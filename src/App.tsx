@@ -9,6 +9,7 @@ import Products from "./pages/Products";
 import Shops from "./pages/Shops";
 import Industries from "./pages/Industries";
 import ProductDetail from "./pages/ProductDetail";
+import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/shops" element={<Shops />} />
           <Route path="/industries" element={<Industries />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/help" element={<Help />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
