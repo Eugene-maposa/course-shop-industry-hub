@@ -9,7 +9,187 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      industries: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["industry_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["industry_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["industry_status"] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      product_types: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          industry_id: string | null
+          name: string
+          status: Database["public"]["Enums"]["product_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry_id?: string | null
+          name: string
+          status?: Database["public"]["Enums"]["product_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry_id?: string | null
+          name?: string
+          status?: Database["public"]["Enums"]["product_status"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_types_industry_id_fkey"
+            columns: ["industry_id"]
+            isOneToOne: false
+            referencedRelation: "industries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          price: number | null
+          product_type_id: string | null
+          registration_date: string | null
+          shop_id: string | null
+          sku: string | null
+          status: Database["public"]["Enums"]["product_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          price?: number | null
+          product_type_id?: string | null
+          registration_date?: string | null
+          shop_id?: string | null
+          sku?: string | null
+          status?: Database["public"]["Enums"]["product_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number | null
+          product_type_id?: string | null
+          registration_date?: string | null
+          shop_id?: string | null
+          sku?: string | null
+          status?: Database["public"]["Enums"]["product_status"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_product_type_id_fkey"
+            columns: ["product_type_id"]
+            isOneToOne: false
+            referencedRelation: "product_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shops: {
+        Row: {
+          address: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          industry_id: string | null
+          name: string
+          phone: string | null
+          registration_date: string | null
+          status: Database["public"]["Enums"]["shop_status"] | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          industry_id?: string | null
+          name: string
+          phone?: string | null
+          registration_date?: string | null
+          status?: Database["public"]["Enums"]["shop_status"] | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          industry_id?: string | null
+          name?: string
+          phone?: string | null
+          registration_date?: string | null
+          status?: Database["public"]["Enums"]["shop_status"] | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shops_industry_id_fkey"
+            columns: ["industry_id"]
+            isOneToOne: false
+            referencedRelation: "industries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +198,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      industry_status: "active" | "inactive" | "pending"
+      product_status: "active" | "inactive" | "pending"
+      shop_status: "active" | "inactive" | "pending"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +315,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      industry_status: ["active", "inactive", "pending"],
+      product_status: ["active", "inactive", "pending"],
+      shop_status: ["active", "inactive", "pending"],
+    },
   },
 } as const
