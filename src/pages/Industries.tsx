@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Building2, TrendingUp, Users } from "lucide-react";
@@ -9,11 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/Navbar";
 import IndustryRegistrationForm from "@/components/forms/IndustryRegistrationForm";
+import IndustryDetailModal from "@/components/IndustryDetailModal";
 import { supabase } from "@/integrations/supabase/client";
 
 const Industries = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("browse");
+  const [selectedIndustry, setSelectedIndustry] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Fetch industries with counts
   const { data: industries = [], isLoading } = useQuery({
@@ -55,6 +57,11 @@ const Industries = () => {
     industry.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     industry.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleViewDetails = (industry) => {
+    setSelectedIndustry(industry);
+    setShowDetailModal(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -143,7 +150,10 @@ const Industries = () => {
                         </div>
                       </div>
                       
-                      <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                      <Button 
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                        onClick={() => handleViewDetails(industry)}
+                      >
                         View Details
                       </Button>
                     </CardContent>
@@ -160,6 +170,13 @@ const Industries = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Detail Modal */}
+      <IndustryDetailModal
+        industry={selectedIndustry}
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+      />
     </div>
   );
 };

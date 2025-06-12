@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,6 +21,8 @@ const ShopRegistrationForm = () => {
     website: "",
     industry_id: ""
   });
+  const [iconFile, setIconFile] = useState<File | null>(null);
+  const [iconPreview, setIconPreview] = useState<string | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -38,7 +41,7 @@ const ShopRegistrationForm = () => {
   });
 
   const registerShopMutation = useMutation({
-    mutationFn: async (shopData: typeof formData) => {
+    mutationFn: async (shopData: typeof formData & { icon_url?: string }) => {
       const { data, error } = await supabase
         .from('shops')
         .insert(shopData)
@@ -61,6 +64,8 @@ const ShopRegistrationForm = () => {
         website: "",
         industry_id: ""
       });
+      setIconFile(null);
+      setIconPreview(null);
       queryClient.invalidateQueries({ queryKey: ['shops'] });
     },
     onError: (error) => {
@@ -73,13 +78,61 @@ const ShopRegistrationForm = () => {
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    registerShopMutation.mutate(formData);
+    
+    let iconUrl = "";
+    
+    // Upload icon if selected
+    if (iconFile) {
+      const fileExt = iconFile.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('shop-icons')
+        .upload(fileName, iconFile);
+        
+      if (uploadError) {
+        toast({
+          title: "Error",
+          description: "Failed to upload icon. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('shop-icons')
+        .getPublicUrl(fileName);
+        
+      iconUrl = publicUrl;
+    }
+    
+    registerShopMutation.mutate({
+      ...formData,
+      ...(iconUrl && { icon_url: iconUrl })
+    });
   };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setIconFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setIconPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeIcon = () => {
+    setIconFile(null);
+    setIconPreview(null);
   };
 
   return (
@@ -115,6 +168,47 @@ const ShopRegistrationForm = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Shop Icon Upload */}
+          <div className="space-y-2">
+            <Label htmlFor="icon">Shop Icon</Label>
+            <div className="flex items-center gap-4">
+              {iconPreview ? (
+                <div className="relative">
+                  <img 
+                    src={iconPreview} 
+                    alt="Shop icon preview" 
+                    className="w-16 h-16 object-cover rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0"
+                    onClick={removeIcon}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                  <Upload className="w-6 h-6 text-gray-400" />
+                </div>
+              )}
+              <div className="flex-1">
+                <Input
+                  id="icon"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleIconChange}
+                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Upload a logo or icon for your shop (optional)
+                </p>
+              </div>
             </div>
           </div>
 
@@ -185,15 +279,19 @@ const ShopRegistrationForm = () => {
               type="button" 
               variant="outline" 
               className="flex-1"
-              onClick={() => setFormData({
-                name: "",
-                description: "",
-                address: "",
-                phone: "",
-                email: "",
-                website: "",
-                industry_id: ""
-              })}
+              onClick={() => {
+                setFormData({
+                  name: "",
+                  description: "",
+                  address: "",
+                  phone: "",
+                  email: "",
+                  website: "",
+                  industry_id: ""
+                });
+                setIconFile(null);
+                setIconPreview(null);
+              }}
             >
               Clear Form
             </Button>

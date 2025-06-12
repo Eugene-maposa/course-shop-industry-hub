@@ -116,12 +116,12 @@ const ProductRegistrationForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="sku">SKU</Label>
+              <Label htmlFor="sku">Product Code</Label>
               <Input
                 id="sku"
                 value={formData.sku}
                 onChange={(e) => handleInputChange("sku", e.target.value)}
-                placeholder="Enter product SKU"
+                placeholder="Enter product code"
               />
             </div>
           </div>
