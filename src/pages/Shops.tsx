@@ -1,21 +1,34 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Search, Filter, MapPin, Phone, Mail, Globe, Building } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Search, Filter, MapPin, Phone, Mail, Globe, Building, CheckCircle, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import Navbar from "@/components/Navbar";
 import ShopRegistrationForm from "@/components/forms/ShopRegistrationForm";
+import ShopContactModal from "@/components/ShopContactModal";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const Shops = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIndustry, setSelectedIndustry] = useState("all");
   const [activeTab, setActiveTab] = useState("browse");
+  const [selectedShop, setSelectedShop] = useState(null);
+  const [showContactModal, setShowContactModal] = useState(false);
+  
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Check if user is admin (you can implement proper role checking later)
+  const isAdmin = user?.email?.includes('admin') || false;
 
   // Fetch shops with related data
   const { data: shops = [], isLoading } = useQuery({
@@ -44,12 +57,67 @@ const Shops = () => {
     }
   });
 
+  // Shop approval mutation
+  const approveShopMutation = useMutation({
+    mutationFn: async ({ shopId, status }: { shopId: string, status: 'active' | 'rejected' }) => {
+      const { data, error } = await supabase
+        .from('shops')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', shopId)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data, variables) => {
+      toast({
+        title: "Success",
+        description: `Shop ${variables.status === 'active' ? 'approved' : 'rejected'} successfully!`
+      });
+      queryClient.invalidateQueries({ queryKey: ['shops'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update shop status. Please try again.",
+        variant: "destructive"
+      });
+      console.error("Error updating shop status:", error);
+    }
+  });
+
   const filteredShops = shops.filter(shop => {
     const matchesSearch = shop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          shop.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesIndustry = selectedIndustry === "all" || shop.industries?.name === selectedIndustry;
     return matchesSearch && matchesIndustry;
   });
+
+  const handleContact = (shop) => {
+    setSelectedShop(shop);
+    setShowContactModal(true);
+  };
+
+  const handleApproveShop = (shopId: string) => {
+    approveShopMutation.mutate({ shopId, status: 'active' });
+  };
+
+  const handleRejectShop = (shopId: string) => {
+    approveShopMutation.mutate({ shopId, status: 'rejected' });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-500';
+      case 'pending':
+        return 'bg-yellow-500';
+      case 'rejected':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -122,7 +190,7 @@ const Shops = () => {
                   <Card key={shop.id} className="group bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start mb-2">
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className={`text-xs text-white ${getStatusColor(shop.status)}`}>
                           {shop.status}
                         </Badge>
                         <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
@@ -171,12 +239,63 @@ const Shops = () => {
                       </div>
                       
                       <div className="flex gap-2 mt-4">
-                        <Button size="sm" variant="outline" className="flex-1 hover:bg-blue-50">
-                          View Details
-                        </Button>
-                        <Button size="sm" className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="flex-1 hover:bg-blue-50"
+                          onClick={() => handleContact(shop)}
+                        >
                           Contact
                         </Button>
+                        
+                        {/* Admin approval buttons */}
+                        {isAdmin && shop.status === 'pending' && (
+                          <div className="flex gap-1">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                                  <CheckCircle className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Approve Shop</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to approve "{shop.name}"? This will make it visible to all users.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleApproveShop(shop.id)}>
+                                    Approve
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                            
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="destructive">
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Reject Shop</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to reject "{shop.name}"? This action can be reversed later.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleRejectShop(shop.id)}>
+                                    Reject
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -192,6 +311,13 @@ const Shops = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Contact Modal */}
+      <ShopContactModal 
+        shop={selectedShop}
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+      />
     </div>
   );
 };
