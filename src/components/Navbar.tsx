@@ -1,12 +1,16 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Package, Store, Building2 } from "lucide-react";
+import { Menu, X, Package, Store, Building2, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
 
   const navigation = [
     { name: "Products", href: "/products", icon: Package },
@@ -15,6 +19,22 @@ const Navbar = () => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully signed out",
+      });
+    }
+  };
 
   return (
     <nav className="bg-nust-blue border-b border-border sticky top-0 z-50">
@@ -63,6 +83,25 @@ const Navbar = () => {
             <Link to="/help" className="text-gray-200 hover:text-white hover:bg-nust-blue-light px-3 py-2 rounded-md text-sm font-medium transition-colors">
               Help ?
             </Link>
+            
+            {/* User Menu */}
+            {user && (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2 text-gray-200">
+                  <User className="w-4 h-4" />
+                  <span className="text-sm">{user.email}</span>
+                </div>
+                <Button
+                  onClick={handleSignOut}
+                  variant="outline"
+                  size="sm"
+                  className="text-white border-white hover:bg-white hover:text-nust-blue"
+                >
+                  <LogOut className="w-4 h-4 mr-1" />
+                  Sign Out
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -116,6 +155,30 @@ const Navbar = () => {
               >
                 Help ?
               </Link>
+              
+              {/* Mobile User Menu */}
+              {user && (
+                <div className="border-t border-nust-blue-light pt-2 mt-2">
+                  <div className="px-3 py-2 text-gray-200 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <User className="w-4 h-4" />
+                      <span>{user.email}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-nust-blue-light transition-colors"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <LogOut className="w-5 h-5" />
+                      <span>Sign Out</span>
+                    </div>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

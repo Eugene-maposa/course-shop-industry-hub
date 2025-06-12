@@ -1,13 +1,35 @@
 
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Package, Store, Building2, User, ShoppingCart, FileText, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
+import AuthModal from "@/components/AuthModal";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { user, loading } = useAuth();
+
+  const handleRegistrationClick = () => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nust-blue mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
@@ -21,7 +43,7 @@ const Index = () => {
           {/* Main Content Cards */}
           <div className="grid md:grid-cols-2 gap-8 mt-16">
             
-            {/* Product Registration Card (equivalent to Online Application) */}
+            {/* Product Registration Card */}
             <Card className="bg-white/95 backdrop-blur-sm shadow-xl border-0">
               <CardHeader className="text-center pb-4">
                 <CardTitle className="text-2xl font-bold text-nust-blue mb-4">
@@ -32,26 +54,56 @@ const Index = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Link to="/products" className="block">
-                  <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium">
-                    <Package className="w-4 h-4 mr-2" />
-                    REGISTER NEW PRODUCT
-                  </Button>
-                </Link>
-                
-                <Link to="/shops" className="block">
-                  <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium">
-                    <Store className="w-4 h-4 mr-2" />
-                    REGISTER SHOP
-                  </Button>
-                </Link>
-                
-                <Link to="/industries" className="block">
-                  <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium">
-                    <Building2 className="w-4 h-4 mr-2" />
-                    REGISTER INDUSTRY
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    <Link to="/products" className="block">
+                      <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium">
+                        <Package className="w-4 h-4 mr-2" />
+                        REGISTER NEW PRODUCT
+                      </Button>
+                    </Link>
+                    
+                    <Link to="/shops" className="block">
+                      <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium">
+                        <Store className="w-4 h-4 mr-2" />
+                        REGISTER SHOP
+                      </Button>
+                    </Link>
+                    
+                    <Link to="/industries" className="block">
+                      <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium">
+                        <Building2 className="w-4 h-4 mr-2" />
+                        REGISTER INDUSTRY
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Button 
+                      onClick={handleRegistrationClick}
+                      className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium"
+                    >
+                      <Package className="w-4 h-4 mr-2" />
+                      REGISTER NEW PRODUCT
+                    </Button>
+                    
+                    <Button 
+                      onClick={handleRegistrationClick}
+                      className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium"
+                    >
+                      <Store className="w-4 h-4 mr-2" />
+                      REGISTER SHOP
+                    </Button>
+                    
+                    <Button 
+                      onClick={handleRegistrationClick}
+                      className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium"
+                    >
+                      <Building2 className="w-4 h-4 mr-2" />
+                      REGISTER INDUSTRY
+                    </Button>
+                  </>
+                )}
                 
                 <Button variant="outline" className="w-full border-nust-blue text-nust-blue hover:bg-nust-blue hover:text-white py-3 text-sm font-medium">
                   <FileText className="w-4 h-4 mr-2" />
@@ -60,50 +112,63 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Shop and Admin Login Card (equivalent to Student and Staff Login) */}
+            {/* Authentication Card */}
             <Card className="bg-white/95 backdrop-blur-sm shadow-xl border-0">
               <CardHeader className="text-center pb-4">
                 <CardTitle className="text-2xl font-bold text-nust-blue mb-4">
-                  SHOP AND ADMIN LOGIN
+                  {user ? 'WELCOME BACK' : 'SHOP AND ADMIN LOGIN'}
                 </CardTitle>
                 <CardDescription className="text-gray-600 text-base leading-relaxed">
-                  Please use your <Link to="#" className="text-blue-600 underline">shop ID</Link> or username and password to log in to the system.
+                  {user 
+                    ? `Welcome back, ${user.email}! You can now access all features.`
+                    : 'Please login to access registration features and manage your products.'
+                  }
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="text-sm font-medium text-gray-700">
-                    Username
-                  </Label>
-                  <Input 
-                    id="username" 
-                    type="text" 
-                    className="w-full"
-                    placeholder="Enter your username"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                    Password
-                  </Label>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    className="w-full"
-                    placeholder="Enter your password"
-                  />
-                </div>
-                
-                <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-lg font-medium">
-                  Login
-                </Button>
-                
-                <div className="text-center">
-                  <Link to="#" className="text-blue-600 hover:underline text-sm">
-                    Click here if you forgot your password.
-                  </Link>
-                </div>
+                {user ? (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex items-center">
+                        <User className="w-5 h-5 text-green-600 mr-2" />
+                        <span className="text-green-800 font-medium">Logged in as:</span>
+                      </div>
+                      <p className="text-green-700 mt-1">{user.email}</p>
+                    </div>
+                    
+                    <Link to="/products" className="block">
+                      <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3">
+                        <Package className="w-4 h-4 mr-2" />
+                        Manage Products
+                      </Button>
+                    </Link>
+                    
+                    <Link to="/shops" className="block">
+                      <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3">
+                        <Store className="w-4 h-4 mr-2" />
+                        Manage Shops
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <Button 
+                      onClick={() => setIsAuthModalOpen(true)}
+                      className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-lg font-medium"
+                    >
+                      Login / Sign Up
+                    </Button>
+                    
+                    <div className="text-center">
+                      <button
+                        onClick={() => setIsAuthModalOpen(true)}
+                        className="text-blue-600 hover:underline text-sm"
+                      >
+                        Need help with your account?
+                      </button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -164,6 +229,11 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
     </div>
   );
 };
