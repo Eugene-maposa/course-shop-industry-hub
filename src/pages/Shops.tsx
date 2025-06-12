@@ -59,7 +59,7 @@ const Shops = () => {
 
   // Shop approval mutation
   const approveShopMutation = useMutation({
-    mutationFn: async ({ shopId, status }: { shopId: string, status: 'active' | 'rejected' }) => {
+    mutationFn: async ({ shopId, status }: { shopId: string, status: 'active' | 'inactive' }) => {
       const { data, error } = await supabase
         .from('shops')
         .update({ status, updated_at: new Date().toISOString() })
@@ -103,7 +103,7 @@ const Shops = () => {
   };
 
   const handleRejectShop = (shopId: string) => {
-    approveShopMutation.mutate({ shopId, status: 'rejected' });
+    approveShopMutation.mutate({ shopId, status: 'inactive' });
   };
 
   const getStatusColor = (status: string) => {
@@ -112,7 +112,7 @@ const Shops = () => {
         return 'bg-green-500';
       case 'pending':
         return 'bg-yellow-500';
-      case 'rejected':
+      case 'inactive':
         return 'bg-red-500';
       default:
         return 'bg-gray-500';
