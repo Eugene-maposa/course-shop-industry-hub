@@ -1,13 +1,56 @@
 
-import { Link } from "react-router-dom";
-import { Package, Store, Building2, User, ShoppingCart, FileText, HelpCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Package, Store, Building2, User, ShoppingCart, FileText, HelpCircle, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
+import AuthModal from "@/components/AuthModal";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, loading, signOut } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Signed out successfully",
+      });
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    toast({
+      title: "Welcome!",
+      description: "You are now logged in to ProductHub",
+    });
+  };
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <Package className="w-16 h-16 mx-auto mb-4 text-nust-blue animate-pulse" />
+          <p className="text-gray-600">Loading ProductHub...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
@@ -18,10 +61,29 @@ const Index = () => {
         <div className="absolute inset-0 bg-black/20"></div>
         
         <div className="relative max-w-6xl mx-auto">
+          {/* User Status Bar */}
+          {user && (
+            <div className="mb-8 bg-white/10 backdrop-blur-sm rounded-lg p-4 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <User className="w-6 h-6 text-white" />
+                <span className="text-white font-medium">Welcome, {user.email}</span>
+              </div>
+              <Button
+                onClick={handleSignOut}
+                variant="outline"
+                size="sm"
+                className="border-white text-white hover:bg-white hover:text-nust-blue"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
+          )}
+          
           {/* Main Content Cards */}
           <div className="grid md:grid-cols-2 gap-8 mt-16">
             
-            {/* Product Registration Card (equivalent to Online Application) */}
+            {/* Product Registration Card */}
             <Card className="bg-white/95 backdrop-blur-sm shadow-xl border-0">
               <CardHeader className="text-center pb-4">
                 <CardTitle className="text-2xl font-bold text-nust-blue mb-4">
@@ -32,26 +94,41 @@ const Index = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Link to="/products" className="block">
-                  <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium">
-                    <Package className="w-4 h-4 mr-2" />
-                    REGISTER NEW PRODUCT
-                  </Button>
-                </Link>
-                
-                <Link to="/shops" className="block">
-                  <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium">
-                    <Store className="w-4 h-4 mr-2" />
-                    REGISTER SHOP
-                  </Button>
-                </Link>
-                
-                <Link to="/industries" className="block">
-                  <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium">
-                    <Building2 className="w-4 h-4 mr-2" />
-                    REGISTER INDUSTRY
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    <Link to="/products" className="block">
+                      <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium">
+                        <Package className="w-4 h-4 mr-2" />
+                        REGISTER NEW PRODUCT
+                      </Button>
+                    </Link>
+                    
+                    <Link to="/shops" className="block">
+                      <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium">
+                        <Store className="w-4 h-4 mr-2" />
+                        REGISTER SHOP
+                      </Button>
+                    </Link>
+                    
+                    <Link to="/industries" className="block">
+                      <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium">
+                        <Building2 className="w-4 h-4 mr-2" />
+                        REGISTER INDUSTRY
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-gray-600 mb-4">Please log in to access registration features</p>
+                    <Button 
+                      onClick={() => setShowAuthModal(true)}
+                      className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-sm font-medium"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      LOGIN TO REGISTER
+                    </Button>
+                  </div>
+                )}
                 
                 <Button variant="outline" className="w-full border-nust-blue text-nust-blue hover:bg-nust-blue hover:text-white py-3 text-sm font-medium">
                   <FileText className="w-4 h-4 mr-2" />
@@ -60,50 +137,66 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Shop and Admin Login Card (equivalent to Student and Staff Login) */}
+            {/* Authentication Card */}
             <Card className="bg-white/95 backdrop-blur-sm shadow-xl border-0">
               <CardHeader className="text-center pb-4">
                 <CardTitle className="text-2xl font-bold text-nust-blue mb-4">
-                  SHOP AND ADMIN LOGIN
+                  {user ? "ACCOUNT MANAGEMENT" : "SHOP AND ADMIN LOGIN"}
                 </CardTitle>
                 <CardDescription className="text-gray-600 text-base leading-relaxed">
-                  Please use your <Link to="#" className="text-blue-600 underline">shop ID</Link> or username and password to log in to the system.
+                  {user 
+                    ? "Manage your account and access advanced features."
+                    : "Please use your shop ID or username and password to log in to the system."
+                  }
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="text-sm font-medium text-gray-700">
-                    Username
-                  </Label>
-                  <Input 
-                    id="username" 
-                    type="text" 
-                    className="w-full"
-                    placeholder="Enter your username"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                    Password
-                  </Label>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    className="w-full"
-                    placeholder="Enter your password"
-                  />
-                </div>
-                
-                <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-lg font-medium">
-                  Login
-                </Button>
-                
-                <div className="text-center">
-                  <Link to="#" className="text-blue-600 hover:underline text-sm">
-                    Click here if you forgot your password.
-                  </Link>
-                </div>
+                {user ? (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <User className="w-5 h-5 text-green-600" />
+                        <span className="font-medium text-green-800">Logged in as:</span>
+                      </div>
+                      <p className="text-green-700 mt-1">{user.email}</p>
+                    </div>
+                    
+                    <Link to="/products" className="block">
+                      <Button className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-lg font-medium">
+                        <ShoppingCart className="w-5 h-5 mr-2" />
+                        Manage Products
+                      </Button>
+                    </Link>
+                    
+                    <Button
+                      onClick={handleSignOut}
+                      variant="outline"
+                      className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white py-3 text-lg font-medium"
+                    >
+                      <LogOut className="w-5 h-5 mr-2" />
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <Button 
+                      onClick={() => setShowAuthModal(true)}
+                      className="w-full bg-nust-blue hover:bg-nust-blue-dark text-white py-3 text-lg font-medium"
+                    >
+                      <User className="w-5 h-5 mr-2" />
+                      Login / Sign Up
+                    </Button>
+                    
+                    <div className="text-center">
+                      <button 
+                        onClick={() => setShowAuthModal(true)}
+                        className="text-blue-600 hover:underline text-sm"
+                      >
+                        Click here if you forgot your password.
+                      </button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -144,6 +237,21 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Authentication Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="relative">
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute -top-4 -right-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 z-10"
+            >
+              ✕
+            </button>
+            <AuthModal onSuccess={handleAuthSuccess} />
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="bg-nust-blue text-white py-8 px-4 sm:px-6 lg:px-8">
