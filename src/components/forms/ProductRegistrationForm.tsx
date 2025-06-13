@@ -51,12 +51,22 @@ const ProductRegistrationForm = () => {
 
   const registerProductMutation = useMutation({
     mutationFn: async (productData: typeof formData) => {
+      console.log("Submitting product data:", productData);
+      
+      // Convert empty strings to null for UUID fields
+      const cleanedData = {
+        ...productData,
+        price: productData.price ? parseFloat(productData.price) : null,
+        product_type_id: productData.product_type_id || null,
+        shop_id: productData.shop_id || null,
+        sku: productData.sku || null
+      };
+      
+      console.log("Cleaned product data:", cleanedData);
+      
       const { data, error } = await supabase
         .from('products')
-        .insert({
-          ...productData,
-          price: productData.price ? parseFloat(productData.price) : null
-        })
+        .insert(cleanedData)
         .select()
         .single();
       if (error) throw error;
@@ -89,6 +99,35 @@ const ProductRegistrationForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.name.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Product name is required.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!formData.product_type_id) {
+      toast({
+        title: "Validation Error",
+        description: "Product type is required.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!formData.shop_id) {
+      toast({
+        title: "Validation Error",
+        description: "Shop is required.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     registerProductMutation.mutate(formData);
   };
 
