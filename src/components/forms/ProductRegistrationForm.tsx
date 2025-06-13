@@ -7,11 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
-import { AlertCircle } from "lucide-react";
 
 const ProductRegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -44,40 +41,21 @@ const ProductRegistrationForm = () => {
     }
   });
 
-  // Fetch shops - try all statuses if no active shops found
+  // Fetch shops
   const { data: shops = [], isLoading: isLoadingShops } = useQuery({
     queryKey: ['shops'],
     queryFn: async () => {
-      console.log("Fetching active shops...");
-      const { data: activeShops, error: activeError } = await supabase
+      console.log("Fetching shops...");
+      const { data, error } = await supabase
         .from('shops')
         .select('*')
         .eq('status', 'active');
-      
-      if (activeError) {
-        console.error("Error fetching active shops:", activeError);
-        throw activeError;
+      if (error) {
+        console.error("Error fetching shops:", error);
+        throw error;
       }
-      
-      console.log("Active shops fetched:", activeShops);
-      
-      // If no active shops, try fetching all shops
-      if (!activeShops || activeShops.length === 0) {
-        console.log("No active shops found, fetching all shops...");
-        const { data: allShops, error: allError } = await supabase
-          .from('shops')
-          .select('*');
-        
-        if (allError) {
-          console.error("Error fetching all shops:", allError);
-          throw allError;
-        }
-        
-        console.log("All shops fetched:", allShops);
-        return allShops || [];
-      }
-      
-      return activeShops || [];
+      console.log("Shops fetched:", data);
+      return data || [];
     }
   });
 
@@ -173,37 +151,12 @@ const ProductRegistrationForm = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      price: "",
-      sku: "",
-      product_type_id: "",
-      shop_id: ""
-    });
-  };
-
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader className="text-center bg-nust-blue text-white">
         <CardTitle className="text-2xl">Register New Product</CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        {/* Show alert if no shops are available */}
-        {!isLoadingShops && shops.length === 0 && (
-          <Alert className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              No shops are available. You need to{" "}
-              <Link to="/shops" className="text-blue-600 hover:underline">
-                register a shop
-              </Link>{" "}
-              first before creating products.
-            </AlertDescription>
-          </Alert>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -264,23 +217,14 @@ const ProductRegistrationForm = () => {
               <Select 
                 value={formData.shop_id} 
                 onValueChange={handleSelectChange("shop_id")}
-                disabled={shops.length === 0}
               >
                 <SelectTrigger>
-                  <SelectValue 
-                    placeholder={
-                      isLoadingShops 
-                        ? "Loading..." 
-                        : shops.length === 0 
-                          ? "No shops available" 
-                          : "Select shop"
-                    } 
-                  />
+                  <SelectValue placeholder={isLoadingShops ? "Loading..." : "Select shop"} />
                 </SelectTrigger>
                 <SelectContent>
                   {shops.map((shop) => (
                     <SelectItem key={shop.id} value={shop.id}>
-                      {shop.name} {shop.status !== 'active' && `(${shop.status})`}
+                      {shop.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -304,7 +248,7 @@ const ProductRegistrationForm = () => {
             <Button 
               type="submit" 
               className="flex-1 bg-nust-blue hover:bg-nust-blue-dark"
-              disabled={registerProductMutation.isPending || shops.length === 0}
+              disabled={registerProductMutation.isPending}
             >
               {registerProductMutation.isPending ? "Registering..." : "Register Product"}
             </Button>
@@ -312,7 +256,14 @@ const ProductRegistrationForm = () => {
               type="button" 
               variant="outline" 
               className="flex-1"
-              onClick={resetForm}
+              onClick={() => setFormData({
+                name: "",
+                description: "",
+                price: "",
+                sku: "",
+                product_type_id: "",
+                shop_id: ""
+              })}
             >
               Clear Form
             </Button>
