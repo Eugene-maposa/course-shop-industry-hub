@@ -24,28 +24,38 @@ const ProductRegistrationForm = () => {
   const queryClient = useQueryClient();
 
   // Fetch product types
-  const { data: productTypes = [] } = useQuery({
+  const { data: productTypes = [], isLoading: isLoadingTypes } = useQuery({
     queryKey: ['productTypes'],
     queryFn: async () => {
+      console.log("Fetching product types...");
       const { data, error } = await supabase
         .from('product_types')
         .select('*')
         .eq('status', 'active');
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error("Error fetching product types:", error);
+        throw error;
+      }
+      console.log("Product types fetched:", data);
+      return data || [];
     }
   });
 
   // Fetch shops
-  const { data: shops = [] } = useQuery({
+  const { data: shops = [], isLoading: isLoadingShops } = useQuery({
     queryKey: ['shops'],
     queryFn: async () => {
+      console.log("Fetching shops...");
       const { data, error } = await supabase
         .from('shops')
         .select('*')
         .eq('status', 'active');
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error("Error fetching shops:", error);
+        throw error;
+      }
+      console.log("Shops fetched:", data);
+      return data || [];
     }
   });
 
@@ -132,6 +142,12 @@ const ProductRegistrationForm = () => {
   };
 
   const handleInputChange = (field: string, value: string) => {
+    console.log(`Updating ${field} to:`, value);
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSelectChange = (field: string) => (value: string) => {
+    console.log(`Select ${field} changed to:`, value);
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -179,9 +195,12 @@ const ProductRegistrationForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="product_type">Product Type *</Label>
-              <Select value={formData.product_type_id} onValueChange={(value) => handleInputChange("product_type_id", value)}>
+              <Select 
+                value={formData.product_type_id} 
+                onValueChange={handleSelectChange("product_type_id")}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select product type" />
+                  <SelectValue placeholder={isLoadingTypes ? "Loading..." : "Select product type"} />
                 </SelectTrigger>
                 <SelectContent>
                   {productTypes.map((type) => (
@@ -195,9 +214,12 @@ const ProductRegistrationForm = () => {
 
             <div className="space-y-2">
               <Label htmlFor="shop">Shop *</Label>
-              <Select value={formData.shop_id} onValueChange={(value) => handleInputChange("shop_id", value)}>
+              <Select 
+                value={formData.shop_id} 
+                onValueChange={handleSelectChange("shop_id")}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select shop" />
+                  <SelectValue placeholder={isLoadingShops ? "Loading..." : "Select shop"} />
                 </SelectTrigger>
                 <SelectContent>
                   {shops.map((shop) => (
