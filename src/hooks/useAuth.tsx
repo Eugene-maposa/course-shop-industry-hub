@@ -15,6 +15,31 @@ export const useAuth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Create default user role when user signs up
+        if (event === 'SIGNED_UP' && session?.user) {
+          setTimeout(async () => {
+            try {
+              // Check if user already has roles
+              const { data: existingRoles } = await supabase
+                .from('user_roles')
+                .select('*')
+                .eq('user_id', session.user.id);
+              
+              // If no roles exist, create default 'user' role
+              if (!existingRoles || existingRoles.length === 0) {
+                await supabase
+                  .from('user_roles')
+                  .insert({
+                    user_id: session.user.id,
+                    role: 'user',
+                  });
+              }
+            } catch (error) {
+              console.error('Error creating default user role:', error);
+            }
+          }, 1000);
+        }
       }
     );
 

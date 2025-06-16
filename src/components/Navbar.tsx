@@ -5,6 +5,7 @@ import { Menu, X, Package, Store, Building2, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import UserRoleDisplay from "@/components/UserRoleDisplay";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -89,7 +90,10 @@ const Navbar = () => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2 text-gray-200">
                   <User className="w-4 h-4" />
-                  <span className="text-sm">{user.email}</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm">{user.email}</span>
+                    <UserRoleDisplay user={user} />
+                  </div>
                 </div>
                 <Button
                   onClick={handleSignOut}
@@ -160,10 +164,11 @@ const Navbar = () => {
               {user && (
                 <div className="border-t border-nust-blue-light pt-2 mt-2">
                   <div className="px-3 py-2 text-gray-200 text-sm">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 mb-2">
                       <User className="w-4 h-4" />
                       <span>{user.email}</span>
                     </div>
+                    <UserRoleDisplay user={user} />
                   </div>
                   <button
                     onClick={() => {
