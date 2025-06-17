@@ -1,10 +1,11 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Package, Store, Building2, User, LogOut } from "lucide-react";
+import { Menu, X, Package, Store, Building2, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import UserRoleDisplay from "@/components/UserRoleDisplay";
 
 const Navbar = () => {
