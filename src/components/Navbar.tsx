@@ -1,19 +1,16 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Package, Store, Building2, User, LogOut, Shield, Settings } from "lucide-react";
+import { Menu, X, Package, Store, Building2, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useUserRoles } from "@/hooks/useUserRoles";
-import UserRoleDisplay from "@/components/UserRoleDisplay";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const { isAdmin } = useUserRoles(user);
 
   const navigation = [
     { name: "Products", href: "/products", icon: Package },
@@ -84,35 +81,6 @@ const Navbar = () => {
               );
             })}
             
-            {/* Admin Links - Only show for admin users */}
-            {isAdmin && (
-              <>
-                <Link
-                  to="/admin"
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive("/admin")
-                      ? "bg-red-600 text-white"
-                      : "text-gray-200 hover:text-white hover:bg-red-600"
-                  }`}
-                >
-                  <Shield className="w-4 h-4" />
-                  <span>Admin</span>
-                </Link>
-                
-                <Link
-                  to="/admin-control"
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive("/admin-control")
-                      ? "bg-purple-600 text-white"
-                      : "text-gray-200 hover:text-white hover:bg-purple-600"
-                  }`}
-                >
-                  <Settings className="w-4 h-4" />
-                  <span>Control</span>
-                </Link>
-              </>
-            )}
-            
             <Link to="/help" className="text-gray-200 hover:text-white hover:bg-nust-blue-light px-3 py-2 rounded-md text-sm font-medium transition-colors">
               Help ?
             </Link>
@@ -122,10 +90,7 @@ const Navbar = () => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2 text-gray-200">
                   <User className="w-4 h-4" />
-                  <div className="flex flex-col">
-                    <span className="text-sm">{user.email}</span>
-                    <UserRoleDisplay user={user} />
-                  </div>
+                  <span className="text-sm">{user.email}</span>
                 </div>
                 <Button
                   onClick={handleSignOut}
@@ -185,37 +150,6 @@ const Navbar = () => {
                 );
               })}
               
-              {/* Mobile Admin Links */}
-              {isAdmin && (
-                <>
-                  <Link
-                    to="/admin"
-                    onClick={() => setIsOpen(false)}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                      isActive("/admin")
-                        ? "bg-red-600 text-white"
-                        : "text-gray-200 hover:text-white hover:bg-red-600"
-                    }`}
-                  >
-                    <Shield className="w-5 h-5" />
-                    <span>Admin</span>
-                  </Link>
-                  
-                  <Link
-                    to="/admin-control"
-                    onClick={() => setIsOpen(false)}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                      isActive("/admin-control")
-                        ? "bg-purple-600 text-white"
-                        : "text-gray-200 hover:text-white hover:bg-purple-600"
-                    }`}
-                  >
-                    <Settings className="w-5 h-5" />
-                    <span>Control Panel</span>
-                  </Link>
-                </>
-              )}
-              
               <Link
                 to="/help"
                 onClick={() => setIsOpen(false)}
@@ -232,7 +166,6 @@ const Navbar = () => {
                       <User className="w-4 h-4" />
                       <span>{user.email}</span>
                     </div>
-                    <UserRoleDisplay user={user} />
                   </div>
                   <button
                     onClick={() => {

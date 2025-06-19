@@ -10,8 +10,6 @@ import Shops from "./pages/Shops";
 import Industries from "./pages/Industries";
 import ProductDetail from "./pages/ProductDetail";
 import Help from "./pages/Help";
-import Admin from "./pages/Admin";
-import AdminControl from "./pages/AdminControl";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,8 +27,6 @@ const App = () => (
           <Route path="/industries" element={<Industries />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/help" element={<Help />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin-control" element={<AdminControl />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

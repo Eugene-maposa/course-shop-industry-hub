@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,7 +18,6 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<'user' | 'admin'>('user');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, resetPassword } = useAuth();
   const { toast } = useToast();
@@ -41,7 +39,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           onClose();
         }
       } else if (mode === 'signup') {
-        result = await signUp(email, password, selectedRole);
+        result = await signUp(email, password);
         if (!result.error) {
           toast({
             title: "Account Created",
@@ -81,7 +79,6 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const resetForm = () => {
     setEmail('');
     setPassword('');
-    setSelectedRole('user');
   };
 
   const switchMode = (newMode: AuthMode) => {
@@ -124,25 +121,6 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 placeholder="Enter your password"
                 required
               />
-            </div>
-          )}
-
-          {mode === 'signup' && (
-            <div className="space-y-3">
-              <Label>Select Your Role</Label>
-              <RadioGroup value={selectedRole} onValueChange={(value: 'user' | 'admin') => setSelectedRole(value)}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="user" id="user" />
-                  <Label htmlFor="user" className="cursor-pointer">Regular User</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="admin" id="admin" />
-                  <Label htmlFor="admin" className="cursor-pointer">Administrator</Label>
-                </div>
-              </RadioGroup>
-              <p className="text-sm text-gray-500">
-                Choose 'Administrator' if you need to manage the entire system
-              </p>
             </div>
           )}
 
