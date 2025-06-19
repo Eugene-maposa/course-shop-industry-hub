@@ -20,8 +20,6 @@ const AdminPanel = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [newAdminEmail, setNewAdminEmail] = useState("");
-  const [newAdminRole, setNewAdminRole] = useState<'admin' | 'moderator'>('admin');
 
   // Redirect if not admin
   if (!adminLoading && !isAdmin) {
@@ -41,14 +39,14 @@ const AdminPanel = () => {
     queryKey: ['admin-stats'],
     queryFn: async () => {
       const [shopsResponse, productsResponse, usersResponse] = await Promise.all([
-        supabase.from('shops').select('status').then(res => res.data || []),
-        supabase.from('products').select('status').then(res => res.data || []),
-        supabase.rpc('get_user_count').then(res => res.data || 0)
+        supabase.from('shops').select('status'),
+        supabase.from('products').select('status'),
+        supabase.rpc('get_user_count')
       ]);
 
-      const shops = shopsResponse;
-      const products = productsResponse;
-      const totalUsers = usersResponse;
+      const shops = shopsResponse.data || [];
+      const products = productsResponse.data || [];
+      const totalUsers = usersResponse.data || 0;
 
       return {
         totalShops: shops.length,
