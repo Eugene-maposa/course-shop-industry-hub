@@ -11,6 +11,8 @@ import Industries from "./pages/Industries";
 import ProductDetail from "./pages/ProductDetail";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
+import AdminLogin from "./pages/AdminLogin";
+import AdminPanel from "./pages/AdminPanel";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +29,8 @@ const App = () => (
           <Route path="/industries" element={<Industries />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/help" element={<Help />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

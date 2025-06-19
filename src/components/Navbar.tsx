@@ -1,15 +1,17 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Package, Store, Building2, User, LogOut } from "lucide-react";
+import { Menu, X, Package, Store, Building2, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const { toast } = useToast();
 
   const navigation = [
@@ -85,6 +87,21 @@ const Navbar = () => {
               Help ?
             </Link>
             
+            {/* Admin Link */}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  location.pathname.startsWith('/admin')
+                    ? "bg-red-600 text-white"
+                    : "text-gray-200 hover:text-white hover:bg-red-600"
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                <span>Admin</span>
+              </Link>
+            )}
+            
             {/* User Menu */}
             {user && (
               <div className="flex items-center space-x-4">
@@ -157,6 +174,22 @@ const Navbar = () => {
               >
                 Help ?
               </Link>
+              
+              {/* Mobile Admin Link */}
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                    location.pathname.startsWith('/admin')
+                      ? "bg-red-600 text-white"
+                      : "text-gray-200 hover:text-white hover:bg-red-600"
+                  }`}
+                >
+                  <Shield className="w-5 h-5" />
+                  <span>Admin Panel</span>
+                </Link>
+              )}
               
               {/* Mobile User Menu */}
               {user && (
