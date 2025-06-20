@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Shield, Users, Building, Package, Activity, UserPlus, MoreHorizontal, CheckCircle, XCircle, Clock } from "lucide-react";
@@ -16,19 +17,43 @@ import { Navigate } from "react-router-dom";
 
 const AdminPanel = () => {
   const { isAdmin, adminRole, loading: adminLoading, logAdminAction } = useAdmin();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Redirect if not admin
-  if (!adminLoading && !isAdmin) {
-    return <Navigate to="/" replace />;
-  }
+  console.log('AdminPanel render:', { user: user?.email, isAdmin, adminRole, adminLoading, authLoading });
 
-  if (adminLoading) {
+  // Show loading while checking authentication and admin status
+  if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
         <div className="text-white text-xl">Loading admin panel...</div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  // Show access denied if not admin
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <Card className="w-full max-w-md bg-slate-800 border-slate-700">
+          <CardContent className="p-6 text-center">
+            <Shield className="w-12 h-12 text-red-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
+            <p className="text-slate-400 mb-4">You don't have admin privileges.</p>
+            <Button 
+              onClick={() => window.location.href = '/'}
+              className="bg-slate-700 hover:bg-slate-600 text-white"
+            >
+              Back to Home
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -37,15 +62,21 @@ const AdminPanel = () => {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      const [shopsResponse, productsResponse, usersResponse] = await Promise.all([
+      console.log('Fetching admin stats...');
+      const [shopsResponse, productsResponse] = await Promise.all([
         supabase.from('shops').select('status'),
-        supabase.from('products').select('status'),
-        supabase.from('admin_users').select('user_id', { count: 'exact', head: true }).then(res => ({ data: res.count || 0 }))
+        supabase.from('products').select('status')
       ]);
+
+      console.log('Stats responses:', { shopsResponse, productsResponse });
 
       const shops = shopsResponse.data || [];
       const products = productsResponse.data || [];
-      const totalUsers = usersResponse.data || 0;
+
+      // Get user count by counting admin_users as a proxy (since we can't access auth.users directly)
+      const { count: adminCount } = await supabase
+        .from('admin_users')
+        .select('*', { count: 'exact', head: true });
 
       return {
         totalShops: shops.length,
@@ -53,15 +84,17 @@ const AdminPanel = () => {
         activeShops: shops.filter(s => s.status === 'active').length,
         totalProducts: products.length,
         pendingProducts: products.filter(p => p.status === 'pending').length,
-        totalUsers
+        totalUsers: adminCount || 0 // This will show admin users count as a placeholder
       };
-    }
+    },
+    enabled: !!user && isAdmin
   });
 
   // Fetch shops for approval
   const { data: shops = [], isLoading: shopsLoading } = useQuery({
     queryKey: ['admin-shops'],
     queryFn: async () => {
+      console.log('Fetching shops...');
       const { data, error } = await supabase
         .from('shops')
         .select(`
@@ -70,9 +103,14 @@ const AdminPanel = () => {
         `)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching shops:', error);
+        throw error;
+      }
+      console.log('Shops fetched:', data?.length);
       return data || [];
-    }
+    },
+    enabled: !!user && isAdmin
   });
 
   // Shop approval mutation
@@ -236,7 +274,7 @@ const AdminPanel = () => {
               <div className="flex items-center space-x-2">
                 <Users className="w-8 h-8 text-purple-400" />
                 <div>
-                  <p className="text-slate-400">Total Users</p>
+                  <p className="text-slate-400">Admin Users</p>
                   <p className="text-2xl font-bold text-white">{stats?.totalUsers || 0}</p>
                 </div>
               </div>
@@ -245,7 +283,7 @@ const AdminPanel = () => {
         </div>
 
         {/* Quick Actions */}
-        {stats?.pendingShops > 0 && (
+        {(stats?.pendingShops || 0) > 0 && (
           <Card className="bg-slate-800 border-slate-700 mb-8">
             <CardHeader>
               <CardTitle className="text-white">Quick Actions</CardTitle>
@@ -255,14 +293,14 @@ const AdminPanel = () => {
                 <AlertDialogTrigger asChild>
                   <Button className="bg-green-600 hover:bg-green-700">
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Approve All Pending Shops ({stats.pendingShops})
+                    Approve All Pending Shops ({stats?.pendingShops || 0})
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent className="bg-slate-800 border-slate-700">
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-white">Approve All Pending Shops</AlertDialogTitle>
                     <AlertDialogDescription className="text-slate-400">
-                      Are you sure you want to approve all {stats.pendingShops} pending shops? This action cannot be undone.
+                      Are you sure you want to approve all {stats?.pendingShops || 0} pending shops? This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -333,6 +371,9 @@ const AdminPanel = () => {
                     ))}
                   </TableBody>
                 </Table>
+                {shops.length === 0 && (
+                  <div className="text-slate-400 text-center py-8">No shops found</div>
+                )}
               </div>
             )}
           </CardContent>

@@ -14,7 +14,10 @@ export const useAdmin = () => {
 
   useEffect(() => {
     const checkAdminStatus = async () => {
+      console.log('Checking admin status for user:', user?.email);
+      
       if (!user || !session) {
+        console.log('No user or session found');
         setIsAdmin(false);
         setAdminRole(null);
         setLoading(false);
@@ -30,14 +33,18 @@ export const useAdmin = () => {
           .eq('is_active', true)
           .maybeSingle();
 
+        console.log('Admin check result:', { adminData, error });
+
         if (error) {
           console.error('Error checking admin status:', error);
           setIsAdmin(false);
           setAdminRole(null);
         } else if (adminData) {
+          console.log('User is admin with role:', adminData.role);
           setIsAdmin(true);
           setAdminRole(adminData.role as AdminRole);
         } else {
+          console.log('User is not an admin');
           setIsAdmin(false);
           setAdminRole(null);
         }
