@@ -22,20 +22,21 @@ export const useAdmin = () => {
       }
 
       try {
-        // Use raw SQL query to check admin status
-        const { data, error } = await supabase.rpc('is_admin', { user_id: user.id });
+        // Use direct SQL query to check admin status
+        const { data: adminData, error } = await supabase
+          .from('admin_users')
+          .select('role, is_active')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .maybeSingle();
 
         if (error) {
           console.error('Error checking admin status:', error);
           setIsAdmin(false);
           setAdminRole(null);
-        } else if (data) {
+        } else if (adminData) {
           setIsAdmin(true);
-          // Get admin role with another RPC call
-          const { data: roleData, error: roleError } = await supabase.rpc('get_admin_role', { user_id: user.id });
-          if (!roleError && roleData) {
-            setAdminRole(roleData as AdminRole);
-          }
+          setAdminRole(adminData.role as AdminRole);
         } else {
           setIsAdmin(false);
           setAdminRole(null);
@@ -55,12 +56,15 @@ export const useAdmin = () => {
   const promoteToAdmin = async (userId: string, role: AdminRole = 'admin') => {
     if (!user) throw new Error('No authenticated user');
 
-    // Use raw SQL insert through RPC
-    const { data, error } = await supabase.rpc('create_admin_user', {
-      target_user_id: userId,
-      admin_role: role,
-      created_by_id: user.id
-    });
+    const { data, error } = await supabase
+      .from('admin_users')
+      .insert({
+        user_id: userId,
+        role: role,
+        created_by: user.id
+      })
+      .select()
+      .single();
 
     if (error) throw error;
     return data;
@@ -69,10 +73,12 @@ export const useAdmin = () => {
   const updateAdminRole = async (userId: string, newRole: AdminRole) => {
     if (!user) throw new Error('No authenticated user');
 
-    const { data, error } = await supabase.rpc('update_admin_role', {
-      target_user_id: userId,
-      new_role: newRole
-    });
+    const { data, error } = await supabase
+      .from('admin_users')
+      .update({ role: newRole, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .select()
+      .single();
 
     if (error) throw error;
     return data;
@@ -81,9 +87,12 @@ export const useAdmin = () => {
   const deactivateAdmin = async (userId: string) => {
     if (!user) throw new Error('No authenticated user');
 
-    const { data, error } = await supabase.rpc('deactivate_admin_user', {
-      target_user_id: userId
-    });
+    const { data, error } = await supabase
+      .from('admin_users')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .select()
+      .single();
 
     if (error) throw error;
     return data;
@@ -92,14 +101,16 @@ export const useAdmin = () => {
   const logAdminAction = async (action: string, targetTable?: string, targetId?: string, oldValues?: any, newValues?: any) => {
     if (!user) return;
 
-    const { error } = await supabase.rpc('log_admin_action', {
-      admin_id: user.id,
-      action_type: action,
-      target_table: targetTable,
-      target_id: targetId,
-      old_values: oldValues,
-      new_values: newValues
-    });
+    const { error } = await supabase
+      .from('admin_audit_log')
+      .insert({
+        admin_user_id: user.id,
+        action: action,
+        target_table: targetTable,
+        target_id: targetId,
+        old_values: oldValues,
+        new_values: newValues
+      });
 
     if (error) {
       console.error('Error logging admin action:', error);

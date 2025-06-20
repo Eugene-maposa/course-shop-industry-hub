@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Shield, Users, Building, Package, Activity, UserPlus, MoreHorizontal, CheckCircle, XCircle, Clock } from "lucide-react";
@@ -41,7 +40,7 @@ const AdminPanel = () => {
       const [shopsResponse, productsResponse, usersResponse] = await Promise.all([
         supabase.from('shops').select('status'),
         supabase.from('products').select('status'),
-        supabase.rpc('get_user_count')
+        supabase.from('admin_users').select('user_id', { count: 'exact', head: true }).then(res => ({ data: res.count || 0 }))
       ]);
 
       const shops = shopsResponse.data || [];
