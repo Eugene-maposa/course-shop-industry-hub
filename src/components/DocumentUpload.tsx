@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, CheckCircle, X, FileText } from "lucide-react";
+import { Upload, CheckCircle, X, FileImage } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface DocumentRequirement {
@@ -27,7 +27,7 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
   const [docPreviews, setDocPreviews] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
-  const handleFileUpload = (docType: string, file: File | null) => {
+  const handleImageUpload = (docType: string, file: File | null) => {
     if (!file) {
       const newDocs = { ...uploadedDocs };
       delete newDocs[docType];
@@ -42,22 +42,22 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
       return;
     }
 
-    // Validate file type
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    // Validate file type - only images allowed
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please upload PDF, JPEG, or PNG files only.",
+        description: "Please upload image files only (JPEG, PNG, WebP).",
         variant: "destructive"
       });
       return;
     }
 
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (10MB max for images)
+    if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please upload files smaller than 5MB.",
+        description: "Please upload images smaller than 10MB.",
         variant: "destructive"
       });
       return;
@@ -67,19 +67,22 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
     setUploadedDocs(newDocs);
 
     // Create preview URL for images
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setDocPreviews(prev => ({
-          ...prev,
-          [docType]: e.target?.result as string
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setDocPreviews(prev => ({
+        ...prev,
+        [docType]: e.target?.result as string
+      }));
+    };
+    reader.readAsDataURL(file);
 
     onDocumentsChange(newDocs);
     calculateProgress(newDocs);
+    
+    toast({
+      title: "Document uploaded",
+      description: `${file.name} has been uploaded successfully.`,
+    });
   };
 
   const calculateProgress = (docs: Record<string, File>) => {
@@ -90,15 +93,19 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
   };
 
   const removeDocument = (docType: string) => {
-    handleFileUpload(docType, null);
+    handleImageUpload(docType, null);
+    toast({
+      title: "Document removed",
+      description: "Document has been removed from your application.",
+    });
   };
 
   return (
     <div className="space-y-4">
       <div className="text-center mb-6">
-        <h3 className="text-lg font-semibold mb-2">Required Documents for Zimbabwe</h3>
+        <h3 className="text-lg font-semibold mb-2">Required Document Images for Zimbabwe</h3>
         <p className="text-sm text-muted-foreground">
-          Please upload all required documents to complete your shop registration
+          Please upload clear images of all required documents to complete your shop registration
         </p>
       </div>
 
@@ -107,7 +114,7 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <FileText className="w-4 h-4" />
+                <FileImage className="w-4 h-4" />
                 {requirement.document_name}
                 {requirement.is_required && (
                   <span className="text-red-500 text-xs">*</span>
@@ -122,15 +129,26 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
           
           <CardContent className="pt-0">
             {uploadedDocs[requirement.document_type] ? (
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
-                <div className="flex items-center gap-3">
-                  {docPreviews[requirement.document_type] && (
-                    <img 
-                      src={docPreviews[requirement.document_type]} 
-                      alt="Preview" 
-                      className="w-12 h-12 object-cover rounded border"
-                    />
-                  )}
+              <div className="space-y-3">
+                {/* Image Preview */}
+                <div className="relative">
+                  <img 
+                    src={docPreviews[requirement.document_type]} 
+                    alt={`${requirement.document_name} preview`}
+                    className="w-full h-48 object-cover rounded-lg border shadow-sm"
+                  />
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => removeDocument(requirement.document_type)}
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full p-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                {/* File Info */}
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                   <div>
                     <p className="text-sm font-medium text-green-700">
                       {uploadedDocs[requirement.document_type].name}
@@ -139,30 +157,28 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
                       {(uploadedDocs[requirement.document_type].size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
+                  <CheckCircle className="w-5 h-5 text-green-500" />
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => removeDocument(requirement.document_type)}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
               </div>
             ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors">
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
                 <Label htmlFor={`doc-${requirement.document_type}`} className="cursor-pointer">
                   <span className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                    Click to upload {requirement.document_name}
+                    Click to upload image of {requirement.document_name}
                   </span>
-                  <p className="text-xs text-gray-500 mt-1">PDF, JPEG, PNG (max 5MB)</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Supported formats: JPEG, PNG, WebP (max 10MB)
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Take a clear photo or scan of your document
+                  </p>
                 </Label>
                 <Input
                   id={`doc-${requirement.document_type}`}
                   type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) => handleFileUpload(requirement.document_type, e.target.files?.[0] || null)}
+                  accept="image/jpeg,image/png,image/jpg,image/webp"
+                  onChange={(e) => handleImageUpload(requirement.document_type, e.target.files?.[0] || null)}
                   className="hidden"
                 />
               </div>
