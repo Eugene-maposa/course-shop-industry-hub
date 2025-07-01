@@ -27,20 +27,14 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
   const [docPreviews, setDocPreviews] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
-  const handleImageUpload = (docType: string, file: File | null) => {
+  const handleFileUpload = (docType: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    
     if (!file) {
-      const newDocs = { ...uploadedDocs };
-      delete newDocs[docType];
-      setUploadedDocs(newDocs);
-      
-      const newPreviews = { ...docPreviews };
-      delete newPreviews[docType];
-      setDocPreviews(newPreviews);
-      
-      onDocumentsChange(newDocs);
-      calculateProgress(newDocs);
       return;
     }
+
+    console.log(`Attempting to upload file for ${docType}:`, file.name, file.type, file.size);
 
     // Validate file type - only images allowed
     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
@@ -50,6 +44,8 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
         description: "Please upload image files only (JPEG, PNG, WebP).",
         variant: "destructive"
       });
+      // Reset the input
+      event.target.value = '';
       return;
     }
 
@@ -60,22 +56,36 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
         description: "Please upload images smaller than 10MB.",
         variant: "destructive"
       });
+      // Reset the input
+      event.target.value = '';
       return;
     }
 
+    // Update uploaded documents
     const newDocs = { ...uploadedDocs, [docType]: file };
     setUploadedDocs(newDocs);
 
     // Create preview URL for images
     const reader = new FileReader();
     reader.onload = (e) => {
+      const result = e.target?.result as string;
       setDocPreviews(prev => ({
         ...prev,
-        [docType]: e.target?.result as string
+        [docType]: result
       }));
+      console.log(`Preview created for ${docType}`);
+    };
+    reader.onerror = (e) => {
+      console.error(`Error reading file for ${docType}:`, e);
+      toast({
+        title: "File read error",
+        description: "There was an error reading the file. Please try again.",
+        variant: "destructive"
+      });
     };
     reader.readAsDataURL(file);
 
+    // Update parent component
     onDocumentsChange(newDocs);
     calculateProgress(newDocs);
     
@@ -83,6 +93,8 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
       title: "Document uploaded",
       description: `${file.name} has been uploaded successfully.`,
     });
+
+    console.log(`Successfully uploaded ${file.name} for ${docType}`);
   };
 
   const calculateProgress = (docs: Record<string, File>) => {
@@ -90,14 +102,27 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
     const uploadedRequiredDocs = requiredDocs.filter(req => docs[req.document_type]);
     const progress = requiredDocs.length > 0 ? (uploadedRequiredDocs.length / requiredDocs.length) * 100 : 0;
     onProgressChange(progress);
+    console.log(`Progress updated: ${progress}% (${uploadedRequiredDocs.length}/${requiredDocs.length})`);
   };
 
   const removeDocument = (docType: string) => {
-    handleImageUpload(docType, null);
+    const newDocs = { ...uploadedDocs };
+    delete newDocs[docType];
+    setUploadedDocs(newDocs);
+    
+    const newPreviews = { ...docPreviews };
+    delete newPreviews[docType];
+    setDocPreviews(newPreviews);
+    
+    onDocumentsChange(newDocs);
+    calculateProgress(newDocs);
+    
     toast({
       title: "Document removed",
       description: "Document has been removed from your application.",
     });
+
+    console.log(`Document removed for ${docType}`);
   };
 
   return (
@@ -178,7 +203,7 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
                   id={`doc-${requirement.document_type}`}
                   type="file"
                   accept="image/jpeg,image/png,image/jpg,image/webp"
-                  onChange={(e) => handleImageUpload(requirement.document_type, e.target.files?.[0] || null)}
+                  onChange={(e) => handleFileUpload(requirement.document_type, e)}
                   className="hidden"
                 />
               </div>
