@@ -1,14 +1,16 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Shield, Users, Building, Package, Activity, UserPlus, MoreHorizontal, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Shield, Users, Building, Package, Activity, UserPlus, MoreHorizontal, CheckCircle, XCircle, Clock, FileText, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +22,8 @@ const AdminPanel = () => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedShop, setSelectedShop] = useState(null);
+  const [verificationNotes, setVerificationNotes] = useState("");
 
   console.log('AdminPanel render:', { user: user?.email, isAdmin, adminRole, adminLoading, authLoading });
 
@@ -63,20 +67,16 @@ const AdminPanel = () => {
     queryKey: ['admin-stats'],
     queryFn: async () => {
       console.log('Fetching admin stats...');
-      const [shopsResponse, productsResponse] = await Promise.all([
+      const [shopsResponse, productsResponse, adminsResponse] = await Promise.all([
         supabase.from('shops').select('status'),
-        supabase.from('products').select('status')
+        supabase.from('products').select('status'),
+        supabase.from('admin_users').select('*', { count: 'exact', head: true })
       ]);
 
-      console.log('Stats responses:', { shopsResponse, productsResponse });
+      console.log('Stats responses:', { shopsResponse, productsResponse, adminsResponse });
 
       const shops = shopsResponse.data || [];
       const products = productsResponse.data || [];
-
-      // Get user count by counting admin_users as a proxy (since we can't access auth.users directly)
-      const { count: adminCount } = await supabase
-        .from('admin_users')
-        .select('*', { count: 'exact', head: true });
 
       return {
         totalShops: shops.length,
@@ -84,13 +84,13 @@ const AdminPanel = () => {
         activeShops: shops.filter(s => s.status === 'active').length,
         totalProducts: products.length,
         pendingProducts: products.filter(p => p.status === 'pending').length,
-        totalUsers: adminCount || 0 // This will show admin users count as a placeholder
+        totalUsers: adminsResponse.count || 0
       };
     },
     enabled: !!user && isAdmin
   });
 
-  // Fetch shops for approval
+  // Fetch shops for approval including document verification
   const { data: shops = [], isLoading: shopsLoading } = useQuery({
     queryKey: ['admin-shops'],
     queryFn: async () => {
@@ -113,13 +113,28 @@ const AdminPanel = () => {
     enabled: !!user && isAdmin
   });
 
-  // Shop approval mutation
+  // Shop approval mutation with document verification
   const approveShopMutation = useMutation({
-    mutationFn: async ({ shopId, status }: { shopId: string, status: 'active' | 'inactive' }) => {
+    mutationFn: async ({ shopId, status, notes }: { shopId: string, status: 'active' | 'inactive', notes?: string }) => {
       const shop = shops.find(s => s.id === shopId);
+      const updateData: any = { 
+        status, 
+        updated_at: new Date().toISOString(),
+        document_verification_status: status === 'active' ? 'approved' : 'rejected'
+      };
+      
+      if (notes) {
+        updateData.verification_notes = notes;
+      }
+      
+      if (status === 'active') {
+        updateData.verified_by = user.id;
+        updateData.verified_at = new Date().toISOString();
+      }
+
       const { data, error } = await supabase
         .from('shops')
-        .update({ status, updated_at: new Date().toISOString() })
+        .update(updateData)
         .eq('id', shopId)
         .select()
         .single();
@@ -131,8 +146,8 @@ const AdminPanel = () => {
         `Shop ${status === 'active' ? 'approved' : 'rejected'}`,
         'shops',
         shopId,
-        { status: shop?.status },
-        { status }
+        { status: shop?.status, document_verification_status: shop?.document_verification_status },
+        { status, document_verification_status: updateData.document_verification_status }
       );
 
       return data;
@@ -144,6 +159,8 @@ const AdminPanel = () => {
       });
       queryClient.invalidateQueries({ queryKey: ['admin-shops'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      setSelectedShop(null);
+      setVerificationNotes("");
     },
     onError: (error) => {
       toast({
@@ -161,7 +178,13 @@ const AdminPanel = () => {
       const pendingShops = shops.filter(shop => shop.status === 'pending');
       const { data, error } = await supabase
         .from('shops')
-        .update({ status: 'active', updated_at: new Date().toISOString() })
+        .update({ 
+          status: 'active', 
+          updated_at: new Date().toISOString(),
+          document_verification_status: 'approved',
+          verified_by: user.id,
+          verified_at: new Date().toISOString()
+        })
         .in('id', pendingShops.map(shop => shop.id))
         .select();
       
@@ -188,12 +211,12 @@ const AdminPanel = () => {
     }
   });
 
-  const handleApproveShop = (shopId: string) => {
-    approveShopMutation.mutate({ shopId, status: 'active' });
+  const handleApproveShop = (shopId: string, notes?: string) => {
+    approveShopMutation.mutate({ shopId, status: 'active', notes });
   };
 
-  const handleRejectShop = (shopId: string) => {
-    approveShopMutation.mutate({ shopId, status: 'inactive' });
+  const handleRejectShop = (shopId: string, notes?: string) => {
+    approveShopMutation.mutate({ shopId, status: 'inactive', notes });
   };
 
   const getStatusBadge = (status: string) => {
@@ -204,6 +227,19 @@ const AdminPanel = () => {
         return <Badge className="bg-yellow-500 text-white">Pending</Badge>;
       case 'inactive':
         return <Badge className="bg-red-500 text-white">Inactive</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
+  const getDocumentVerificationBadge = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return <Badge className="bg-green-500 text-white">Approved</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-500 text-white">Pending Review</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-500 text-white">Rejected</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -321,7 +357,7 @@ const AdminPanel = () => {
         {/* Shops Management */}
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
-            <CardTitle className="text-white">Shops Management</CardTitle>
+            <CardTitle className="text-white">Shops Management & Document Verification</CardTitle>
           </CardHeader>
           <CardContent>
             {shopsLoading ? (
@@ -334,6 +370,7 @@ const AdminPanel = () => {
                       <TableHead className="text-slate-300">Name</TableHead>
                       <TableHead className="text-slate-300">Industry</TableHead>
                       <TableHead className="text-slate-300">Status</TableHead>
+                      <TableHead className="text-slate-300">Documents</TableHead>
                       <TableHead className="text-slate-300">Created</TableHead>
                       <TableHead className="text-slate-300">Actions</TableHead>
                     </TableRow>
@@ -344,28 +381,112 @@ const AdminPanel = () => {
                         <TableCell className="text-white font-medium">{shop.name}</TableCell>
                         <TableCell className="text-slate-300">{shop.industries?.name || 'N/A'}</TableCell>
                         <TableCell>{getStatusBadge(shop.status)}</TableCell>
+                        <TableCell>{getDocumentVerificationBadge(shop.document_verification_status || 'pending')}</TableCell>
                         <TableCell className="text-slate-300">
                           {new Date(shop.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          {shop.status === 'pending' && (
-                            <div className="flex space-x-2">
-                              <Button
-                                size="sm"
-                                onClick={() => handleApproveShop(shop.id)}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleRejectShop(shop.id)}
-                              >
-                                <XCircle className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          )}
+                          <div className="flex space-x-2">
+                            {/* View Documents Button */}
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setSelectedShop(shop)}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl">
+                                <DialogHeader>
+                                  <DialogTitle className="text-white">Shop Documents - {shop.name}</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  {shop.documents && Object.keys(shop.documents).length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                      {Object.entries(shop.documents).map(([docType, url]) => (
+                                        <Card key={docType} className="bg-slate-700 border-slate-600">
+                                          <CardContent className="p-4">
+                                            <div className="flex items-center justify-between mb-2">
+                                              <span className="text-white font-medium capitalize">
+                                                {docType.replace('_', ' ')}
+                                              </span>
+                                              <FileText className="w-4 h-4 text-blue-400" />
+                                            </div>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              onClick={() => window.open(url as string, '_blank')}
+                                              className="w-full"
+                                            >
+                                              View Document
+                                            </Button>
+                                          </CardContent>
+                                        </Card>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="text-slate-400 text-center py-8">
+                                      No documents uploaded
+                                    </div>
+                                  )}
+                                  
+                                  <div className="space-y-4 mt-6">
+                                    <div>
+                                      <Label className="text-white">Verification Notes</Label>
+                                      <Textarea
+                                        value={verificationNotes}
+                                        onChange={(e) => setVerificationNotes(e.target.value)}
+                                        placeholder="Add notes about document verification..."
+                                        className="bg-slate-700 border-slate-600 text-white"
+                                      />
+                                    </div>
+                                    
+                                    {shop.status === 'pending' && (
+                                      <div className="flex space-x-2">
+                                        <Button
+                                          onClick={() => handleApproveShop(shop.id, verificationNotes)}
+                                          className="bg-green-600 hover:bg-green-700 flex-1"
+                                        >
+                                          <CheckCircle className="w-4 h-4 mr-2" />
+                                          Approve Shop
+                                        </Button>
+                                        <Button
+                                          onClick={() => handleRejectShop(shop.id, verificationNotes)}
+                                          variant="destructive"
+                                          className="flex-1"
+                                        >
+                                          <XCircle className="w-4 h-4 mr-2" />
+                                          Reject Shop
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+
+                            {shop.status === 'pending' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleApproveShop(shop.id)}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleRejectShop(shop.id)}
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

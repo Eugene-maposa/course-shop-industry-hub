@@ -45,7 +45,7 @@ export type Database = {
       admin_users: {
         Row: {
           created_at: string | null
-          created_by: string | null
+          email: string | null
           id: string
           is_active: boolean | null
           role: Database["public"]["Enums"]["admin_role"]
@@ -54,7 +54,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          created_by?: string | null
+          email?: string | null
           id?: string
           is_active?: boolean | null
           role?: Database["public"]["Enums"]["admin_role"]
@@ -63,7 +63,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          created_by?: string | null
+          email?: string | null
           id?: string
           is_active?: boolean | null
           role?: Database["public"]["Enums"]["admin_role"]
@@ -200,11 +200,46 @@ export type Database = {
           },
         ]
       }
+      shop_document_requirements: {
+        Row: {
+          country_code: string | null
+          created_at: string | null
+          description: string | null
+          document_name: string
+          document_type: string
+          id: string
+          is_required: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          country_code?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_name: string
+          document_type: string
+          id?: string
+          is_required?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          country_code?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_name?: string
+          document_type?: string
+          id?: string
+          is_required?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       shops: {
         Row: {
           address: string | null
           created_at: string
           description: string | null
+          document_verification_status: string | null
+          documents: Json | null
           email: string | null
           icon_url: string | null
           id: string
@@ -214,12 +249,17 @@ export type Database = {
           registration_date: string | null
           status: Database["public"]["Enums"]["shop_status"] | null
           updated_at: string
+          verification_notes: string | null
+          verified_at: string | null
+          verified_by: string | null
           website: string | null
         }
         Insert: {
           address?: string | null
           created_at?: string
           description?: string | null
+          document_verification_status?: string | null
+          documents?: Json | null
           email?: string | null
           icon_url?: string | null
           id?: string
@@ -229,12 +269,17 @@ export type Database = {
           registration_date?: string | null
           status?: Database["public"]["Enums"]["shop_status"] | null
           updated_at?: string
+          verification_notes?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
           website?: string | null
         }
         Update: {
           address?: string | null
           created_at?: string
           description?: string | null
+          document_verification_status?: string | null
+          documents?: Json | null
           email?: string | null
           icon_url?: string | null
           id?: string
@@ -244,6 +289,9 @@ export type Database = {
           registration_date?: string | null
           status?: Database["public"]["Enums"]["shop_status"] | null
           updated_at?: string
+          verification_notes?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
           website?: string | null
         }
         Relationships: [

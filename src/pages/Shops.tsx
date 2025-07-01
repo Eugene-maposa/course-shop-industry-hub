@@ -1,13 +1,14 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Filter, MapPin, Phone, Mail, Globe } from "lucide-react";
+import { Search, Filter, MapPin, Phone, Mail, Globe, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import Navbar from "@/components/Navbar";
 import ShopRegistrationForm from "@/components/forms/ShopRegistrationForm";
 import ShopContactModal from "@/components/ShopContactModal";
@@ -83,6 +84,15 @@ const Shops = () => {
           </TabsList>
 
           <TabsContent value="register">
+            <div className="mb-6">
+              <Alert>
+                <Clock className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Shop Registration Process:</strong> After submitting your registration with all required documents, 
+                  your shop will be reviewed by our admin team. You will be notified once your shop is approved and published.
+                </AlertDescription>
+              </Alert>
+            </div>
             <ShopRegistrationForm />
           </TabsContent>
 
@@ -123,6 +133,15 @@ const Shops = () => {
               </div>
             </div>
 
+            {/* Notice for approved shops only */}
+            <div className="mb-6">
+              <Alert>
+                <AlertDescription>
+                  Only approved and verified shops are displayed here. All shops go through our verification process to ensure quality and authenticity.
+                </AlertDescription>
+              </Alert>
+            </div>
+
             {/* Shops Grid */}
             {isLoading ? (
               <div className="text-center py-12">
@@ -134,6 +153,9 @@ const Shops = () => {
                   <Card key={shop.id} className="group bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start mb-2">
+                        <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+                          Verified
+                        </Badge>
                         <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
                           {shop.industries?.name || 'General'}
                         </Badge>
