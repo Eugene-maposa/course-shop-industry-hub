@@ -212,19 +212,6 @@ const ShopRegistrationForm = () => {
     <Card className="max-w-4xl mx-auto">
       <CardHeader className="text-center bg-nust-blue text-white">
         <CardTitle className="text-2xl">Register New Shop - Zimbabwe</CardTitle>
-        <div className="mt-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm">Document Verification Progress</span>
-            <span className="text-sm font-semibold">{Math.round(documentProgress)}%</span>
-          </div>
-          <Progress value={documentProgress} className="w-full bg-blue-200" />
-          {documentProgress === 100 && (
-            <div className="flex items-center justify-center gap-2 mt-2 text-green-200">
-              <CheckCircle className="w-4 h-4" />
-              <span className="text-sm">All required documents uploaded</span>
-            </div>
-          )}
-        </div>
       </CardHeader>
       
       <CardContent className="p-6 space-y-6">
@@ -362,6 +349,26 @@ const ShopRegistrationForm = () => {
           {/* Document Upload Section */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold border-b pb-2">Required Documents</h3>
+            
+            {/* Document Verification Progress */}
+            <div className="bg-blue-50 p-4 rounded-lg border">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-blue-900">Document Verification Progress</span>
+                <span className="text-sm font-semibold text-blue-900">{Math.round(documentProgress)}%</span>
+              </div>
+              <Progress value={documentProgress} className="w-full" />
+              {documentProgress === 100 ? (
+                <div className="flex items-center justify-center gap-2 mt-2 text-green-600">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">All required documents uploaded</span>
+                </div>
+              ) : (
+                <p className="text-xs text-blue-700 mt-2 text-center">
+                  Please upload all required document images to complete your registration
+                </p>
+              )}
+            </div>
+
             <DocumentUpload
               requirements={documentRequirements}
               onDocumentsChange={setDocuments}
