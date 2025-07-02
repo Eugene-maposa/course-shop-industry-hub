@@ -1,11 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, CheckCircle, X, FileImage } from "lucide-react";
+import { Upload, CheckCircle, X, FileImage, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface DocumentRequirement {
@@ -27,6 +26,15 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
   const [docPreviews, setDocPreviews] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
+  // Calculate progress whenever uploaded docs change
+  useEffect(() => {
+    const requiredDocs = requirements.filter(req => req.is_required);
+    const uploadedRequiredDocs = requiredDocs.filter(req => uploadedDocs[req.document_type]);
+    const progress = requiredDocs.length > 0 ? (uploadedRequiredDocs.length / requiredDocs.length) * 100 : 0;
+    onProgressChange(progress);
+    console.log(`Progress updated: ${progress}% (${uploadedRequiredDocs.length}/${requiredDocs.length})`);
+  }, [uploadedDocs, requirements, onProgressChange]);
+
   const handleFileUpload = (docType: string, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     
@@ -36,27 +44,25 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
 
     console.log(`Attempting to upload file for ${docType}:`, file.name, file.type, file.size);
 
-    // Validate file type - only images allowed
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    // Validate file type - allow images and PDFs
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please upload image files only (JPEG, PNG, WebP).",
+        description: "Please upload image files (JPEG, PNG, WebP) or PDF documents.",
         variant: "destructive"
       });
-      // Reset the input
       event.target.value = '';
       return;
     }
 
-    // Validate file size (10MB max for images)
+    // Validate file size (10MB max)
     if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please upload images smaller than 10MB.",
+        description: "Please upload files smaller than 10MB.",
         variant: "destructive"
       });
-      // Reset the input
       event.target.value = '';
       return;
     }
@@ -64,30 +70,29 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
     // Update uploaded documents
     const newDocs = { ...uploadedDocs, [docType]: file };
     setUploadedDocs(newDocs);
-
-    // Create preview URL for images
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setDocPreviews(prev => ({
-        ...prev,
-        [docType]: result
-      }));
-      console.log(`Preview created for ${docType}`);
-    };
-    reader.onerror = (e) => {
-      console.error(`Error reading file for ${docType}:`, e);
-      toast({
-        title: "File read error",
-        description: "There was an error reading the file. Please try again.",
-        variant: "destructive"
-      });
-    };
-    reader.readAsDataURL(file);
-
-    // Update parent component
     onDocumentsChange(newDocs);
-    calculateProgress(newDocs);
+
+    // Create preview URL for images only
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setDocPreviews(prev => ({
+          ...prev,
+          [docType]: result
+        }));
+        console.log(`Preview created for ${docType}`);
+      };
+      reader.onerror = (e) => {
+        console.error(`Error reading file for ${docType}:`, e);
+        toast({
+          title: "File read error",
+          description: "There was an error reading the file. Please try again.",
+          variant: "destructive"
+        });
+      };
+      reader.readAsDataURL(file);
+    }
     
     toast({
       title: "Document uploaded",
@@ -95,14 +100,6 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
     });
 
     console.log(`Successfully uploaded ${file.name} for ${docType}`);
-  };
-
-  const calculateProgress = (docs: Record<string, File>) => {
-    const requiredDocs = requirements.filter(req => req.is_required);
-    const uploadedRequiredDocs = requiredDocs.filter(req => docs[req.document_type]);
-    const progress = requiredDocs.length > 0 ? (uploadedRequiredDocs.length / requiredDocs.length) * 100 : 0;
-    onProgressChange(progress);
-    console.log(`Progress updated: ${progress}% (${uploadedRequiredDocs.length}/${requiredDocs.length})`);
   };
 
   const removeDocument = (docType: string) => {
@@ -115,7 +112,6 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
     setDocPreviews(newPreviews);
     
     onDocumentsChange(newDocs);
-    calculateProgress(newDocs);
     
     toast({
       title: "Document removed",
@@ -125,12 +121,22 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
     console.log(`Document removed for ${docType}`);
   };
 
+  if (!requirements || requirements.length === 0) {
+    return (
+      <div className="text-center p-8 bg-gray-50 rounded-lg">
+        <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-600">No document requirements found for Zimbabwe.</p>
+        <p className="text-sm text-gray-500 mt-2">Please contact support if this is unexpected.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="text-center mb-6">
-        <h3 className="text-lg font-semibold mb-2">Required Document Images for Zimbabwe</h3>
+        <h3 className="text-lg font-semibold mb-2">Upload Required Documents</h3>
         <p className="text-sm text-muted-foreground">
-          Please upload clear images of all required documents to complete your shop registration
+          Please upload clear images or PDF files of all required documents to complete your shop registration
         </p>
       </div>
 
@@ -155,13 +161,23 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
           <CardContent className="pt-0">
             {uploadedDocs[requirement.document_type] ? (
               <div className="space-y-3">
-                {/* Image Preview */}
+                {/* Preview for images or file info for PDFs */}
                 <div className="relative">
-                  <img 
-                    src={docPreviews[requirement.document_type]} 
-                    alt={`${requirement.document_name} preview`}
-                    className="w-full h-48 object-cover rounded-lg border shadow-sm"
-                  />
+                  {docPreviews[requirement.document_type] ? (
+                    <img 
+                      src={docPreviews[requirement.document_type]} 
+                      alt={`${requirement.document_name} preview`}
+                      className="w-full h-48 object-cover rounded-lg border shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-full h-48 bg-gray-100 rounded-lg border shadow-sm flex items-center justify-center">
+                      <div className="text-center">
+                        <FileImage className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-600">PDF Document</p>
+                        <p className="text-xs text-gray-500">{uploadedDocs[requirement.document_type].name}</p>
+                      </div>
+                    </div>
+                  )}
                   <Button
                     size="sm"
                     variant="destructive"
@@ -190,19 +206,19 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
                 <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
                 <Label htmlFor={`doc-${requirement.document_type}`} className="cursor-pointer">
                   <span className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                    Click to upload image of {requirement.document_name}
+                    Click to upload {requirement.document_name}
                   </span>
                   <p className="text-xs text-gray-500 mt-2">
-                    Supported formats: JPEG, PNG, WebP (max 10MB)
+                    Supported formats: Images (JPEG, PNG, WebP) or PDF (max 10MB)
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Take a clear photo or scan of your document
+                    Take a clear photo, scan, or upload PDF of your document
                   </p>
                 </Label>
                 <Input
                   id={`doc-${requirement.document_type}`}
                   type="file"
-                  accept="image/jpeg,image/png,image/jpg,image/webp"
+                  accept="image/jpeg,image/png,image/jpg,image/webp,application/pdf"
                   onChange={(e) => handleFileUpload(requirement.document_type, e)}
                   className="hidden"
                 />

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Upload, X, CheckCircle } from "lucide-react";
+import { Upload, X, CheckCircle, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import DocumentUpload from "@/components/DocumentUpload";
@@ -27,52 +26,107 @@ const ShopRegistrationForm = () => {
   const [iconPreview, setIconPreview] = useState<string | null>(null);
   const [documents, setDocuments] = useState<Record<string, File>>({});
   const [documentProgress, setDocumentProgress] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch industries
-  const { data: industries = [] } = useQuery({
+  const { data: industries = [], isLoading: industriesLoading } = useQuery({
     queryKey: ['industries'],
     queryFn: async () => {
+      console.log('Fetching industries...');
       const { data, error } = await supabase
         .from('industries')
         .select('*')
-        .eq('status', 'active');
-      if (error) throw error;
-      return data;
+        .eq('status', 'active')
+        .order('name');
+      if (error) {
+        console.error('Error fetching industries:', error);
+        throw error;
+      }
+      console.log('Industries fetched:', data);
+      return data || [];
     }
   });
 
   // Fetch document requirements
-  const { data: documentRequirements = [] } = useQuery({
+  const { data: documentRequirements = [], isLoading: requirementsLoading } = useQuery({
     queryKey: ['document-requirements'],
     queryFn: async () => {
+      console.log('Fetching document requirements...');
       const { data, error } = await supabase
         .from('shop_document_requirements')
         .select('*')
         .eq('country_code', 'ZW')
         .order('document_name');
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching document requirements:', error);
+        throw error;
+      }
+      console.log('Document requirements fetched:', data);
+      return data || [];
     }
   });
 
+  const uploadDocumentsToStorage = async (): Promise<Record<string, string>> => {
+    const documentUrls: Record<string, string> = {};
+    
+    for (const [docType, file] of Object.entries(documents)) {
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${docType}.${fileExt}`;
+        
+        console.log(`Uploading document ${docType} as ${fileName}`);
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('shop-icons')
+          .upload(`documents/${fileName}`, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+          
+        if (uploadError) {
+          console.error(`Upload error for ${docType}:`, uploadError);
+          throw new Error(`Failed to upload ${docType}: ${uploadError.message}`);
+        }
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('shop-icons')
+          .getPublicUrl(`documents/${fileName}`);
+          
+        documentUrls[docType] = publicUrl;
+        console.log(`Document ${docType} uploaded successfully:`, publicUrl);
+      } catch (error) {
+        console.error(`Error uploading ${docType}:`, error);
+        throw error;
+      }
+    }
+    
+    return documentUrls;
+  };
+
   const registerShopMutation = useMutation({
     mutationFn: async (shopData: typeof formData & { icon_url?: string; documents: Record<string, string> }) => {
+      console.log('Registering shop with data:', shopData);
       const { data, error } = await supabase
         .from('shops')
         .insert({
           ...shopData,
           status: 'pending',
-          document_verification_status: 'pending'
+          document_verification_status: 'pending',
+          registration_date: new Date().toISOString().split('T')[0]
         })
         .select()
         .single();
-      if (error) throw error;
+      if (error) {
+        console.error('Shop registration error:', error);
+        throw error;
+      }
+      console.log('Shop registered successfully:', data);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Success",
         description: "Shop registered successfully! Your application is pending admin approval."
@@ -91,45 +145,48 @@ const ShopRegistrationForm = () => {
       setIconPreview(null);
       setDocuments({});
       setDocumentProgress(0);
+      setIsSubmitting(false);
       queryClient.invalidateQueries({ queryKey: ['shops'] });
     },
     onError: (error) => {
+      console.error("Shop registration error:", error);
       toast({
         title: "Error",
         description: "Failed to register shop. Please try again.",
         variant: "destructive"
       });
-      console.error("Error registering shop:", error);
+      setIsSubmitting(false);
     }
   });
 
-  const uploadDocumentsToStorage = async (): Promise<Record<string, string>> => {
-    const documentUrls: Record<string, string> = {};
-    
-    for (const [docType, file] of Object.entries(documents)) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${docType}.${fileExt}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('shop-icons')
-        .upload(`documents/${fileName}`, file);
-        
-      if (uploadError) {
-        throw new Error(`Failed to upload ${docType}: ${uploadError.message}`);
-      }
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from('shop-icons')
-        .getPublicUrl(`documents/${fileName}`);
-        
-      documentUrls[docType] = publicUrl;
-    }
-    
-    return documentUrls;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isSubmitting) return;
+    
+    console.log('Form submission started');
+    console.log('Current form data:', formData);
+    console.log('Current documents:', Object.keys(documents));
+    console.log('Document requirements:', documentRequirements);
+    
+    // Validate required fields
+    if (!formData.name.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a shop name.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!formData.industry_id) {
+      toast({
+        title: "Missing Information",
+        description: "Please select an industry.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     // Check if all required documents are uploaded
     const requiredDocs = documentRequirements.filter(req => req.is_required);
@@ -144,20 +201,27 @@ const ShopRegistrationForm = () => {
       return;
     }
     
-    let iconUrl = "";
-    let documentUrls: Record<string, string> = {};
+    setIsSubmitting(true);
     
     try {
+      let iconUrl = "";
+      let documentUrls: Record<string, string> = {};
+      
       // Upload icon if selected
       if (iconFile) {
+        console.log('Uploading shop icon...');
         const fileExt = iconFile.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('shop-icons')
-          .upload(fileName, iconFile);
+          .upload(fileName, iconFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
           
         if (uploadError) {
+          console.error('Icon upload error:', uploadError);
           throw new Error("Failed to upload icon");
         }
         
@@ -166,22 +230,31 @@ const ShopRegistrationForm = () => {
           .getPublicUrl(fileName);
           
         iconUrl = publicUrl;
+        console.log('Icon uploaded successfully:', iconUrl);
       }
       
       // Upload documents
-      documentUrls = await uploadDocumentsToStorage();
+      if (Object.keys(documents).length > 0) {
+        console.log('Uploading documents...');
+        documentUrls = await uploadDocumentsToStorage();
+        console.log('All documents uploaded successfully:', documentUrls);
+      }
       
-      registerShopMutation.mutate({
+      // Register shop
+      await registerShopMutation.mutateAsync({
         ...formData,
         ...(iconUrl && { icon_url: iconUrl }),
         documents: documentUrls
       });
+      
     } catch (error) {
+      console.error('Registration process error:', error);
       toast({
         title: "Upload Error",
         description: error instanceof Error ? error.message : "Failed to upload files",
         variant: "destructive"
       });
+      setIsSubmitting(false);
     }
   };
 
@@ -192,6 +265,29 @@ const ShopRegistrationForm = () => {
   const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file (JPEG, PNG, WebP).",
+          variant: "destructive"
+        });
+        e.target.value = '';
+        return;
+      }
+      
+      // Validate file size (5MB max for icons)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload an image smaller than 5MB.",
+          variant: "destructive"
+        });
+        e.target.value = '';
+        return;
+      }
+      
       setIconFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -206,7 +302,35 @@ const ShopRegistrationForm = () => {
     setIconPreview(null);
   };
 
-  const isFormValid = documentProgress === 100 && formData.name && formData.industry_id;
+  const clearForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      address: "",
+      phone: "",
+      email: "",
+      website: "",
+      industry_id: ""
+    });
+    setIconFile(null);
+    setIconPreview(null);
+    setDocuments({});
+    setDocumentProgress(0);
+  };
+
+  const isFormValid = formData.name.trim() && formData.industry_id && documentProgress === 100;
+
+  if (industriesLoading || requirementsLoading) {
+    return (
+      <Card className="max-w-4xl mx-auto">
+        <CardContent className="p-6">
+          <div className="text-center">
+            <p className="text-lg">Loading registration form...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="max-w-4xl mx-auto">
@@ -284,7 +408,7 @@ const ShopRegistrationForm = () => {
                     className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Upload a logo or icon for your shop (optional)
+                    Upload a logo or icon for your shop (optional, max 5MB)
                   </p>
                 </div>
               </div>
@@ -369,40 +493,37 @@ const ShopRegistrationForm = () => {
               )}
             </div>
 
-            <DocumentUpload
-              requirements={documentRequirements}
-              onDocumentsChange={setDocuments}
-              onProgressChange={setDocumentProgress}
-            />
+            {documentRequirements.length > 0 ? (
+              <DocumentUpload
+                requirements={documentRequirements}
+                onDocumentsChange={setDocuments}
+                onProgressChange={setDocumentProgress}
+              />
+            ) : (
+              <div className="text-center p-8 bg-yellow-50 rounded-lg border border-yellow-200">
+                <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+                <p className="text-yellow-800 font-medium">No document requirements found</p>
+                <p className="text-yellow-700 text-sm mt-2">
+                  Document requirements may still be loading or there might be a configuration issue.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-4 pt-4">
             <Button 
               type="submit" 
               className={`flex-1 ${isFormValid ? 'bg-nust-blue hover:bg-nust-blue-dark' : 'bg-gray-400'}`}
-              disabled={registerShopMutation.isPending || !isFormValid}
+              disabled={isSubmitting || !isFormValid}
             >
-              {registerShopMutation.isPending ? "Registering..." : "Register Shop"}
+              {isSubmitting ? "Registering..." : "Register Shop"}
             </Button>
             <Button 
               type="button" 
               variant="outline" 
               className="flex-1"
-              onClick={() => {
-                setFormData({
-                  name: "",
-                  description: "",
-                  address: "",
-                  phone: "",
-                  email: "",
-                  website: "",
-                  industry_id: ""
-                });
-                setIconFile(null);
-                setIconPreview(null);
-                setDocuments({});
-                setDocumentProgress(0);
-              }}
+              onClick={clearForm}
+              disabled={isSubmitting}
             >
               Clear Form
             </Button>
