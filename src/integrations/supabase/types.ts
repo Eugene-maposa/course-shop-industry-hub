@@ -200,6 +200,39 @@ export type Database = {
           },
         ]
       }
+      prohibited_products: {
+        Row: {
+          category: string
+          country_code: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          keyword: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          country_code?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          keyword: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          country_code?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          keyword?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       shop_document_requirements: {
         Row: {
           country_code: string | null
@@ -330,6 +363,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_product_legality: {
+        Args: { product_name: string; product_description?: string }
+        Returns: {
+          is_legal: boolean
+          violations: string[]
+        }[]
+      }
       create_admin_user: {
         Args: {
           target_user_id: string

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,6 +19,16 @@ const ProductRegistrationForm = () => {
     sku: "",
     product_type_id: "",
     shop_id: ""
+  });
+
+  const [validationStatus, setValidationStatus] = useState<{
+    isChecked: boolean;
+    isLegal: boolean;
+    violations: string[];
+  }>({
+    isChecked: false,
+    isLegal: true,
+    violations: []
   });
 
   const { toast } = useToast();
@@ -58,6 +69,46 @@ const ProductRegistrationForm = () => {
       return data || [];
     }
   });
+
+  // Add product legality check function
+  const checkProductLegality = async (name: string, description: string) => {
+    console.log("Checking product legality for:", name, description);
+    
+    try {
+      const { data, error } = await supabase.rpc('check_product_legality', {
+        product_name: name,
+        product_description: description || ''
+      });
+
+      if (error) {
+        console.error("Error checking product legality:", error);
+        throw error;
+      }
+
+      console.log("Legality check result:", data);
+      
+      if (data && data.length > 0) {
+        const result = data[0];
+        setValidationStatus({
+          isChecked: true,
+          isLegal: result.is_legal,
+          violations: result.violations || []
+        });
+        
+        return result;
+      }
+      
+      return { is_legal: true, violations: [] };
+    } catch (error) {
+      console.error("Failed to check product legality:", error);
+      setValidationStatus({
+        isChecked: true,
+        isLegal: true,
+        violations: []
+      });
+      return { is_legal: true, violations: [] };
+    }
+  };
 
   const registerProductMutation = useMutation({
     mutationFn: async (productData: typeof formData) => {
@@ -107,7 +158,7 @@ const ProductRegistrationForm = () => {
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate required fields
@@ -137,6 +188,18 @@ const ProductRegistrationForm = () => {
       });
       return;
     }
+
+    // Check product legality before submission
+    const legalityCheck = await checkProductLegality(formData.name, formData.description);
+    
+    if (!legalityCheck.is_legal) {
+      toast({
+        title: "Product Registration Blocked",
+        description: `This product contains prohibited content and cannot be registered in Zimbabwe: ${legalityCheck.violations.join(', ')}`,
+        variant: "destructive"
+      });
+      return;
+    }
     
     registerProductMutation.mutate(formData);
   };
@@ -144,11 +207,33 @@ const ProductRegistrationForm = () => {
   const handleInputChange = (field: string, value: string) => {
     console.log(`Updating ${field} to:`, value);
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Reset validation status when name or description changes
+    if (field === 'name' || field === 'description') {
+      setValidationStatus({
+        isChecked: false,
+        isLegal: true,
+        violations: []
+      });
+    }
   };
 
   const handleSelectChange = (field: string) => (value: string) => {
     console.log(`Select ${field} changed to:`, value);
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleValidateProduct = async () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a product name first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    await checkProductLegality(formData.name, formData.description);
   };
 
   return (
@@ -190,6 +275,53 @@ const ProductRegistrationForm = () => {
               placeholder="Enter product description"
               rows={4}
             />
+          </div>
+
+          {/* Product Validation Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Product Legality Check</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleValidateProduct}
+                disabled={!formData.name.trim()}
+              >
+                <Info className="w-4 h-4 mr-2" />
+                Check Product
+              </Button>
+            </div>
+
+            {validationStatus.isChecked && (
+              <Alert className={validationStatus.isLegal ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+                <div className="flex items-center">
+                  {validationStatus.isLegal ? (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                  )}
+                  <AlertDescription className="ml-2">
+                    {validationStatus.isLegal ? (
+                      <span className="text-green-700">
+                        ✅ This product is legal for registration in Zimbabwe
+                      </span>
+                    ) : (
+                      <div className="text-red-700">
+                        <div className="font-medium mb-1">
+                          ❌ This product contains prohibited content and cannot be registered:
+                        </div>
+                        <ul className="list-disc list-inside text-sm">
+                          {validationStatus.violations.map((violation, index) => (
+                            <li key={index}>{violation}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </AlertDescription>
+                </div>
+              </Alert>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -248,7 +380,7 @@ const ProductRegistrationForm = () => {
             <Button 
               type="submit" 
               className="flex-1 bg-nust-blue hover:bg-nust-blue-dark"
-              disabled={registerProductMutation.isPending}
+              disabled={registerProductMutation.isPending || (validationStatus.isChecked && !validationStatus.isLegal)}
             >
               {registerProductMutation.isPending ? "Registering..." : "Register Product"}
             </Button>
@@ -256,14 +388,21 @@ const ProductRegistrationForm = () => {
               type="button" 
               variant="outline" 
               className="flex-1"
-              onClick={() => setFormData({
-                name: "",
-                description: "",
-                price: "",
-                sku: "",
-                product_type_id: "",
-                shop_id: ""
-              })}
+              onClick={() => {
+                setFormData({
+                  name: "",
+                  description: "",
+                  price: "",
+                  sku: "",
+                  product_type_id: "",
+                  shop_id: ""
+                });
+                setValidationStatus({
+                  isChecked: false,
+                  isLegal: true,
+                  violations: []
+                });
+              }}
             >
               Clear Form
             </Button>
