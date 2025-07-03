@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, CheckCircle, X, FileImage, AlertCircle } from "lucide-react";
+import { Upload, CheckCircle, X, FileImage, AlertCircle, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface DocumentRequirement {
@@ -133,19 +133,16 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
 
   return (
     <div className="space-y-4">
-      <div className="text-center mb-6">
-        <h3 className="text-lg font-semibold mb-2">Upload Required Documents</h3>
-        <p className="text-sm text-muted-foreground">
-          Please upload clear images or PDF files of all required documents to complete your shop registration
-        </p>
-      </div>
-
       {requirements.map((requirement) => (
         <Card key={requirement.id} className="border-l-4 border-l-blue-500">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <FileImage className="w-4 h-4" />
+                {uploadedDocs[requirement.document_type]?.type.startsWith('image/') ? (
+                  <FileImage className="w-4 h-4" />
+                ) : (
+                  <FileText className="w-4 h-4" />
+                )}
                 {requirement.document_name}
                 {requirement.is_required && (
                   <span className="text-red-500 text-xs">*</span>
@@ -172,7 +169,7 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
                   ) : (
                     <div className="w-full h-48 bg-gray-100 rounded-lg border shadow-sm flex items-center justify-center">
                       <div className="text-center">
-                        <FileImage className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                        <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                         <p className="text-sm text-gray-600">PDF Document</p>
                         <p className="text-xs text-gray-500">{uploadedDocs[requirement.document_type].name}</p>
                       </div>
@@ -195,7 +192,7 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
                       {uploadedDocs[requirement.document_type].name}
                     </p>
                     <p className="text-xs text-green-600">
-                      {(uploadedDocs[requirement.document_type].size / 1024 / 1024).toFixed(2)} MB
+                      {(uploadedDocs[requirement.document_type].size / 1024 / 1024).toFixed(2)} MB • {uploadedDocs[requirement.document_type].type.includes('pdf') ? 'PDF Document' : 'Image File'}
                     </p>
                   </div>
                   <CheckCircle className="w-5 h-5 text-green-500" />
@@ -212,7 +209,7 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
                     Supported formats: Images (JPEG, PNG, WebP) or PDF (max 10MB)
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Take a clear photo, scan, or upload PDF of your document
+                    Upload a clear image or PDF document for verification
                   </p>
                 </Label>
                 <Input

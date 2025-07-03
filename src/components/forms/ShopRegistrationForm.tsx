@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -132,7 +131,7 @@ const ShopRegistrationForm = () => {
         const fileName = `${docType}_${Date.now()}.${fileExt}`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('shop-icons') // Using existing bucket for now
+          .from('shop-icons')
           .upload(`documents/${fileName}`, file, {
             cacheControl: '3600',
             upsert: false
@@ -476,21 +475,37 @@ const ShopRegistrationForm = () => {
             </div>
           </div>
 
-          {/* Document Upload Section */}
+          {/* Document Verification Progress */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold border-b pb-2 flex-1">Required Documents for Zimbabwe</h3>
+              <h3 className="text-lg font-semibold border-b pb-2 flex-1">Document Verification Progress</h3>
             </div>
             
             {/* Progress Bar */}
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label className="text-sm font-medium">Document Completion Progress</Label>
+                <Label className="text-sm font-medium">Document Completion Status</Label>
                 <span className="text-sm text-muted-foreground">{Math.round(documentProgress)}%</span>
               </div>
-              <Progress value={documentProgress} className="w-full h-2" />
+              <Progress value={documentProgress} className="w-full h-3" />
               <p className="text-xs text-muted-foreground">
-                Upload all required documents to complete your registration
+                Upload all required documents to complete your registration and verify your shop
+              </p>
+            </div>
+          </div>
+
+          {/* Required Documents Upload Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold border-b pb-2 flex-1">Required Documents for Zimbabwe</h3>
+            </div>
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800 mb-2">
+                <strong>Document Requirements:</strong> Please upload clear images or PDF documents for each required document below.
+              </p>
+              <p className="text-xs text-blue-600">
+                Accepted formats: Images (JPEG, PNG, WebP) or PDF documents (max 10MB each)
               </p>
             </div>
 
