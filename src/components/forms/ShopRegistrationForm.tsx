@@ -54,11 +54,12 @@ const ShopRegistrationForm = () => {
   const { data: documentRequirements = [], isLoading: documentsLoading } = useQuery({
     queryKey: ['document-requirements', 'ZW'],
     queryFn: async () => {
-      console.log('Fetching document requirements...');
+      console.log('Fetching Zimbabwe document requirements...');
       const { data, error } = await supabase
         .from('shop_document_requirements')
         .select('*')
         .eq('country_code', 'ZW')
+        .order('is_required', { ascending: false })
         .order('document_name');
       if (error) {
         console.error('Error fetching document requirements:', error);
@@ -190,9 +191,10 @@ const ShopRegistrationForm = () => {
     const missingDocs = requiredDocs.filter(req => !documents[req.document_type]);
     
     if (missingDocs.length > 0) {
+      const missingDocNames = missingDocs.map(doc => doc.document_name).join(', ');
       toast({
-        title: "Missing Documents",
-        description: `Please upload all required documents: ${missingDocs.map(doc => doc.document_name).join(', ')}`,
+        title: "Missing Required Documents",
+        description: `Please upload all required documents: ${missingDocNames}`,
         variant: "destructive"
       });
       return;
@@ -478,35 +480,43 @@ const ShopRegistrationForm = () => {
           {/* Document Verification Progress */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold border-b pb-2 flex-1">Document Verification Progress</h3>
+              <h3 className="text-lg font-semibold border-b pb-2 flex-1">Document Upload Progress</h3>
             </div>
             
             {/* Progress Bar */}
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label className="text-sm font-medium">Document Completion Status</Label>
-                <span className="text-sm text-muted-foreground">{Math.round(documentProgress)}%</span>
+                <Label className="text-sm font-medium">Required Documents Completion</Label>
+                <span className="text-sm font-semibold text-muted-foreground">{Math.round(documentProgress)}%</span>
               </div>
-              <Progress value={documentProgress} className="w-full h-3" />
-              <p className="text-xs text-muted-foreground">
-                Upload all required documents to complete your registration and verify your shop
-              </p>
+              <Progress value={documentProgress} className="w-full h-4" />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Upload all required documents to complete registration</span>
+                <span className={documentProgress === 100 ? "text-green-600 font-medium" : ""}>
+                  {documentProgress === 100 ? "All documents uploaded!" : "Upload remaining documents"}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Required Documents Upload Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold border-b pb-2 flex-1">Required Documents for Zimbabwe</h3>
+              <h3 className="text-lg font-semibold border-b pb-2 flex-1">Business Registration Documents</h3>
             </div>
             
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800 mb-2">
-                <strong>Document Requirements:</strong> Please upload clear images or PDF documents for each required document below.
-              </p>
-              <p className="text-xs text-blue-600">
-                Accepted formats: Images (JPEG, PNG, WebP) or PDF documents (max 10MB each)
-              </p>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800 mb-1">
+                    Zimbabwe Business Registration Requirements
+                  </p>
+                  <p className="text-xs text-amber-700">
+                    Please upload all required business documents. These documents will be verified by our team to ensure your shop meets regulatory requirements.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <DocumentUpload 

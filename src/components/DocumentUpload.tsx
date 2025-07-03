@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, CheckCircle, X, FileImage, AlertCircle, FileText } from "lucide-react";
+import { Upload, CheckCircle, X, FileImage, AlertCircle, FileText, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface DocumentRequirement {
@@ -132,98 +132,145 @@ const DocumentUpload = ({ requirements, onDocumentsChange, onProgressChange }: D
   }
 
   return (
-    <div className="space-y-4">
-      {requirements.map((requirement) => (
-        <Card key={requirement.id} className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                {uploadedDocs[requirement.document_type]?.type.startsWith('image/') ? (
-                  <FileImage className="w-4 h-4" />
-                ) : (
-                  <FileText className="w-4 h-4" />
-                )}
-                {requirement.document_name}
-                {requirement.is_required && (
-                  <span className="text-red-500 text-xs">*</span>
-                )}
-              </CardTitle>
-              {uploadedDocs[requirement.document_type] && (
-                <CheckCircle className="w-5 h-5 text-green-500" />
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">{requirement.description}</p>
-          </CardHeader>
-          
-          <CardContent className="pt-0">
-            {uploadedDocs[requirement.document_type] ? (
-              <div className="space-y-3">
-                {/* Preview for images or file info for PDFs */}
-                <div className="relative">
-                  {docPreviews[requirement.document_type] ? (
-                    <img 
-                      src={docPreviews[requirement.document_type]} 
-                      alt={`${requirement.document_name} preview`}
-                      className="w-full h-48 object-cover rounded-lg border shadow-sm"
-                    />
+    <div className="space-y-6">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h4 className="font-semibold text-blue-800 mb-2">Document Upload Instructions</h4>
+        <ul className="text-sm text-blue-700 space-y-1">
+          <li>• Upload clear, readable images or PDF documents</li>
+          <li>• Accepted formats: JPEG, PNG, WebP images or PDF files</li>
+          <li>• Maximum file size: 10MB per document</li>
+          <li>• Required documents are marked with a red asterisk (*)</li>
+          <li>• Ensure all document text is clearly visible</li>
+        </ul>
+      </div>
+
+      <div className="grid gap-6">
+        {requirements.map((requirement) => (
+          <Card key={requirement.id} className={`border-l-4 ${requirement.is_required ? 'border-l-red-500' : 'border-l-blue-500'}`}>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-medium flex items-center gap-2">
+                  {uploadedDocs[requirement.document_type]?.type.startsWith('image/') ? (
+                    <FileImage className="w-5 h-5 text-blue-600" />
+                  ) : uploadedDocs[requirement.document_type] ? (
+                    <FileText className="w-5 h-5 text-blue-600" />
                   ) : (
-                    <div className="w-full h-48 bg-gray-100 rounded-lg border shadow-sm flex items-center justify-center">
-                      <div className="text-center">
-                        <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-600">PDF Document</p>
-                        <p className="text-xs text-gray-500">{uploadedDocs[requirement.document_type].name}</p>
-                      </div>
-                    </div>
+                    <Upload className="w-5 h-5 text-gray-400" />
                   )}
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => removeDocument(requirement.document_type)}
-                    className="absolute top-2 right-2 w-8 h-8 rounded-full p-0"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-                
-                {/* File Info */}
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
-                  <div>
-                    <p className="text-sm font-medium text-green-700">
-                      {uploadedDocs[requirement.document_type].name}
-                    </p>
-                    <p className="text-xs text-green-600">
-                      {(uploadedDocs[requirement.document_type].size / 1024 / 1024).toFixed(2)} MB • {uploadedDocs[requirement.document_type].type.includes('pdf') ? 'PDF Document' : 'Image File'}
-                    </p>
+                  {requirement.document_name}
+                  {requirement.is_required && (
+                    <span className="text-red-500 text-sm font-bold">*</span>
+                  )}
+                </CardTitle>
+                {uploadedDocs[requirement.document_type] && (
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">{requirement.description}</p>
+              {requirement.is_required && (
+                <p className="text-xs text-red-600 font-medium">This document is required for shop registration</p>
+              )}
+            </CardHeader>
+            
+            <CardContent className="pt-0">
+              {uploadedDocs[requirement.document_type] ? (
+                <div className="space-y-4">
+                  {/* Document Preview */}
+                  <div className="relative">
+                    {docPreviews[requirement.document_type] ? (
+                      <img 
+                        src={docPreviews[requirement.document_type]} 
+                        alt={`${requirement.document_name} preview`}
+                        className="w-full h-64 object-contain rounded-lg border-2 border-gray-200 bg-gray-50"
+                      />
+                    ) : (
+                      <div className="w-full h-64 bg-gray-50 rounded-lg border-2 border-gray-200 flex items-center justify-center">
+                        <div className="text-center">
+                          <FileText className="w-16 h-16 text-gray-400 mx-auto mb-3" />
+                          <p className="text-lg font-medium text-gray-600">PDF Document</p>
+                          <p className="text-sm text-gray-500 mt-1">{uploadedDocs[requirement.document_type].name}</p>
+                        </div>
+                      </div>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => removeDocument(requirement.document_type)}
+                      className="absolute top-2 right-2 w-8 h-8 rounded-full p-0 shadow-lg"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  
+                  {/* File Info */}
+                  <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border-2 border-green-200">
+                    <div className="flex-1">
+                      <p className="font-medium text-green-800">
+                        {uploadedDocs[requirement.document_type].name}
+                      </p>
+                      <p className="text-sm text-green-600 mt-1">
+                        Size: {(uploadedDocs[requirement.document_type].size / 1024 / 1024).toFixed(2)} MB • 
+                        Type: {uploadedDocs[requirement.document_type].type.includes('pdf') ? 'PDF Document' : 'Image File'}
+                      </p>
+                    </div>
+                    <CheckCircle className="w-6 h-6 text-green-600 ml-3" />
+                  </div>
+
+                  {/* Replace Document Button */}
+                  <div className="flex justify-center">
+                    <Label htmlFor={`replace-${requirement.document_type}`} className="cursor-pointer">
+                      <Button variant="outline" size="sm" className="flex items-center gap-2" asChild>
+                        <span>
+                          <Upload className="w-4 h-4" />
+                          Replace Document
+                        </span>
+                      </Button>
+                    </Label>
+                    <Input
+                      id={`replace-${requirement.document_type}`}
+                      type="file"
+                      accept="image/jpeg,image/png,image/jpg,image/webp,application/pdf"
+                      onChange={(e) => handleFileUpload(requirement.document_type, e)}
+                      className="hidden"
+                    />
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
-                <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-                <Label htmlFor={`doc-${requirement.document_type}`} className="cursor-pointer">
-                  <span className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                    Click to upload {requirement.document_name}
-                  </span>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Supported formats: Images (JPEG, PNG, WebP) or PDF (max 10MB)
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Upload a clear image or PDF document for verification
-                  </p>
-                </Label>
-                <Input
-                  id={`doc-${requirement.document_type}`}
-                  type="file"
-                  accept="image/jpeg,image/png,image/jpg,image/webp,application/pdf"
-                  onChange={(e) => handleFileUpload(requirement.document_type, e)}
-                  className="hidden"
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                      <Plus className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <Label htmlFor={`doc-${requirement.document_type}`} className="cursor-pointer">
+                      <Button variant="outline" size="lg" className="mb-3" asChild>
+                        <span className="flex items-center gap-2">
+                          <Upload className="w-5 h-5" />
+                          Upload {requirement.document_name}
+                        </span>
+                      </Button>
+                    </Label>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Click to browse and select your document
+                    </p>
+                    <div className="text-xs text-gray-500 space-y-1">
+                      <p>Supported formats: Images (JPEG, PNG, WebP) or PDF</p>
+                      <p>Maximum file size: 10MB</p>
+                      <p>Ensure document is clear and readable</p>
+                    </div>
+                  </div>
+                  <Input
+                    id={`doc-${requirement.document_type}`}
+                    type="file"
+                    accept="image/jpeg,image/png,image/jpg,image/webp,application/pdf"
+                    onChange={(e) => handleFileUpload(requirement.document_type, e)}
+                    className="hidden"
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
