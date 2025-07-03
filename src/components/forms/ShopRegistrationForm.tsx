@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import DocumentUpload from "@/components/DocumentUpload";
 
 const ShopRegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -23,6 +25,8 @@ const ShopRegistrationForm = () => {
   });
   const [iconFile, setIconFile] = useState<File | null>(null);
   const [iconPreview, setIconPreview] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<Record<string, File>>({});
+  const [documentProgress, setDocumentProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { toast } = useToast();
@@ -47,15 +51,35 @@ const ShopRegistrationForm = () => {
     }
   });
 
+  // Fetch document requirements for Zimbabwe
+  const { data: documentRequirements = [], isLoading: documentsLoading } = useQuery({
+    queryKey: ['document-requirements', 'ZW'],
+    queryFn: async () => {
+      console.log('Fetching document requirements...');
+      const { data, error } = await supabase
+        .from('shop_document_requirements')
+        .select('*')
+        .eq('country_code', 'ZW')
+        .order('document_name');
+      if (error) {
+        console.error('Error fetching document requirements:', error);
+        throw error;
+      }
+      console.log('Document requirements fetched:', data);
+      return data || [];
+    }
+  });
+
   const registerShopMutation = useMutation({
-    mutationFn: async (shopData: typeof formData & { icon_url?: string }) => {
+    mutationFn: async (shopData: typeof formData & { icon_url?: string; documents?: Record<string, string> }) => {
       console.log('Registering shop with data:', shopData);
       const { data, error } = await supabase
         .from('shops')
         .insert({
           ...shopData,
           status: 'pending',
-          registration_date: new Date().toISOString().split('T')[0]
+          registration_date: new Date().toISOString().split('T')[0],
+          document_verification_status: 'pending'
         })
         .select()
         .single();
@@ -69,7 +93,7 @@ const ShopRegistrationForm = () => {
     onSuccess: (data) => {
       toast({
         title: "Success",
-        description: "Shop registered successfully! Your application is pending admin approval."
+        description: "Shop registered successfully! Your application and documents are pending admin approval."
       });
       // Reset form
       setFormData({
@@ -83,6 +107,8 @@ const ShopRegistrationForm = () => {
       });
       setIconFile(null);
       setIconPreview(null);
+      setDocuments({});
+      setDocumentProgress(0);
       setIsSubmitting(false);
       queryClient.invalidateQueries({ queryKey: ['shops'] });
     },
@@ -97,6 +123,41 @@ const ShopRegistrationForm = () => {
     }
   });
 
+  const uploadDocumentsToStorage = async (documents: Record<string, File>) => {
+    const documentUrls: Record<string, string> = {};
+    
+    for (const [docType, file] of Object.entries(documents)) {
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${docType}_${Date.now()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('shop-icons') // Using existing bucket for now
+          .upload(`documents/${fileName}`, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+          
+        if (uploadError) {
+          console.error(`Document upload error for ${docType}:`, uploadError);
+          throw new Error(`Failed to upload ${docType}`);
+        }
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('shop-icons')
+          .getPublicUrl(`documents/${fileName}`);
+          
+        documentUrls[docType] = publicUrl;
+        console.log(`Document uploaded successfully for ${docType}:`, publicUrl);
+      } catch (error) {
+        console.error(`Error uploading document ${docType}:`, error);
+        throw error;
+      }
+    }
+    
+    return documentUrls;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -104,6 +165,7 @@ const ShopRegistrationForm = () => {
     
     console.log('Form submission started');
     console.log('Current form data:', formData);
+    console.log('Documents:', Object.keys(documents));
     
     // Validate required fields
     if (!formData.name.trim()) {
@@ -123,11 +185,25 @@ const ShopRegistrationForm = () => {
       });
       return;
     }
+
+    // Check if all required documents are uploaded
+    const requiredDocs = documentRequirements.filter(req => req.is_required);
+    const missingDocs = requiredDocs.filter(req => !documents[req.document_type]);
+    
+    if (missingDocs.length > 0) {
+      toast({
+        title: "Missing Documents",
+        description: `Please upload all required documents: ${missingDocs.map(doc => doc.document_name).join(', ')}`,
+        variant: "destructive"
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     
     try {
       let iconUrl = "";
+      let documentUrls: Record<string, string> = {};
       
       // Upload icon if selected
       if (iconFile) {
@@ -154,11 +230,19 @@ const ShopRegistrationForm = () => {
         iconUrl = publicUrl;
         console.log('Icon uploaded successfully:', iconUrl);
       }
+
+      // Upload documents
+      if (Object.keys(documents).length > 0) {
+        console.log('Uploading documents...');
+        documentUrls = await uploadDocumentsToStorage(documents);
+        console.log('All documents uploaded successfully');
+      }
       
       // Register shop
       await registerShopMutation.mutateAsync({
         ...formData,
-        ...(iconUrl && { icon_url: iconUrl })
+        ...(iconUrl && { icon_url: iconUrl }),
+        ...(Object.keys(documentUrls).length > 0 && { documents: documentUrls })
       });
       
     } catch (error) {
@@ -216,6 +300,14 @@ const ShopRegistrationForm = () => {
     setIconPreview(null);
   };
 
+  const handleDocumentsChange = (newDocuments: Record<string, File>) => {
+    setDocuments(newDocuments);
+  };
+
+  const handleProgressChange = (progress: number) => {
+    setDocumentProgress(progress);
+  };
+
   const clearForm = () => {
     setFormData({
       name: "",
@@ -228,11 +320,13 @@ const ShopRegistrationForm = () => {
     });
     setIconFile(null);
     setIconPreview(null);
+    setDocuments({});
+    setDocumentProgress(0);
   };
 
-  const isFormValid = formData.name.trim() && formData.industry_id;
+  const isFormValid = formData.name.trim() && formData.industry_id && documentProgress === 100;
 
-  if (industriesLoading) {
+  if (industriesLoading || documentsLoading) {
     return (
       <Card className="max-w-4xl mx-auto">
         <CardContent className="p-6">
@@ -380,6 +474,31 @@ const ShopRegistrationForm = () => {
                 placeholder="Enter website URL"
               />
             </div>
+          </div>
+
+          {/* Document Upload Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold border-b pb-2 flex-1">Required Documents for Zimbabwe</h3>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="text-sm font-medium">Document Completion Progress</Label>
+                <span className="text-sm text-muted-foreground">{Math.round(documentProgress)}%</span>
+              </div>
+              <Progress value={documentProgress} className="w-full h-2" />
+              <p className="text-xs text-muted-foreground">
+                Upload all required documents to complete your registration
+              </p>
+            </div>
+
+            <DocumentUpload 
+              requirements={documentRequirements}
+              onDocumentsChange={handleDocumentsChange}
+              onProgressChange={handleProgressChange}
+            />
           </div>
 
           <div className="flex gap-4 pt-4">
