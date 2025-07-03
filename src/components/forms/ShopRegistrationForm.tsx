@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -6,11 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Upload, X, CheckCircle, AlertCircle } from "lucide-react";
+import { Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import DocumentUpload from "@/components/DocumentUpload";
 
 const ShopRegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -24,8 +23,6 @@ const ShopRegistrationForm = () => {
   });
   const [iconFile, setIconFile] = useState<File | null>(null);
   const [iconPreview, setIconPreview] = useState<string | null>(null);
-  const [documents, setDocuments] = useState<Record<string, File>>({});
-  const [documentProgress, setDocumentProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { toast } = useToast();
@@ -50,71 +47,14 @@ const ShopRegistrationForm = () => {
     }
   });
 
-  // Fetch document requirements
-  const { data: documentRequirements = [], isLoading: requirementsLoading } = useQuery({
-    queryKey: ['document-requirements'],
-    queryFn: async () => {
-      console.log('Fetching document requirements...');
-      const { data, error } = await supabase
-        .from('shop_document_requirements')
-        .select('*')
-        .eq('country_code', 'ZW')
-        .order('document_name');
-      if (error) {
-        console.error('Error fetching document requirements:', error);
-        throw error;
-      }
-      console.log('Document requirements fetched:', data);
-      return data || [];
-    }
-  });
-
-  const uploadDocumentsToStorage = async (): Promise<Record<string, string>> => {
-    const documentUrls: Record<string, string> = {};
-    
-    for (const [docType, file] of Object.entries(documents)) {
-      try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${docType}.${fileExt}`;
-        
-        console.log(`Uploading document ${docType} as ${fileName}`);
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('shop-icons')
-          .upload(`documents/${fileName}`, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-          
-        if (uploadError) {
-          console.error(`Upload error for ${docType}:`, uploadError);
-          throw new Error(`Failed to upload ${docType}: ${uploadError.message}`);
-        }
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('shop-icons')
-          .getPublicUrl(`documents/${fileName}`);
-          
-        documentUrls[docType] = publicUrl;
-        console.log(`Document ${docType} uploaded successfully:`, publicUrl);
-      } catch (error) {
-        console.error(`Error uploading ${docType}:`, error);
-        throw error;
-      }
-    }
-    
-    return documentUrls;
-  };
-
   const registerShopMutation = useMutation({
-    mutationFn: async (shopData: typeof formData & { icon_url?: string; documents: Record<string, string> }) => {
+    mutationFn: async (shopData: typeof formData & { icon_url?: string }) => {
       console.log('Registering shop with data:', shopData);
       const { data, error } = await supabase
         .from('shops')
         .insert({
           ...shopData,
           status: 'pending',
-          document_verification_status: 'pending',
           registration_date: new Date().toISOString().split('T')[0]
         })
         .select()
@@ -143,8 +83,6 @@ const ShopRegistrationForm = () => {
       });
       setIconFile(null);
       setIconPreview(null);
-      setDocuments({});
-      setDocumentProgress(0);
       setIsSubmitting(false);
       queryClient.invalidateQueries({ queryKey: ['shops'] });
     },
@@ -166,8 +104,6 @@ const ShopRegistrationForm = () => {
     
     console.log('Form submission started');
     console.log('Current form data:', formData);
-    console.log('Current documents:', Object.keys(documents));
-    console.log('Document requirements:', documentRequirements);
     
     // Validate required fields
     if (!formData.name.trim()) {
@@ -188,24 +124,10 @@ const ShopRegistrationForm = () => {
       return;
     }
     
-    // Check if all required documents are uploaded
-    const requiredDocs = documentRequirements.filter(req => req.is_required);
-    const missingDocs = requiredDocs.filter(req => !documents[req.document_type]);
-    
-    if (missingDocs.length > 0) {
-      toast({
-        title: "Missing Documents",
-        description: `Please upload all required documents: ${missingDocs.map(doc => doc.document_name).join(', ')}`,
-        variant: "destructive"
-      });
-      return;
-    }
-    
     setIsSubmitting(true);
     
     try {
       let iconUrl = "";
-      let documentUrls: Record<string, string> = {};
       
       // Upload icon if selected
       if (iconFile) {
@@ -233,18 +155,10 @@ const ShopRegistrationForm = () => {
         console.log('Icon uploaded successfully:', iconUrl);
       }
       
-      // Upload documents
-      if (Object.keys(documents).length > 0) {
-        console.log('Uploading documents...');
-        documentUrls = await uploadDocumentsToStorage();
-        console.log('All documents uploaded successfully:', documentUrls);
-      }
-      
       // Register shop
       await registerShopMutation.mutateAsync({
         ...formData,
-        ...(iconUrl && { icon_url: iconUrl }),
-        documents: documentUrls
+        ...(iconUrl && { icon_url: iconUrl })
       });
       
     } catch (error) {
@@ -314,13 +228,11 @@ const ShopRegistrationForm = () => {
     });
     setIconFile(null);
     setIconPreview(null);
-    setDocuments({});
-    setDocumentProgress(0);
   };
 
-  const isFormValid = formData.name.trim() && formData.industry_id && documentProgress === 100;
+  const isFormValid = formData.name.trim() && formData.industry_id;
 
-  if (industriesLoading || requirementsLoading) {
+  if (industriesLoading) {
     return (
       <Card className="max-w-4xl mx-auto">
         <CardContent className="p-6">
@@ -468,46 +380,6 @@ const ShopRegistrationForm = () => {
                 placeholder="Enter website URL"
               />
             </div>
-          </div>
-
-          {/* Document Upload Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Required Documents</h3>
-            
-            {/* Document Verification Progress */}
-            <div className="bg-blue-50 p-4 rounded-lg border">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-blue-900">Document Verification Progress</span>
-                <span className="text-sm font-semibold text-blue-900">{Math.round(documentProgress)}%</span>
-              </div>
-              <Progress value={documentProgress} className="w-full" />
-              {documentProgress === 100 ? (
-                <div className="flex items-center justify-center gap-2 mt-2 text-green-600">
-                  <CheckCircle className="w-4 h-4" />
-                  <span className="text-sm font-medium">All required documents uploaded</span>
-                </div>
-              ) : (
-                <p className="text-xs text-blue-700 mt-2 text-center">
-                  Please upload all required document images to complete your registration
-                </p>
-              )}
-            </div>
-
-            {documentRequirements.length > 0 ? (
-              <DocumentUpload
-                requirements={documentRequirements}
-                onDocumentsChange={setDocuments}
-                onProgressChange={setDocumentProgress}
-              />
-            ) : (
-              <div className="text-center p-8 bg-yellow-50 rounded-lg border border-yellow-200">
-                <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-                <p className="text-yellow-800 font-medium">No document requirements found</p>
-                <p className="text-yellow-700 text-sm mt-2">
-                  Document requirements may still be loading or there might be a configuration issue.
-                </p>
-              </div>
-            )}
           </div>
 
           <div className="flex gap-4 pt-4">

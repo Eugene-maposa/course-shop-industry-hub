@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Filter, MapPin, Phone, Mail, Globe, Clock } from "lucide-react";
+import { Search, Filter, MapPin, Phone, Mail, Globe } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,10 +86,9 @@ const Shops = () => {
           <TabsContent value="register">
             <div className="mb-6">
               <Alert>
-                <Clock className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Shop Registration Process:</strong> After submitting your registration with all required documents, 
-                  your shop will be reviewed by our admin team. You will be notified once your shop is approved and published.
+                  <strong>Shop Registration:</strong> Complete the form below to register your shop. 
+                  Your shop will be reviewed by our admin team and you will be notified once it's approved and published.
                 </AlertDescription>
               </Alert>
             </div>
