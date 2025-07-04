@@ -1,5 +1,5 @@
 
-import { HelpCircle, Mail, Phone, MessageCircle, FileText, Video } from "lucide-react";
+import { HelpCircle, Mail, Phone, MessageCircle, FileText, Video, MapPin, Clock, Globe } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -88,7 +88,7 @@ const Help = () => {
         </div>
 
         {/* Contact Support */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-nust-blue mb-4">Need More Help?</h2>
             <p className="text-gray-600 text-lg">
@@ -129,6 +129,140 @@ const Help = () => {
                 </Button>
               </CardContent>
             </Card>
+          </div>
+        </div>
+
+        {/* Full Contact Information Section */}
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-nust-blue mb-4">Contact Us</h2>
+            <p className="text-gray-600 text-lg">
+              Ministry of Industry and Commerce - Zimbabwe
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Physical Address */}
+            <Card className="border border-gray-200">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <MapPin className="w-6 h-6 text-nust-blue mr-3" />
+                  <h3 className="text-lg font-semibold text-nust-blue">Physical Address</h3>
+                </div>
+                <div className="space-y-2 text-gray-700">
+                  <p className="font-medium">Mukwati Building</p>
+                  <p>Corner 4th Street/Central Avenue</p>
+                  <p>Harare, Zimbabwe</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Postal Address */}
+            <Card className="border border-gray-200">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <Mail className="w-6 h-6 text-nust-blue mr-3" />
+                  <h3 className="text-lg font-semibold text-nust-blue">Postal Address</h3>
+                </div>
+                <div className="space-y-2 text-gray-700">
+                  <p>P.O. Box CY 708</p>
+                  <p>Causeway</p>
+                  <p>Harare, Zimbabwe</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Contact Numbers */}
+            <Card className="border border-gray-200">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <Phone className="w-6 h-6 text-nust-blue mr-3" />
+                  <h3 className="text-lg font-semibold text-nust-blue">Phone & Fax</h3>
+                </div>
+                <div className="space-y-2 text-gray-700">
+                  <p><strong>Main Line:</strong> +263 4 703 001-9</p>
+                  <p><strong>Switchboard:</strong> +263 4 703 000</p>
+                  <p><strong>Fax:</strong> +263 4 728 695</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Email Contacts */}
+            <Card className="border border-gray-200">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <Mail className="w-6 h-6 text-nust-blue mr-3" />
+                  <h3 className="text-lg font-semibold text-nust-blue">Email Contacts</h3>
+                </div>
+                <div className="space-y-2 text-gray-700">
+                  <p><strong>General Inquiries:</strong></p>
+                  <p className="text-blue-600">info@mic.gov.zw</p>
+                  <p><strong>Product Registration:</strong></p>
+                  <p className="text-blue-600">products@mic.gov.zw</p>
+                  <p><strong>Technical Support:</strong></p>
+                  <p className="text-blue-600">support@mic.gov.zw</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Office Hours */}
+            <Card className="border border-gray-200">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <Clock className="w-6 h-6 text-nust-blue mr-3" />
+                  <h3 className="text-lg font-semibold text-nust-blue">Office Hours</h3>
+                </div>
+                <div className="space-y-2 text-gray-700">
+                  <p><strong>Monday - Friday:</strong></p>
+                  <p>8:00 AM - 4:30 PM</p>
+                  <p><strong>Saturday - Sunday:</strong></p>
+                  <p>Closed</p>
+                  <p className="text-sm text-gray-500 mt-3">*Public holidays excluded</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Website & Online Services */}
+            <Card className="border border-gray-200">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <Globe className="w-6 h-6 text-nust-blue mr-3" />
+                  <h3 className="text-lg font-semibold text-nust-blue">Online Services</h3>
+                </div>
+                <div className="space-y-2 text-gray-700">
+                  <p><strong>Official Website:</strong></p>
+                  <a 
+                    href="https://www.mic.gov.zw" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline block"
+                  >
+                    www.mic.gov.zw
+                  </a>
+                  <p><strong>Online Portal:</strong></p>
+                  <p className="text-blue-600">portal.mic.gov.zw</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Additional Information */}
+          <div className="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 className="text-lg font-semibold text-nust-blue mb-3">Important Notice</h3>
+            <div className="text-gray-700 space-y-2">
+              <p>
+                • For urgent matters outside office hours, please send an email to our support team
+              </p>
+              <p>
+                • All product registration applications must be submitted through the official online portal
+              </p>
+              <p>
+                • Physical visits to our offices require prior appointment for specialized services
+              </p>
+              <p>
+                • Document verification and approval processes may take 5-10 business days
+              </p>
+            </div>
           </div>
         </div>
       </div>
