@@ -214,7 +214,7 @@ const Index = () => {
       <footer className="bg-nust-blue text-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Main Footer Content */}
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
+          <div className="grid md:grid-cols-2 gap-8 mb-8">
             {/* Brand Section */}
             <div>
               <div className="flex items-center space-x-2 mb-4">
@@ -223,31 +223,9 @@ const Index = () => {
                 </div>
                 <span className="text-xl font-bold">ProductHub</span>
               </div>
-              <p className="text-gray-200 mb-4">
-                Official product registration system for the Ministry of Industry and Commerce, Zimbabwe
-              </p>
               <p className="text-sm text-gray-300">
                 Empowering Zimbabwean businesses with intelligent product management solutions
               </p>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-              <div className="space-y-2 text-sm">
-                <Link to="/products" className="block text-gray-200 hover:text-white transition-colors">
-                  Register Product
-                </Link>
-                <Link to="/shops" className="block text-gray-200 hover:text-white transition-colors">
-                  Register Shop
-                </Link>
-                <Link to="/industries" className="block text-gray-200 hover:text-white transition-colors">
-                  Register Industry
-                </Link>
-                <Link to="/help" className="block text-gray-200 hover:text-white transition-colors">
-                  Help & Support
-                </Link>
-              </div>
             </div>
 
             {/* Contact Information */}
@@ -255,7 +233,8 @@ const Index = () => {
               <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
               <div className="space-y-2 text-sm text-gray-200">
                 <p>Ministry of Industry and Commerce</p>
-                <p>Private Bag 7708, Causeway</p>
+                <p>Mukwati Building, Corner 4th Street/Central Avenue</p>
+                <p>P.O. Box CY 708, Causeway</p>
                 <p>Harare, Zimbabwe</p>
                 <p className="mt-3">
                   <strong>Phone:</strong> +263 4 703 001-9
