@@ -211,21 +211,98 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-nust-blue text-white py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <Package className="w-5 h-5 text-nust-blue" />
+      <footer className="bg-nust-blue text-white py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Main Footer Content */}
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
+            {/* Brand Section */}
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                  <Package className="w-5 h-5 text-nust-blue" />
+                </div>
+                <span className="text-xl font-bold">ProductHub</span>
+              </div>
+              <p className="text-gray-200 mb-4">
+                Official product registration system for the Ministry of Industry and Commerce, Zimbabwe
+              </p>
+              <p className="text-sm text-gray-300">
+                Empowering Zimbabwean businesses with intelligent product management solutions
+              </p>
             </div>
-            <span className="text-xl font-bold">ProductHub</span>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+              <div className="space-y-2 text-sm">
+                <Link to="/products" className="block text-gray-200 hover:text-white transition-colors">
+                  Register Product
+                </Link>
+                <Link to="/shops" className="block text-gray-200 hover:text-white transition-colors">
+                  Register Shop
+                </Link>
+                <Link to="/industries" className="block text-gray-200 hover:text-white transition-colors">
+                  Register Industry
+                </Link>
+                <Link to="/help" className="block text-gray-200 hover:text-white transition-colors">
+                  Help & Support
+                </Link>
+              </div>
+            </div>
+
+            {/* Contact Information */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+              <div className="space-y-2 text-sm text-gray-200">
+                <p>Ministry of Industry and Commerce</p>
+                <p>Private Bag 7708, Causeway</p>
+                <p>Harare, Zimbabwe</p>
+                <p className="mt-3">
+                  <strong>Phone:</strong> +263 4 703 001-9
+                </p>
+                <p>
+                  <strong>Email:</strong> info@mic.gov.zw
+                </p>
+                <p>
+                  <strong>Website:</strong> www.mic.gov.zw
+                </p>
+              </div>
+            </div>
           </div>
-          <p className="text-gray-200 mb-4">
-            Empowering businesses with intelligent product management solutions
-          </p>
-          <div className="flex justify-center space-x-6 text-sm text-gray-200">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-white transition-colors">Contact</a>
+
+          {/* Bottom Footer */}
+          <div className="border-t border-blue-600 pt-6">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+              <div className="text-sm text-gray-200">
+                2025 © All rights reserved by EMAPS
+              </div>
+              <div className="flex space-x-6 text-sm">
+                <a 
+                  href="https://www.mic.gov.zw/privacy-policy" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-200 hover:text-white transition-colors"
+                >
+                  Privacy Policy
+                </a>
+                <a 
+                  href="https://www.mic.gov.zw/terms-of-service" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-200 hover:text-white transition-colors"
+                >
+                  Terms of Service
+                </a>
+                <a 
+                  href="https://www.mic.gov.zw/contact" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-200 hover:text-white transition-colors"
+                >
+                  Contact Us
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
