@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Upload, X, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import DocumentUpload from "@/components/DocumentUpload";
+import StepByStepDocumentUpload from "@/components/StepByStepDocumentUpload";
 
 const ShopRegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -478,33 +477,9 @@ const ShopRegistrationForm = () => {
             </div>
           </div>
 
-          {/* Document Verification Progress */}
+          {/* Step-by-Step Document Upload */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold border-b pb-2 flex-1">Document Upload Progress</h3>
-            </div>
-            
-            {/* Progress Bar */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label className="text-sm font-medium">Required Documents Completion</Label>
-                <span className="text-sm font-semibold text-muted-foreground">{Math.round(documentProgress)}%</span>
-              </div>
-              <Progress value={documentProgress} className="w-full h-4" />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Upload all required documents to complete registration</span>
-                <span className={documentProgress === 100 ? "text-green-600 font-medium" : ""}>
-                  {documentProgress === 100 ? "All documents uploaded!" : "Upload remaining documents"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Required Documents Upload Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold border-b pb-2 flex-1">Business Registration Documents</h3>
-            </div>
+            <h3 className="text-lg font-semibold border-b pb-2">Required Documents Upload</h3>
             
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
@@ -514,14 +489,13 @@ const ShopRegistrationForm = () => {
                     Zimbabwe Business Registration Requirements
                   </p>
                   <p className="text-xs text-amber-700">
-                    Please upload all required business documents. These documents will be verified by our team to ensure your shop meets regulatory requirements.
+                    Please upload all required business documents step by step. These documents will be verified by our team to ensure your shop meets regulatory requirements.
                   </p>
                 </div>
               </div>
             </div>
 
-            <DocumentUpload 
-              requirements={documentRequirements}
+            <StepByStepDocumentUpload 
               onDocumentsChange={handleDocumentsChange}
               onProgressChange={handleProgressChange}
             />
