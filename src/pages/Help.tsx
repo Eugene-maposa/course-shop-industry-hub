@@ -133,7 +133,7 @@ const Help = () => {
         </div>
 
         {/* Full Contact Information Section */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div id="contact" className="bg-white rounded-lg shadow-lg p-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-nust-blue mb-4">Contact Us</h2>
             <p className="text-gray-600 text-lg">

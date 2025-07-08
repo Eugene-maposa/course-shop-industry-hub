@@ -10,6 +10,8 @@ import Shops from "./pages/Shops";
 import Industries from "./pages/Industries";
 import ProductDetail from "./pages/ProductDetail";
 import Help from "./pages/Help";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import AdminPanel from "./pages/AdminPanel";
@@ -29,6 +31,8 @@ const App = () => (
           <Route path="/industries" element={<Industries />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/help" element={<Help />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<NotFound />} />

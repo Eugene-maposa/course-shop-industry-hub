@@ -256,30 +256,24 @@ const Index = () => {
                 2025 © All rights reserved by EMAPS
               </div>
               <div className="flex space-x-6 text-sm">
-                <a 
-                  href="https://www.mic.gov.zw/privacy-policy" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                <Link 
+                  to="/privacy-policy" 
                   className="text-gray-200 hover:text-white transition-colors"
                 >
                   Privacy Policy
-                </a>
-                <a 
-                  href="https://www.mic.gov.zw/terms-of-service" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                </Link>
+                <Link 
+                  to="/terms-of-service" 
                   className="text-gray-200 hover:text-white transition-colors"
                 >
                   Terms of Service
-                </a>
-                <a 
-                  href="https://www.mic.gov.zw/contact" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                </Link>
+                <Link 
+                  to="/help#contact" 
                   className="text-gray-200 hover:text-white transition-colors"
                 >
                   Contact Us
-                </a>
+                </Link>
               </div>
             </div>
           </div>
