@@ -25,24 +25,32 @@ export const useAdmin = () => {
       }
 
       try {
-        // Use direct SQL query to check admin status
-        const { data: adminData, error } = await supabase
-          .from('admin_users')
-          .select('role, is_active')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .maybeSingle();
+        // Use the new security definer function to check admin status
+        const { data: adminStatusData, error: statusError } = await supabase
+          .rpc('check_admin_status', { user_id: user.id });
 
-        console.log('Admin check result:', { adminData, error });
+        console.log('Admin status check result:', { adminStatusData, statusError });
 
-        if (error) {
-          console.error('Error checking admin status:', error);
+        if (statusError) {
+          console.error('Error checking admin status:', statusError);
           setIsAdmin(false);
           setAdminRole(null);
-        } else if (adminData) {
-          console.log('User is admin with role:', adminData.role);
-          setIsAdmin(true);
-          setAdminRole(adminData.role as AdminRole);
+        } else if (adminStatusData) {
+          // If user is admin, get their role
+          const { data: roleData, error: roleError } = await supabase
+            .rpc('get_current_admin_role', { user_id: user.id });
+
+          console.log('Admin role check result:', { roleData, roleError });
+
+          if (roleError) {
+            console.error('Error getting admin role:', roleError);
+            setIsAdmin(true);
+            setAdminRole('admin'); // Default fallback
+          } else {
+            console.log('User is admin with role:', roleData);
+            setIsAdmin(true);
+            setAdminRole(roleData as AdminRole);
+          }
         } else {
           console.log('User is not an admin');
           setIsAdmin(false);
@@ -68,7 +76,7 @@ export const useAdmin = () => {
       .insert({
         user_id: userId,
         role: role,
-        created_by: user.id
+        email: user.email // Store the email properly
       })
       .select()
       .single();

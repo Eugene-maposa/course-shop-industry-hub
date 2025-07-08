@@ -368,6 +368,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_admin_status: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
       check_product_legality: {
         Args: { product_name: string; product_description?: string }
         Returns: {
@@ -388,6 +392,10 @@ export type Database = {
         Returns: Json
       }
       get_admin_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["admin_role"]
+      }
+      get_current_admin_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["admin_role"]
       }
