@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Filter, MapPin, Phone, Mail, Globe } from "lucide-react";
+import { Search, Filter, MapPin, Phone, Mail, Globe, ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,6 +60,13 @@ const Shops = () => {
   const handleContact = (shop) => {
     setSelectedShop(shop);
     setShowContactModal(true);
+  };
+
+  const handleVisitWebsite = (website) => {
+    if (website) {
+      const url = website.startsWith('http') ? website : `https://${website}`;
+      window.open(url, '_blank');
+    }
   };
 
   return (
@@ -195,7 +202,12 @@ const Shops = () => {
                         {shop.website && (
                           <div className="flex items-center text-sm text-muted-foreground">
                             <Globe className="w-4 h-4 mr-2" />
-                            <span className="line-clamp-1">{shop.website}</span>
+                            <button
+                              onClick={() => handleVisitWebsite(shop.website)}
+                              className="text-blue-600 hover:text-blue-800 underline line-clamp-1 text-left"
+                            >
+                              {shop.website}
+                            </button>
                           </div>
                         )}
                       </div>
@@ -209,6 +221,16 @@ const Shops = () => {
                         >
                           Contact
                         </Button>
+                        {shop.website && (
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="hover:bg-green-50"
+                            onClick={() => handleVisitWebsite(shop.website)}
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

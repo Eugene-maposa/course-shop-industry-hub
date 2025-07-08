@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Phone, Mail, Globe, MapPin } from "lucide-react";
+import { Phone, Mail, Globe, MapPin, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ShopContactModalProps {
@@ -121,7 +121,13 @@ const ShopContactModal = ({ shop, isOpen, onClose }: ShopContactModalProps) => {
               {shop.website && (
                 <div className="flex items-center text-sm">
                   <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
-                  <span>{shop.website}</span>
+                  <button
+                    onClick={handleWebsiteVisit}
+                    className="text-blue-600 hover:text-blue-800 underline flex items-center"
+                  >
+                    {shop.website}
+                    <ExternalLink className="w-3 h-3 ml-1" />
+                  </button>
                   <Button
                     size="sm"
                     variant="outline"
