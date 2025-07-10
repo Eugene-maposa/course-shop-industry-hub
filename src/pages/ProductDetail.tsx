@@ -1,5 +1,6 @@
 
 import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Star, Heart, ShoppingCart, Share2, Shield, Truck, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,54 +8,44 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProductDetail = () => {
   const { id } = useParams();
   
-  // Mock product data - in a real app, this would come from an API
-  const product = {
-    id: 1,
-    name: "Smart Wireless Headphones",
-    category: "Electronics",
-    price: 299,
-    originalPrice: 399,
-    rating: 4.8,
-    reviews: 156,
-    shop: "TechWorld",
-    industry: "Technology",
-    images: [
-      "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=600&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1460574283810-2aab119d8511?w=600&h=600&fit=crop"
-    ],
-    description: "Experience premium audio quality with our latest smart wireless headphones. Featuring advanced noise cancellation, 30-hour battery life, and seamless connectivity across all your devices.",
-    features: [
-      "Active Noise Cancellation",
-      "30-hour battery life",
-      "Bluetooth 5.0 connectivity",
-      "Premium leather comfort fit",
-      "Voice assistant integration",
-      "Quick charge - 5 min for 2 hours playback"
-    ],
-    specifications: {
-      "Driver Size": "40mm",
-      "Frequency Response": "20Hz - 20kHz",
-      "Impedance": "32 Ohm",
-      "Weight": "280g",
-      "Connectivity": "Bluetooth 5.0, 3.5mm jack",
-      "Battery": "30 hours playback"
+  // Fetch real product data from database
+  const { data: product, isLoading, error } = useQuery({
+    queryKey: ['product', id],
+    queryFn: async () => {
+      console.log("Fetching product with ID:", id);
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          product_types(name, code),
+          shops(name, website, email, phone)
+        `)
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching product:", error);
+        throw error;
+      }
+      console.log("Fetched product data:", data);
+      return data;
     },
-    inStock: true,
-    stockCount: 12
-  };
+    enabled: !!id
+  });
 
+  // Mock reviews data - in a real app, this would also come from API
   const reviews = [
     {
       id: 1,
       user: "Sarah M.",
       avatar: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=40&h=40&fit=crop&crop=face",
       rating: 5,
-      comment: "Amazing sound quality and the noise cancellation is incredible. Best purchase I've made this year!",
+      comment: "Great product! Exactly as described.",
       date: "2 days ago"
     },
     {
@@ -62,7 +53,7 @@ const ProductDetail = () => {
       user: "Mike R.",
       avatar: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=40&h=40&fit=crop&crop=face",
       rating: 4,
-      comment: "Great headphones overall. Battery life is fantastic and they're very comfortable for long sessions.",
+      comment: "Good quality and fast delivery.",
       date: "1 week ago"
     },
     {
@@ -70,10 +61,43 @@ const ProductDetail = () => {
       user: "Emma L.",
       avatar: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=40&h=40&fit=crop&crop=face",
       rating: 5,
-      comment: "The build quality is excellent and the sound is crystal clear. Highly recommend!",
+      comment: "Highly recommend this product!",
       date: "2 weeks ago"
     }
   ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <p className="text-xl text-muted-foreground">Loading product details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <p className="text-xl text-red-600">Product not found or error loading product details.</p>
+            <Link to="/products" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
+              ← Back to Products
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default values for display
+  const defaultImage = "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop";
+  const productImages = [defaultImage, defaultImage, defaultImage];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -93,13 +117,13 @@ const ProductDetail = () => {
           <div className="space-y-4">
             <div className="aspect-square bg-white rounded-2xl overflow-hidden shadow-lg">
               <img 
-                src={product.images[0]} 
+                src={productImages[0]} 
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="grid grid-cols-3 gap-4">
-              {product.images.slice(1).map((image, index) => (
+              {productImages.slice(1).map((image, index) => (
                 <div key={index} className="aspect-square bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer">
                   <img 
                     src={image} 
@@ -115,8 +139,8 @@ const ProductDetail = () => {
           <div className="space-y-6">
             <div>
               <div className="flex items-center space-x-2 mb-2">
-                <Badge variant="secondary">{product.category}</Badge>
-                <Badge variant="outline">{product.industry}</Badge>
+                <Badge variant="secondary">{product.product_types?.name || 'General'}</Badge>
+                <Badge variant="outline">{product.status}</Badge>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                 {product.name}
@@ -127,42 +151,37 @@ const ProductDetail = () => {
                     {[...Array(5)].map((_, i) => (
                       <Star 
                         key={i} 
-                        className={`w-5 h-5 ${i < Math.floor(product.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                        className={`w-5 h-5 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
                       />
                     ))}
                   </div>
-                  <span className="text-sm font-medium">{product.rating}</span>
-                  <span className="text-sm text-muted-foreground">({product.reviews} reviews)</span>
+                  <span className="text-sm font-medium">4.5</span>
+                  <span className="text-sm text-muted-foreground">(12 reviews)</span>
                 </div>
-                <span className="text-sm text-muted-foreground">by {product.shop}</span>
+                <span className="text-sm text-muted-foreground">by {product.shops?.name || 'Unknown Shop'}</span>
               </div>
             </div>
 
             <div className="flex items-center space-x-4">
-              <div className="text-3xl font-bold text-foreground">${product.price}</div>
-              {product.originalPrice && (
-                <div className="text-lg text-muted-foreground line-through">${product.originalPrice}</div>
-              )}
-              <Badge className="bg-green-100 text-green-700">
-                {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
-              </Badge>
+              <div className="text-3xl font-bold text-foreground">
+                {product.price ? `$${product.price}` : 'Price not set'}
+              </div>
             </div>
 
-            <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+            <p className="text-muted-foreground leading-relaxed">
+              {product.description || 'No description available for this product.'}
+            </p>
 
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${product.inStock ? 'bg-green-500' : 'bg-red-500'}`} />
-                <span className="text-sm font-medium">
-                  {product.inStock ? `In Stock (${product.stockCount} available)` : 'Out of Stock'}
-                </span>
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+                <span className="text-sm font-medium">In Stock</span>
               </div>
 
               <div className="flex space-x-4">
                 <Button 
                   size="lg" 
                   className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-lg py-6"
-                  disabled={!product.inStock}
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
                   Add to Cart
@@ -181,17 +200,17 @@ const ProductDetail = () => {
               <div className="text-center">
                 <Shield className="w-6 h-6 mx-auto mb-2 text-green-600" />
                 <div className="text-xs font-medium">Warranty</div>
-                <div className="text-xs text-muted-foreground">2 Years</div>
+                <div className="text-xs text-muted-foreground">1 Year</div>
               </div>
               <div className="text-center">
                 <Truck className="w-6 h-6 mx-auto mb-2 text-blue-600" />
-                <div className="text-xs font-medium">Free Shipping</div>
-                <div className="text-xs text-muted-foreground">2-3 Days</div>
+                <div className="text-xs font-medium">Shipping</div>
+                <div className="text-xs text-muted-foreground">3-5 Days</div>
               </div>
               <div className="text-center">
                 <RotateCcw className="w-6 h-6 mx-auto mb-2 text-purple-600" />
                 <div className="text-xs font-medium">Returns</div>
-                <div className="text-xs text-muted-foreground">30 Days</div>
+                <div className="text-xs text-muted-foreground">14 Days</div>
               </div>
             </div>
           </div>
@@ -199,33 +218,68 @@ const ProductDetail = () => {
 
         {/* Product Details Tabs */}
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Features */}
+          {/* Product Info */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
-              <CardTitle>Key Features</CardTitle>
+              <CardTitle>Product Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {product.features.map((feature, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full" />
-                  <span className="text-sm">{feature}</span>
-                </div>
-              ))}
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Product Code</span>
+                <span className="text-sm font-medium">{product.sku || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Category</span>
+                <span className="text-sm font-medium">{product.product_types?.name || 'General'}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Status</span>
+                <span className="text-sm font-medium capitalize">{product.status}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Registration Date</span>
+                <span className="text-sm font-medium">
+                  {product.registration_date ? new Date(product.registration_date).toLocaleDateString() : 'N/A'}
+                </span>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Specifications */}
+          {/* Shop Information */}
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
-              <CardTitle>Specifications</CardTitle>
+              <CardTitle>Shop Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {Object.entries(product.specifications).map(([key, value]) => (
-                <div key={key} className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">{key}</span>
-                  <span className="text-sm font-medium">{value}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Shop Name</span>
+                <span className="text-sm font-medium">{product.shops?.name || 'Unknown'}</span>
+              </div>
+              {product.shops?.email && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Email</span>
+                  <span className="text-sm font-medium">{product.shops.email}</span>
                 </div>
-              ))}
+              )}
+              {product.shops?.phone && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Phone</span>
+                  <span className="text-sm font-medium">{product.shops.phone}</span>
+                </div>
+              )}
+              {product.shops?.website && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Website</span>
+                  <a 
+                    href={product.shops.website.startsWith('http') ? product.shops.website : `https://${product.shops.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Visit Website
+                  </a>
+                </div>
+              )}
             </CardContent>
           </Card>
 
