@@ -95,9 +95,13 @@ const ProductDetail = () => {
     );
   }
 
-  // Default values for display
-  const defaultImage = "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop";
-  const productImages = [defaultImage, defaultImage, defaultImage];
+  // Get product images from the database or use defaults
+  const mainImageUrl = (product.main_image_url as string) || "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop";
+  const galleryImages: string[] = Array.isArray(product.gallery_images) && product.gallery_images.length > 0 
+    ? (product.gallery_images as string[])
+    : ["https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop", "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop"];
+  
+  const productImages = [mainImageUrl, ...galleryImages];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">

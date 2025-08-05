@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ProductImageUpload from "@/components/ProductImageUpload";
 
 const ProductRegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -20,6 +21,9 @@ const ProductRegistrationForm = () => {
     product_type_id: "",
     shop_id: ""
   });
+
+  const [mainImage, setMainImage] = useState<string | null>(null);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
 
   const [validationStatus, setValidationStatus] = useState<{
     isChecked: boolean;
@@ -120,7 +124,9 @@ const ProductRegistrationForm = () => {
         price: productData.price ? parseFloat(productData.price) : null,
         product_type_id: productData.product_type_id || null,
         shop_id: productData.shop_id || null,
-        sku: productData.sku || null
+        sku: productData.sku || null,
+        main_image_url: mainImage,
+        gallery_images: galleryImages
       };
       
       console.log("Cleaned product data:", cleanedData);
@@ -146,6 +152,8 @@ const ProductRegistrationForm = () => {
         product_type_id: "",
         shop_id: ""
       });
+      setMainImage(null);
+      setGalleryImages([]);
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },
     onError: (error) => {
@@ -376,6 +384,16 @@ const ProductRegistrationForm = () => {
             />
           </div>
 
+          {/* Product Images Section */}
+          <div className="col-span-full">
+            <ProductImageUpload
+              mainImage={mainImage}
+              galleryImages={galleryImages}
+              onMainImageChange={setMainImage}
+              onGalleryImagesChange={setGalleryImages}
+            />
+          </div>
+
           <div className="flex gap-4 pt-4">
             <Button 
               type="submit" 
@@ -397,6 +415,8 @@ const ProductRegistrationForm = () => {
                   product_type_id: "",
                   shop_id: ""
                 });
+                setMainImage(null);
+                setGalleryImages([]);
                 setValidationStatus({
                   isChecked: false,
                   isLegal: true,
