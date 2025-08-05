@@ -9,9 +9,15 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/hooks/useCart";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useShare } from "@/hooks/useShare";
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { shareProduct } = useShare();
   
   // Fetch real product data from database
   const { data: product, isLoading, error } = useQuery({
@@ -103,6 +109,40 @@ const ProductDetail = () => {
   
   const productImages = [mainImageUrl, ...galleryImages];
 
+  const handleAddToCart = () => {
+    if (product.price) {
+      addToCart({
+        id: product.id,
+        name: product.name,
+        price: Number(product.price),
+        image: mainImageUrl
+      });
+    }
+  };
+
+  const handleWishlistToggle = () => {
+    const wishlistItem = {
+      id: product.id,
+      name: product.name,
+      price: Number(product.price) || 0,
+      image: mainImageUrl
+    };
+
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(wishlistItem);
+    }
+  };
+
+  const handleShare = () => {
+    shareProduct({
+      title: product.name,
+      text: product.description || `Check out ${product.name}`,
+      url: window.location.href
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navbar />
@@ -186,14 +226,26 @@ const ProductDetail = () => {
                 <Button 
                   size="lg" 
                   className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-lg py-6"
+                  onClick={handleAddToCart}
+                  disabled={!product.price}
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
                   Add to Cart
                 </Button>
-                <Button size="lg" variant="outline" className="px-6 py-6">
-                  <Heart className="w-5 h-5" />
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="px-6 py-6"
+                  onClick={handleWishlistToggle}
+                >
+                  <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
                 </Button>
-                <Button size="lg" variant="outline" className="px-6 py-6">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="px-6 py-6"
+                  onClick={handleShare}
+                >
                   <Share2 className="w-5 h-5" />
                 </Button>
               </div>
