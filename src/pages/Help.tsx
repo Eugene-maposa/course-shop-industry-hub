@@ -1,45 +1,162 @@
 
-import { HelpCircle, Mail, Phone, MessageCircle, FileText, Video, MapPin, Clock, Globe } from "lucide-react";
+import { HelpCircle, Mail, Phone, MessageCircle, FileText, Video, MapPin, Clock, Globe, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 
 const Help = () => {
+  const [openFaqSections, setOpenFaqSections] = useState<Record<string, boolean>>({});
+  const [openFaqItems, setOpenFaqItems] = useState<Record<string, boolean>>({});
+
+  const toggleFaqSection = (section: string) => {
+    setOpenFaqSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const toggleFaqItem = (itemKey: string) => {
+    setOpenFaqItems(prev => ({
+      ...prev,
+      [itemKey]: !prev[itemKey]
+    }));
+  };
   const helpSections = [
     {
       icon: FileText,
       title: "User Guides",
-      description: "Step-by-step guides for using ProductHub features",
+      description: "Complete step-by-step guides for all ProductHub features",
       items: [
-        "How to register a product",
-        "Managing your shop profile",
-        "Industry categorization guide",
-        "Search and filtering products"
+        "Getting Started - Creating your first account and setting up your profile",
+        "Product Registration - Complete guide from initial submission to approval",
+        "Shop Profile Management - Setting up and optimizing your business presence",
+        "Industry Classification - Understanding categories and selecting the right industry",
+        "Product Image Guidelines - Requirements, formats, and best practices",
+        "Search & Discovery - Advanced filtering and finding products effectively",
+        "Product Updates - Editing, pricing, and managing your product listings",
+        "Quality Control - Meeting standards and passing review processes",
+        "Account Security - Password management and two-factor authentication",
+        "Mobile App Usage - Using ProductHub on mobile devices"
       ]
     },
     {
       icon: Video,
       title: "Video Tutorials",
-      description: "Watch detailed video tutorials",
+      description: "Comprehensive video walkthroughs for visual learners",
       items: [
-        "Getting started with ProductHub",
-        "Product registration walkthrough",
-        "Shop management best practices",
-        "Advanced search techniques"
+        "Complete Platform Overview - 15-minute introduction to ProductHub",
+        "Product Registration Walkthrough - Step-by-step submission process",
+        "Shop Setup & Optimization - Creating an attractive business profile",
+        "Photo Guidelines & Best Practices - Taking and uploading quality images",
+        "Advanced Search Techniques - Finding exactly what you need",
+        "Bulk Product Management - Handling multiple listings efficiently",
+        "Common Issues & Solutions - Troubleshooting frequent problems",
+        "Mobile App Features - Using the mobile interface effectively",
+        "Industry-Specific Guidelines - Tailored advice for different sectors",
+        "Success Stories - Learn from top-performing shops and products"
       ]
     },
     {
       icon: MessageCircle,
-      title: "FAQs",
-      description: "Find answers to common questions",
+      title: "Frequently Asked Questions",
+      description: "Detailed answers to the most common user questions",
       items: [
-        "Account setup and login issues",
-        "Product approval process",
-        "Payment and billing questions",
-        "Technical troubleshooting"
+        "Account & Registration",
+        "Product Submission & Approval",
+        "Shop Management & Verification",
+        "Payment & Billing Information",
+        "Technical Support & Troubleshooting",
+        "Privacy & Security Guidelines",
+        "Industry Compliance & Standards",
+        "Mobile App Support",
+        "Business Features & Tools",
+        "Contact & Support Options"
       ]
     }
   ];
+
+  const faqDetails = {
+    "Account & Registration": [
+      {
+        question: "How do I create a ProductHub account?",
+        answer: "Visit the registration page, provide your business details, email, and phone number. You'll receive a verification email to activate your account. For businesses, additional documentation may be required."
+      },
+      {
+        question: "What documents do I need for business verification?",
+        answer: "You'll need: Business registration certificate, Tax clearance certificate, Valid ID of the business owner, Proof of address, and any relevant industry licenses."
+      },
+      {
+        question: "How long does account verification take?",
+        answer: "Standard verification takes 3-5 business days. Complex cases requiring additional documentation may take up to 10 business days."
+      },
+      {
+        question: "Can I register multiple shops under one account?",
+        answer: "Yes, you can manage multiple business locations or brands under a single account. Each shop will have its own profile and product listings."
+      }
+    ],
+    "Product Submission & Approval": [
+      {
+        question: "What are the product image requirements?",
+        answer: "Images must be: High resolution (minimum 800x600px), Clear and well-lit, Show the actual product, No watermarks or logos, Maximum 5MB per image, Accepted formats: JPG, PNG, WEBP."
+      },
+      {
+        question: "How long does product approval take?",
+        answer: "Most products are reviewed within 24-48 hours. Complex products requiring additional verification may take up to 5 business days."
+      },
+      {
+        question: "Why was my product rejected?",
+        answer: "Common reasons include: Poor image quality, Incomplete product information, Non-compliance with industry standards, Prohibited items, or missing documentation."
+      },
+      {
+        question: "Can I edit products after approval?",
+        answer: "Yes, you can update pricing, descriptions, and images. Significant changes may require re-approval. Changes to product category or type require admin review."
+      }
+    ],
+    "Shop Management & Verification": [
+      {
+        question: "How do I optimize my shop profile?",
+        answer: "Complete all profile sections, add high-quality business photos, write detailed descriptions, upload business certificates, maintain regular product updates, and respond promptly to inquiries."
+      },
+      {
+        question: "What are the shop verification badges?",
+        answer: "Verified Badge: Basic business verification complete, Premium Badge: Enhanced verification with additional documents, Top Rated: Based on customer reviews and performance metrics."
+      },
+      {
+        question: "How can I improve my shop's visibility?",
+        answer: "Keep your profile complete and updated, maintain high-quality product images, respond quickly to customer inquiries, encourage customer reviews, and regularly add new products."
+      }
+    ],
+    "Technical Support & Troubleshooting": [
+      {
+        question: "I can't upload images. What should I do?",
+        answer: "Check your internet connection, ensure images meet size requirements (max 5MB), try a different browser, clear your browser cache, or try uploading one image at a time."
+      },
+      {
+        question: "The website is loading slowly. How can I fix this?",
+        answer: "Clear your browser cache and cookies, disable browser extensions, check your internet speed, try using a different browser, or contact support if the issue persists."
+      },
+      {
+        question: "I forgot my password. How do I reset it?",
+        answer: "Click 'Forgot Password' on the login page, enter your email address, check your email for reset instructions, and follow the link to create a new password."
+      }
+    ],
+    "Industry Compliance & Standards": [
+      {
+        question: "What products are prohibited on ProductHub?",
+        answer: "Prohibited items include: Illegal substances, Weapons and ammunition, Counterfeit goods, Expired products, Items requiring special licenses without proper documentation."
+      },
+      {
+        question: "Do I need special permits for certain products?",
+        answer: "Yes, certain categories require permits: Pharmaceuticals need MCAZ approval, Food products need health department certification, Electronics need POTRAZ compliance, Chemicals need environmental clearance."
+      },
+      {
+        question: "How do I ensure my products meet Zimbabwe standards?",
+        answer: "Check with the Standards Association of Zimbabwe (SAZ), ensure products have proper labeling, verify safety certifications, and consult with industry-specific regulatory bodies."
+      }
+    ]
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -85,6 +202,69 @@ const Help = () => {
               </Card>
             );
           })}
+        </div>
+
+        {/* Detailed FAQ Section */}
+        <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-nust-blue mb-4">Detailed FAQs</h2>
+            <p className="text-gray-600 text-lg">
+              Comprehensive answers to help you navigate ProductHub successfully
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {Object.entries(faqDetails).map(([category, questions]) => (
+              <Card key={category} className="border border-gray-200">
+                <Collapsible open={openFaqSections[category]} onOpenChange={() => toggleFaqSection(category)}>
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg text-nust-blue">{category}</CardTitle>
+                        {openFaqSections[category] ? (
+                          <ChevronUp className="w-5 h-5 text-nust-blue" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-nust-blue" />
+                        )}
+                      </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="pt-0">
+                      <div className="space-y-4">
+                        {questions.map((faq, index) => {
+                          const itemKey = `${category}-${index}`;
+                          return (
+                            <div key={index} className="border-l-4 border-nust-blue/20 pl-4">
+                              <Collapsible open={openFaqItems[itemKey]} onOpenChange={() => toggleFaqItem(itemKey)}>
+                                <CollapsibleTrigger asChild>
+                                  <div className="cursor-pointer hover:bg-gray-50 p-3 rounded transition-colors">
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="font-medium text-gray-900 text-left">{faq.question}</h4>
+                                      {openFaqItems[itemKey] ? (
+                                        <ChevronUp className="w-4 h-4 text-gray-500 flex-shrink-0 ml-2" />
+                                      ) : (
+                                        <ChevronDown className="w-4 h-4 text-gray-500 flex-shrink-0 ml-2" />
+                                      )}
+                                    </div>
+                                  </div>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                  <div className="mt-2 p-3 bg-gray-50 rounded text-gray-700 leading-relaxed">
+                                    {faq.answer}
+                                  </div>
+                                </CollapsibleContent>
+                              </Collapsible>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Collapsible>
+              </Card>
+            ))}
+          </div>
         </div>
 
         {/* Contact Support */}
