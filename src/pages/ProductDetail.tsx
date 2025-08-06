@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
+import ProductImageEditor from "@/components/ProductImageEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -158,12 +159,17 @@ const ProductDetail = () => {
 
         <div className="grid lg:grid-cols-2 gap-12 mb-12">
           {/* Product Images */}
-          <div className="space-y-4">
-            <div className="aspect-square bg-white rounded-2xl overflow-hidden shadow-lg">
+          <div className="space-y-4 relative">
+            <div className="aspect-square bg-white rounded-2xl overflow-hidden shadow-lg relative">
               <img 
                 src={productImages[0]} 
                 alt={product.name}
                 className="w-full h-full object-cover"
+              />
+              <ProductImageEditor
+                productId={product.id}
+                mainImage={mainImageUrl}
+                galleryImages={galleryImages}
               />
             </div>
             <div className="grid grid-cols-3 gap-4">
