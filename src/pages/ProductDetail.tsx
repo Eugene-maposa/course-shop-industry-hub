@@ -257,24 +257,6 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-border">
-              <div className="text-center">
-                <Shield className="w-6 h-6 mx-auto mb-2 text-green-600" />
-                <div className="text-xs font-medium">Warranty</div>
-                <div className="text-xs text-muted-foreground">1 Year</div>
-              </div>
-              <div className="text-center">
-                <Truck className="w-6 h-6 mx-auto mb-2 text-blue-600" />
-                <div className="text-xs font-medium">Shipping</div>
-                <div className="text-xs text-muted-foreground">3-5 Days</div>
-              </div>
-              <div className="text-center">
-                <RotateCcw className="w-6 h-6 mx-auto mb-2 text-purple-600" />
-                <div className="text-xs font-medium">Returns</div>
-                <div className="text-xs text-muted-foreground">14 Days</div>
-              </div>
-            </div>
           </div>
         </div>
 
