@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Shield, Users, Building, Package, Activity, UserPlus, MoreHorizontal, CheckCircle, XCircle, Clock, FileText, Eye, Settings, Plus, Trash2, Edit, Database, BarChart3 } from "lucide-react";
+import { Shield, Users, Building, Package, Activity, UserPlus, MoreHorizontal, CheckCircle, XCircle, Clock, FileText, Eye, Settings, Plus, Trash2, Edit, Database, BarChart3, Monitor } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
+import { SystemMonitor } from "@/components/admin/SystemMonitor";
+import { UserManagement } from "@/components/admin/UserManagement";
+import { ContentManagement } from "@/components/admin/ContentManagement";
+import { AuditLogs } from "@/components/admin/AuditLogs";
 
 const AdminPanel = () => {
   const { isAdmin, adminRole, loading: adminLoading, logAdminAction } = useAdmin();
@@ -25,12 +29,6 @@ const AdminPanel = () => {
   const queryClient = useQueryClient();
   const [selectedShop, setSelectedShop] = useState(null);
   const [verificationNotes, setVerificationNotes] = useState("");
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserRole, setNewUserRole] = useState("admin");
-  const [newIndustryName, setNewIndustryName] = useState("");
-  const [newIndustryCode, setNewIndustryCode] = useState("");
-  const [newIndustryDescription, setNewIndustryDescription] = useState("");
-  const [editingIndustry, setEditingIndustry] = useState(null);
 
   console.log('AdminPanel render:', { user: user?.email, isAdmin, adminRole, adminLoading, authLoading });
 
@@ -104,36 +102,6 @@ const AdminPanel = () => {
       };
     },
     enabled: !!user && isAdmin
-  });
-
-  // Fetch admin users (super-admin only)
-  const { data: adminUsers = [], isLoading: adminUsersLoading } = useQuery({
-    queryKey: ['admin-users'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user && isSuperAdmin
-  });
-
-  // Fetch industries for management
-  const { data: industries = [], isLoading: industriesLoading } = useQuery({
-    queryKey: ['admin-industries'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('industries')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user && isSuperAdmin
   });
 
   // Fetch shops for approval including document verification
@@ -291,131 +259,6 @@ const AdminPanel = () => {
     }
   };
 
-  // User management mutations (super-admin only)
-  const createAdminMutation = useMutation({
-    mutationFn: async ({ email, role }: { email: string, role: string }) => {
-      // Then add to admin_users table
-      const { data, error } = await supabase
-        .from('admin_users')
-        .insert({
-          user_id: email, // Temporary - in real app would create auth user first
-          role: role as "super_admin" | "admin" | "moderator",
-          email: email
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Admin user created successfully!"
-      });
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      setNewUserEmail("");
-      setNewUserRole("admin");
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to create admin user.",
-        variant: "destructive"
-      });
-      console.error("Error creating admin user:", error);
-    }
-  });
-
-  const deactivateAdminMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .update({ is_active: false })
-        .eq('user_id', userId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Admin user deactivated successfully!"
-      });
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-    }
-  });
-
-  // Industry management mutations (super-admin only)
-  const createIndustryMutation = useMutation({
-    mutationFn: async (industryData: { name: string, code: string, description: string }) => {
-      const { data, error } = await supabase
-        .from('industries')
-        .insert(industryData)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Industry created successfully!"
-      });
-      queryClient.invalidateQueries({ queryKey: ['admin-industries'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      setNewIndustryName("");
-      setNewIndustryCode("");
-      setNewIndustryDescription("");
-    }
-  });
-
-  const updateIndustryMutation = useMutation({
-    mutationFn: async ({ id, ...updateData }: any) => {
-      const { data, error } = await supabase
-        .from('industries')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Industry updated successfully!"
-      });
-      queryClient.invalidateQueries({ queryKey: ['admin-industries'] });
-      setEditingIndustry(null);
-    }
-  });
-
-  const deleteIndustryMutation = useMutation({
-    mutationFn: async (industryId: string) => {
-      const { error } = await supabase
-        .from('industries')
-        .delete()
-        .eq('id', industryId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Industry deleted successfully!"
-      });
-      queryClient.invalidateQueries({ queryKey: ['admin-industries'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-    }
-  });
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
       {/* Header */}
@@ -491,7 +334,7 @@ const AdminPanel = () => {
           <Card className="bg-slate-800 border-slate-700">
             <CardContent className="p-6">
               <div className="flex items-center space-x-2">
-                <Users className="w-8 h-8 text-indigo-400" />
+                <Users className="w-8 h-8 text-orange-400" />
                 <div>
                   <p className="text-slate-400">Total Users</p>
                   <p className="text-2xl font-bold text-white">{stats?.totalUsers || 0}</p>
@@ -501,670 +344,218 @@ const AdminPanel = () => {
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        {(stats?.pendingShops || 0) > 0 && (
-          <Card className="bg-slate-800 border-slate-700 mb-8">
-            <CardHeader>
-              <CardTitle className="text-white">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button className="bg-green-600 hover:bg-green-700">
+        {/* Main Content */}
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="bg-slate-800 border-slate-700">
+            <TabsTrigger value="dashboard" className="data-[state=active]:bg-slate-700">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="monitor" className="data-[state=active]:bg-slate-700">
+              <Monitor className="w-4 h-4 mr-2" />
+              System Monitor
+            </TabsTrigger>
+            <TabsTrigger value="shops" className="data-[state=active]:bg-slate-700">
+              <Building className="w-4 h-4 mr-2" />
+              Shop Approvals
+            </TabsTrigger>
+            {isSuperAdmin && (
+              <>
+                <TabsTrigger value="users" className="data-[state=active]:bg-slate-700">
+                  <Users className="w-4 h-4 mr-2" />
+                  User Management
+                </TabsTrigger>
+                <TabsTrigger value="content" className="data-[state=active]:bg-slate-700">
+                  <Package className="w-4 h-4 mr-2" />
+                  Content Management
+                </TabsTrigger>
+                <TabsTrigger value="audit" className="data-[state=active]:bg-slate-700">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Audit Logs
+                </TabsTrigger>
+                <TabsTrigger value="system" className="data-[state=active]:bg-slate-700">
+                  <Database className="w-4 h-4 mr-2" />
+                  System Details
+                </TabsTrigger>
+              </>
+            )}
+          </TabsList>
+
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="bg-slate-800 border-slate-700 lg:col-span-1">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center space-x-2">
+                    <Settings className="w-5 h-5" />
+                    <span>Quick Actions</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button 
+                    onClick={() => bulkApproveMutation.mutate()}
+                    disabled={!stats?.pendingShops || bulkApproveMutation.isPending}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Approve All Pending Shops ({stats?.pendingShops || 0})
+                    Bulk Approve Shops ({stats?.pendingShops || 0})
                   </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="bg-slate-800 border-slate-700">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="text-white">Approve All Pending Shops</AlertDialogTitle>
-                    <AlertDialogDescription className="text-slate-400">
-                      Are you sure you want to approve all {stats?.pendingShops || 0} pending shops? This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="bg-slate-700 text-white border-slate-600">Cancel</AlertDialogCancel>
-                    <AlertDialogAction 
-                      onClick={() => bulkApproveMutation.mutate()}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      Approve All
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Super Admin Features */}
-        {isSuperAdmin ? (
-          <Tabs defaultValue="shops" className="space-y-6">
-            <TabsList className="bg-slate-800 border-slate-700">
-              <TabsTrigger value="shops" className="data-[state=active]:bg-slate-700">
-                <Building className="w-4 h-4 mr-2" />
-                Shops Management
-              </TabsTrigger>
-              <TabsTrigger value="users" className="data-[state=active]:bg-slate-700">
-                <Users className="w-4 h-4 mr-2" />
-                User Management
-              </TabsTrigger>
-              <TabsTrigger value="industries" className="data-[state=active]:bg-slate-700">
-                <Package className="w-4 h-4 mr-2" />
-                Industries
-              </TabsTrigger>
-              <TabsTrigger value="system" className="data-[state=active]:bg-slate-700">
-                <Database className="w-4 h-4 mr-2" />
-                System Overview
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="shops">
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Shops Management & Document Verification</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {shopsLoading ? (
-                    <div className="text-slate-400 text-center py-8">Loading shops...</div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="border-slate-700">
-                            <TableHead className="text-slate-300">Name</TableHead>
-                            <TableHead className="text-slate-300">Industry</TableHead>
-                            <TableHead className="text-slate-300">Status</TableHead>
-                            <TableHead className="text-slate-300">Documents</TableHead>
-                            <TableHead className="text-slate-300">Created</TableHead>
-                            <TableHead className="text-slate-300">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {shops.map((shop) => (
-                            <TableRow key={shop.id} className="border-slate-700">
-                              <TableCell className="text-white font-medium">{shop.name}</TableCell>
-                              <TableCell className="text-slate-300">{shop.industries?.name || 'N/A'}</TableCell>
-                              <TableCell>{getStatusBadge(shop.status)}</TableCell>
-                              <TableCell>{getDocumentVerificationBadge(shop.document_verification_status || 'pending')}</TableCell>
-                              <TableCell className="text-slate-300">
-                                {new Date(shop.created_at).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex space-x-2">
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => setSelectedShop(shop)}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-                                      >
-                                        <Eye className="w-4 h-4" />
-                                      </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl">
-                                      <DialogHeader>
-                                        <DialogTitle className="text-white">Shop Documents - {shop.name}</DialogTitle>
-                                      </DialogHeader>
-                                      <div className="space-y-4">
-                                        {shop.documents && Object.keys(shop.documents).length > 0 ? (
-                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {Object.entries(shop.documents).map(([docType, url]) => (
-                                              <Card key={docType} className="bg-slate-700 border-slate-600">
-                                                <CardContent className="p-4">
-                                                  <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-white font-medium capitalize">
-                                                      {docType.replace('_', ' ')}
-                                                    </span>
-                                                    <FileText className="w-4 h-4 text-blue-400" />
-                                                  </div>
-                                                  <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => window.open(url as string, '_blank')}
-                                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-                                                  >
-                                                    View Document
-                                                  </Button>
-                                                </CardContent>
-                                              </Card>
-                                            ))}
-                                          </div>
-                                        ) : (
-                                          <div className="text-slate-400 text-center py-8">
-                                            No documents uploaded for this shop.
-                                          </div>
-                                        )}
-                                        
-                                        <div className="border-t border-slate-600 pt-4">
-                                          <Label htmlFor="verification-notes" className="text-white">
-                                            Verification Notes (Optional)
-                                          </Label>
-                                          <Textarea
-                                            id="verification-notes"
-                                            value={verificationNotes}
-                                            onChange={(e) => setVerificationNotes(e.target.value)}
-                                            placeholder="Add notes about the verification process..."
-                                            className="mt-2 bg-slate-700 border-slate-600 text-white"
-                                          />
-                                        </div>
-
-                                        <div className="flex space-x-2">
-                                          <Button
-                                            onClick={() => handleApproveShop(shop.id, verificationNotes)}
-                                            disabled={approveShopMutation.isPending}
-                                            className="flex-1 bg-green-600 hover:bg-green-700"
-                                          >
-                                            <CheckCircle className="w-4 h-4 mr-2" />
-                                            Approve Shop
-                                          </Button>
-                                          <Button
-                                            onClick={() => handleRejectShop(shop.id, verificationNotes)}
-                                            disabled={approveShopMutation.isPending}
-                                            variant="destructive"
-                                            className="flex-1"
-                                          >
-                                            <XCircle className="w-4 h-4 mr-2" />
-                                            Reject Shop
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    </DialogContent>
-                                  </Dialog>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
-            </TabsContent>
 
-            <TabsContent value="users">
-              <Card className="bg-slate-800 border-slate-700">
+              <Card className="bg-slate-800 border-slate-700 lg:col-span-2">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-white">Admin Users Management</CardTitle>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button className="bg-blue-600 hover:bg-blue-700">
-                          <UserPlus className="w-4 h-4 mr-2" />
-                          Add Admin User
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="bg-slate-800 border-slate-700">
-                        <DialogHeader>
-                          <DialogTitle className="text-white">Create New Admin User</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="email" className="text-white">Email</Label>
-                            <Input
-                              id="email"
-                              type="email"
-                              value={newUserEmail}
-                              onChange={(e) => setNewUserEmail(e.target.value)}
-                              className="bg-slate-700 border-slate-600 text-white"
-                              placeholder="admin@example.com"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="role" className="text-white">Role</Label>
-                            <Select value={newUserRole} onValueChange={setNewUserRole}>
-                              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-slate-700 border-slate-600">
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="moderator">Moderator</SelectItem>
-                                <SelectItem value="super_admin">Super Admin</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <Button 
-                            onClick={() => createAdminMutation.mutate({ email: newUserEmail, role: newUserRole })}
-                            disabled={!newUserEmail || createAdminMutation.isPending}
-                            className="w-full bg-blue-600 hover:bg-blue-700"
-                          >
-                            {createAdminMutation.isPending ? "Creating..." : "Create Admin User"}
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                  <CardTitle className="text-white flex items-center space-x-2">
+                    <Activity className="w-5 h-5" />
+                    <span>System Performance</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-400 mb-1">
+                        {stats ? Math.round((stats.activeShops / (stats.totalShops || 1)) * 100) : 0}%
+                      </div>
+                      <div className="text-slate-400 text-sm">Shop Approval Rate</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-400 mb-1">
+                        {stats?.totalUsers || 0}
+                      </div>
+                      <div className="text-slate-400 text-sm">Total Platform Users</div>
+                    </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  {adminUsersLoading ? (
-                    <div className="text-slate-400 text-center py-8">Loading admin users...</div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="border-slate-700">
-                            <TableHead className="text-slate-300">Email</TableHead>
-                            <TableHead className="text-slate-300">Role</TableHead>
-                            <TableHead className="text-slate-300">Status</TableHead>
-                            <TableHead className="text-slate-300">Created</TableHead>
-                            <TableHead className="text-slate-300">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {adminUsers.map((admin) => (
-                            <TableRow key={admin.id} className="border-slate-700">
-                              <TableCell className="text-white font-medium">{admin.email}</TableCell>
-                              <TableCell>
-                                <Badge className={admin.role === 'super_admin' ? 'bg-red-500' : admin.role === 'admin' ? 'bg-blue-500' : 'bg-green-500'}>
-                                  {admin.role}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Badge className={admin.is_active ? 'bg-green-500' : 'bg-red-500'}>
-                                  {admin.is_active ? 'Active' : 'Inactive'}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-slate-300">
-                                {new Date(admin.created_at).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell>
-                                {admin.user_id !== user?.id && admin.is_active && (
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => deactivateAdminMutation.mutate(admin.user_id)}
-                                    disabled={deactivateAdminMutation.isPending}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
-            </TabsContent>
+            </div>
+          </TabsContent>
 
-            <TabsContent value="industries">
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-white">Industries Management</CardTitle>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button className="bg-green-600 hover:bg-green-700">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add Industry
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="bg-slate-800 border-slate-700">
-                        <DialogHeader>
-                          <DialogTitle className="text-white">Create New Industry</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="name" className="text-white">Industry Name</Label>
-                            <Input
-                              id="name"
-                              value={newIndustryName}
-                              onChange={(e) => setNewIndustryName(e.target.value)}
-                              className="bg-slate-700 border-slate-600 text-white"
-                              placeholder="Technology"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="code" className="text-white">Industry Code</Label>
-                            <Input
-                              id="code"
-                              value={newIndustryCode}
-                              onChange={(e) => setNewIndustryCode(e.target.value)}
-                              className="bg-slate-700 border-slate-600 text-white"
-                              placeholder="TECH"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="description" className="text-white">Description</Label>
-                            <Textarea
-                              id="description"
-                              value={newIndustryDescription}
-                              onChange={(e) => setNewIndustryDescription(e.target.value)}
-                              className="bg-slate-700 border-slate-600 text-white"
-                              placeholder="Industry description..."
-                            />
-                          </div>
-                          <Button 
-                            onClick={() => createIndustryMutation.mutate({ 
-                              name: newIndustryName, 
-                              code: newIndustryCode, 
-                              description: newIndustryDescription 
-                            })}
-                            disabled={!newIndustryName || !newIndustryCode || createIndustryMutation.isPending}
-                            className="w-full bg-green-600 hover:bg-green-700"
-                          >
-                            {createIndustryMutation.isPending ? "Creating..." : "Create Industry"}
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+          {/* System Monitor Tab */}
+          <TabsContent value="monitor">
+            <SystemMonitor />
+          </TabsContent>
+
+          <TabsContent value="shops">
+            <Card className="bg-slate-800 border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-white">Shop Approvals & Document Verification</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {shopsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+                    <p className="text-slate-400 mt-2">Loading shops...</p>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  {industriesLoading ? (
-                    <div className="text-slate-400 text-center py-8">Loading industries...</div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="border-slate-700">
-                            <TableHead className="text-slate-300">Name</TableHead>
-                            <TableHead className="text-slate-300">Code</TableHead>
-                            <TableHead className="text-slate-300">Status</TableHead>
-                            <TableHead className="text-slate-300">Created</TableHead>
-                            <TableHead className="text-slate-300">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {industries.map((industry) => (
-                            <TableRow key={industry.id} className="border-slate-700">
-                              <TableCell className="text-white font-medium">{industry.name}</TableCell>
-                              <TableCell className="text-slate-300">{industry.code}</TableCell>
-                              <TableCell>{getStatusBadge(industry.status)}</TableCell>
-                              <TableCell className="text-slate-300">
-                                {new Date(industry.created_at).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex space-x-2">
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => setEditingIndustry(industry)}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-                                      >
-                                        <Edit className="w-4 h-4" />
-                                      </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="bg-slate-800 border-slate-700">
-                                      <DialogHeader>
-                                        <DialogTitle className="text-white">Edit Industry</DialogTitle>
-                                      </DialogHeader>
-                                      {editingIndustry && (
-                                        <div className="space-y-4">
-                                          <div>
-                                            <Label className="text-white">Industry Name</Label>
-                                            <Input
-                                              value={editingIndustry.name}
-                                              onChange={(e) => setEditingIndustry({...editingIndustry, name: e.target.value})}
-                                              className="bg-slate-700 border-slate-600 text-white"
-                                            />
-                                          </div>
-                                          <div>
-                                            <Label className="text-white">Status</Label>
-                                            <Select 
-                                              value={editingIndustry.status} 
-                                              onValueChange={(value) => setEditingIndustry({...editingIndustry, status: value})}
-                                            >
-                                              <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                                                <SelectValue />
-                                              </SelectTrigger>
-                                              <SelectContent className="bg-slate-700 border-slate-600">
-                                                <SelectItem value="active">Active</SelectItem>
-                                                <SelectItem value="inactive">Inactive</SelectItem>
-                                              </SelectContent>
-                                            </Select>
-                                          </div>
-                                          <Button 
-                                            onClick={() => updateIndustryMutation.mutate(editingIndustry)}
-                                            disabled={updateIndustryMutation.isPending}
-                                            className="w-full bg-blue-600 hover:bg-blue-700"
-                                          >
-                                            {updateIndustryMutation.isPending ? "Updating..." : "Update Industry"}
-                                          </Button>
-                                        </div>
-                                      )}
-                                    </DialogContent>
-                                  </Dialog>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button
-                                        size="sm"
-                                        variant="destructive"
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent className="bg-slate-800 border-slate-700">
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle className="text-white">Delete Industry</AlertDialogTitle>
-                                        <AlertDialogDescription className="text-slate-400">
-                                          Are you sure you want to delete "{industry.name}"? This action cannot be undone.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel className="bg-slate-700 text-white border-slate-600">Cancel</AlertDialogCancel>
-                                        <AlertDialogAction 
-                                          onClick={() => deleteIndustryMutation.mutate(industry.id)}
-                                          className="bg-red-600 hover:bg-red-700"
-                                        >
-                                          Delete
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="system">
-              <div className="grid gap-6">
-                <Card className="bg-slate-800 border-slate-700">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center">
-                      <BarChart3 className="w-5 h-5 mr-2" />
-                      System Overview
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="bg-slate-700 p-4 rounded-lg">
-                        <h4 className="text-white font-medium mb-2">Platform Statistics</h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between text-slate-300">
-                            <span>Active Shops:</span>
-                            <span className="text-green-400">{stats?.activeShops || 0}</span>
-                          </div>
-                          <div className="flex justify-between text-slate-300">
-                            <span>Pending Shops:</span>
-                            <span className="text-yellow-400">{stats?.pendingShops || 0}</span>
-                          </div>
-                          <div className="flex justify-between text-slate-300">
-                            <span>Active Industries:</span>
-                            <span className="text-blue-400">{stats?.activeIndustries || 0}</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-slate-700 p-4 rounded-lg">
-                        <h4 className="text-white font-medium mb-2">Content Statistics</h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between text-slate-300">
-                            <span>Total Products:</span>
-                            <span className="text-purple-400">{stats?.totalProducts || 0}</span>
-                          </div>
-                          <div className="flex justify-between text-slate-300">
-                            <span>Pending Products:</span>
-                            <span className="text-orange-400">{stats?.pendingProducts || 0}</span>
-                          </div>
-                          <div className="flex justify-between text-slate-300">
-                            <span>Total Industries:</span>
-                            <span className="text-indigo-400">{stats?.totalIndustries || 0}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-700 p-4 rounded-lg">
-                        <h4 className="text-white font-medium mb-2">User Management</h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between text-slate-300">
-                            <span>Total Users:</span>
-                            <span className="text-cyan-400">{stats?.totalUsers || 0}</span>
-                          </div>
-                          <div className="flex justify-between text-slate-300">
-                            <span>Admin Users:</span>
-                            <span className="text-red-400">{stats?.totalAdmins || 0}</span>
-                          </div>
-                          <div className="flex justify-between text-slate-300">
-                            <span>Your Role:</span>
-                            <span className="text-green-400 capitalize">{adminRole}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
-        ) : (
-          // Regular admin view (shops management only)
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white">Shops Management & Document Verification</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {shopsLoading ? (
-                <div className="text-slate-400 text-center py-8">Loading shops...</div>
-              ) : (
-                <div className="overflow-x-auto">
+                ) : (
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-slate-700">
-                        <TableHead className="text-slate-300">Name</TableHead>
+                      <TableRow>
+                        <TableHead className="text-slate-300">Shop Name</TableHead>
                         <TableHead className="text-slate-300">Industry</TableHead>
                         <TableHead className="text-slate-300">Status</TableHead>
-                        <TableHead className="text-slate-300">Documents</TableHead>
-                        <TableHead className="text-slate-300">Created</TableHead>
+                        <TableHead className="text-slate-300">Doc Verification</TableHead>
+                        <TableHead className="text-slate-300">Registration Date</TableHead>
                         <TableHead className="text-slate-300">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {shops.map((shop) => (
-                        <TableRow key={shop.id} className="border-slate-700">
+                        <TableRow key={shop.id}>
                           <TableCell className="text-white font-medium">{shop.name}</TableCell>
                           <TableCell className="text-slate-300">{shop.industries?.name || 'N/A'}</TableCell>
                           <TableCell>{getStatusBadge(shop.status)}</TableCell>
-                          <TableCell>{getDocumentVerificationBadge(shop.document_verification_status || 'pending')}</TableCell>
+                          <TableCell>{getDocumentVerificationBadge(shop.document_verification_status)}</TableCell>
                           <TableCell className="text-slate-300">
-                            {new Date(shop.created_at).toLocaleDateString()}
+                            {new Date(shop.registration_date).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
-                            <div className="flex space-x-2">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => setSelectedShop(shop)}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-                                  >
-                                    <Eye className="w-4 h-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl">
-                                  <DialogHeader>
-                                    <DialogTitle className="text-white">Shop Documents - {shop.name}</DialogTitle>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    {shop.documents && Object.keys(shop.documents).length > 0 ? (
-                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {Object.entries(shop.documents).map(([docType, url]) => (
-                                          <Card key={docType} className="bg-slate-700 border-slate-600">
-                                            <CardContent className="p-4">
-                                              <div className="flex items-center justify-between mb-2">
-                                                <span className="text-white font-medium capitalize">
-                                                  {docType.replace('_', ' ')}
-                                                </span>
-                                                <FileText className="w-4 h-4 text-blue-400" />
-                                              </div>
-                                              <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => window.open(url as string, '_blank')}
-                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-                                              >
-                                                View Document
-                                              </Button>
-                                            </CardContent>
-                                          </Card>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <div className="text-slate-400 text-center py-8">
-                                        No documents uploaded for this shop.
-                                      </div>
-                                    )}
-                                    
-                                    <div className="border-t border-slate-600 pt-4">
-                                      <Label htmlFor="verification-notes" className="text-white">
-                                        Verification Notes (Optional)
-                                      </Label>
-                                      <Textarea
-                                        id="verification-notes"
-                                        value={verificationNotes}
-                                        onChange={(e) => setVerificationNotes(e.target.value)}
-                                        placeholder="Add notes about the verification process..."
-                                        className="mt-2 bg-slate-700 border-slate-600 text-white"
-                                      />
-                                    </div>
-
-                                    <div className="flex space-x-2">
-                                      <Button
-                                        onClick={() => handleApproveShop(shop.id, verificationNotes)}
-                                        disabled={approveShopMutation.isPending}
-                                        className="flex-1 bg-green-600 hover:bg-green-700"
-                                      >
-                                        <CheckCircle className="w-4 h-4 mr-2" />
-                                        Approve Shop
-                                      </Button>
-                                      <Button
-                                        onClick={() => handleRejectShop(shop.id, verificationNotes)}
-                                        disabled={approveShopMutation.isPending}
-                                        variant="destructive"
-                                        className="flex-1"
-                                      >
-                                        <XCircle className="w-4 h-4 mr-2" />
-                                        Reject Shop
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
+                            <div className="flex items-center space-x-2">
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleApproveShop(shop.id)}
+                                disabled={shop.status === 'active' || approveShopMutation.isPending}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleRejectShop(shop.id)}
+                                disabled={shop.status === 'inactive' || approveShopMutation.isPending}
+                                className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {isSuperAdmin && (
+            <TabsContent value="users">
+              <UserManagement />
+            </TabsContent>
+          )}
+
+          {isSuperAdmin && (
+            <TabsContent value="content">
+              <ContentManagement />
+            </TabsContent>
+          )}
+
+          {isSuperAdmin && (
+            <TabsContent value="audit">
+              <AuditLogs />
+            </TabsContent>
+          )}
+
+          {isSuperAdmin && (
+            <TabsContent value="system">
+              <Card className="bg-slate-800 border-slate-700">
+                <CardHeader>
+                  <CardTitle className="text-white">System Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="text-lg font-semibold text-white mb-3">Database Status</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Connection:</span>
+                          <Badge className="bg-green-500 text-white">Active</Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Total Tables:</span>
+                          <span className="text-white">8</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-white mb-3">Application Health</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Uptime:</span>
+                          <span className="text-white">99.9%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Response Time:</span>
+                          <span className="text-white">150ms</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+        </Tabs>
       </div>
     </div>
   );
