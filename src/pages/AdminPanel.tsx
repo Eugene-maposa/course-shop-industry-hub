@@ -347,6 +347,14 @@ const AdminPanel = () => {
         {/* Main Content */}
         <Tabs defaultValue="dashboard" className="space-y-6">
           <TabsList className="bg-slate-800 border-slate-700">
+            <TabsTrigger 
+              value="home" 
+              className="data-[state=active]:bg-slate-700"
+              onClick={() => window.location.href = '/'}
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              Home
+            </TabsTrigger>
             <TabsTrigger value="dashboard" className="data-[state=active]:bg-slate-700">
               <BarChart3 className="w-4 h-4 mr-2" />
               Dashboard
