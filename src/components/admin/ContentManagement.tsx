@@ -375,6 +375,7 @@ export const ContentManagement = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="text-slate-300">Image</TableHead>
                       <TableHead className="text-slate-300">Name</TableHead>
                       <TableHead className="text-slate-300">Shop</TableHead>
                       <TableHead className="text-slate-300">Price</TableHead>
@@ -385,6 +386,21 @@ export const ContentManagement = () => {
                   <TableBody>
                     {products.slice(0, 10).map((product) => (
                       <TableRow key={product.id}>
+                        <TableCell>
+                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-700">
+                            {product.main_image_url ? (
+                              <img 
+                                src={product.main_image_url} 
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-slate-600 flex items-center justify-center">
+                                <Package className="w-6 h-6 text-slate-400" />
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-white font-medium">{product.name}</TableCell>
                         <TableCell className="text-slate-300">{product.shops?.name || 'N/A'}</TableCell>
                         <TableCell className="text-slate-300">${product.price || 0}</TableCell>

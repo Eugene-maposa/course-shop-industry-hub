@@ -12,11 +12,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/Navbar";
 import ProductRegistrationForm from "@/components/forms/ProductRegistrationForm";
 import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/hooks/useCart";
+import { useWishlist } from "@/hooks/useWishlist";
 
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [activeTab, setActiveTab] = useState("browse");
+  const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   // Fetch products with related data
   const { data: products = [], isLoading } = useQuery({
@@ -127,12 +131,36 @@ const Products = () => {
                         {product.product_types?.name || 'General'}
                       </Badge>
                       <div className="absolute top-4 right-4 z-10">
-                        <Button size="sm" variant="secondary" className="bg-white/80 backdrop-blur-sm hover:bg-white/90">
-                          <Heart className="w-4 h-4" />
+                        <Button 
+                          size="sm" 
+                          variant="secondary" 
+                          className={`bg-white/80 backdrop-blur-sm hover:bg-white/90 ${isInWishlist(product.id) ? 'text-red-500' : ''}`}
+                          onClick={() => {
+                            if (isInWishlist(product.id)) {
+                              removeFromWishlist(product.id);
+                            } else {
+                              addToWishlist({
+                                id: product.id,
+                                name: product.name,
+                                price: product.price || 0,
+                                image: product.main_image_url || "/placeholder.svg"
+                              });
+                            }
+                          }}
+                        >
+                          <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                         </Button>
                       </div>
-                      <div className="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                        <ShoppingCart className="w-16 h-16 text-gray-400" />
+                      <div className="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
+                        {product.main_image_url ? (
+                          <img 
+                            src={product.main_image_url} 
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ShoppingCart className="w-16 h-16 text-gray-400" />
+                        )}
                       </div>
                     </div>
                     
@@ -163,7 +191,18 @@ const Products = () => {
                               View
                             </Button>
                           </Link>
-                          <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                          <Button 
+                            size="sm" 
+                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                            onClick={() => {
+                              addToCart({
+                                id: product.id,
+                                name: product.name,
+                                price: product.price || 0,
+                                image: product.main_image_url || "/placeholder.svg"
+                              });
+                            }}
+                          >
                             <ShoppingCart className="w-4 h-4 mr-1" />
                             Add
                           </Button>
