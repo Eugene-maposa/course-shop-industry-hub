@@ -32,45 +32,10 @@ const AdminPanel = () => {
 
   console.log('AdminPanel render:', { user: user?.email, isAdmin, adminRole, adminLoading, authLoading });
 
-  // Show loading while checking authentication and admin status
-  if (authLoading || adminLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-white text-xl">Loading admin panel...</div>
-      </div>
-    );
-  }
-
-  // Redirect to login if not authenticated
-  if (!user) {
-    return <Navigate to="/admin/login" replace />;
-  }
-
-  // Show access denied if not admin
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <Card className="w-full max-w-md bg-slate-800 border-slate-700">
-          <CardContent className="p-6 text-center">
-            <Shield className="w-12 h-12 text-red-400 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
-            <p className="text-slate-400 mb-4">You don't have admin privileges.</p>
-            <Button 
-              onClick={() => window.location.href = '/'}
-              className="bg-slate-700 hover:bg-slate-600 text-white"
-            >
-              Back to Home
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   // Only super-admins can access all features
   const isSuperAdmin = adminRole === 'super_admin';
 
-  // Fetch dashboard stats
+  // Fetch dashboard stats - call all hooks before conditional returns
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
@@ -258,6 +223,41 @@ const AdminPanel = () => {
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
+
+  // Show loading while checking authentication and admin status
+  if (authLoading || adminLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-white text-xl">Loading admin panel...</div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  // Show access denied if not admin
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <Card className="w-full max-w-md bg-slate-800 border-slate-700">
+          <CardContent className="p-6 text-center">
+            <Shield className="w-12 h-12 text-red-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
+            <p className="text-slate-400 mb-4">You don't have admin privileges.</p>
+            <Button 
+              onClick={() => window.location.href = '/'}
+              className="bg-slate-700 hover:bg-slate-600 text-white"
+            >
+              Back to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
