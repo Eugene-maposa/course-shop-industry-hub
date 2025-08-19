@@ -20,7 +20,7 @@ export const UserManagement = () => {
   const [newUserRole, setNewUserRole] = useState("admin");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  // Fetch admin users
+  // Fetch admin users with real-time updates
   const { data: adminUsers = [], isLoading } = useQuery({
     queryKey: ['admin-users-management'],
     queryFn: async () => {
@@ -31,7 +31,8 @@ export const UserManagement = () => {
       
       if (error) throw error;
       return data || [];
-    }
+    },
+    refetchInterval: 10000 // Auto-refresh every 10 seconds
   });
 
   // Create admin user mutation

@@ -32,7 +32,7 @@ export const SystemMonitor = () => {
         storageHealth: storageUsage.error ? 'error' : 'healthy'
       };
     },
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 15000 // Refresh every 15 seconds for better monitoring
   });
 
   // Real-time system health monitoring

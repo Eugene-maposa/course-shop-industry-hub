@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -379,7 +379,7 @@ export type Database = {
         Returns: boolean
       }
       check_product_legality: {
-        Args: { product_name: string; product_description?: string }
+        Args: { product_description?: string; product_name: string }
         Returns: {
           is_legal: boolean
           violations: string[]
@@ -387,9 +387,9 @@ export type Database = {
       }
       create_admin_user: {
         Args: {
-          target_user_id: string
           admin_role: Database["public"]["Enums"]["admin_role"]
           created_by_id: string
+          target_user_id: string
         }
         Returns: Json
       }
@@ -411,8 +411,8 @@ export type Database = {
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
@@ -422,19 +422,19 @@ export type Database = {
       }
       log_admin_action: {
         Args: {
-          admin_id: string
           action_type: string
-          target_table?: string
-          target_id?: string
-          old_values?: Json
+          admin_id: string
           new_values?: Json
+          old_values?: Json
+          target_id?: string
+          target_table?: string
         }
         Returns: Json
       }
       update_admin_role: {
         Args: {
-          target_user_id: string
           new_role: Database["public"]["Enums"]["admin_role"]
+          target_user_id: string
         }
         Returns: Json
       }

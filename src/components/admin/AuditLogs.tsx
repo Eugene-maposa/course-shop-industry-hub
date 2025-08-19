@@ -14,7 +14,7 @@ export const AuditLogs = () => {
   const [filterAction, setFilterAction] = useState("all");
   const [filterTable, setFilterTable] = useState("all");
 
-  // Fetch audit logs
+  // Fetch audit logs with real-time updates
   const { data: auditLogs = [], isLoading } = useQuery({
     queryKey: ['audit-logs', filterAction, filterTable],
     queryFn: async () => {
@@ -36,7 +36,8 @@ export const AuditLogs = () => {
       
       if (error) throw error;
       return data || [];
-    }
+    },
+    refetchInterval: 5000 // Auto-refresh every 5 seconds for logs
   });
 
   // Filter logs based on search term

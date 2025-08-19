@@ -66,7 +66,8 @@ const AdminPanel = () => {
         activeIndustries: industries.filter(i => i.status === 'active').length
       };
     },
-    enabled: !!user && isAdmin
+    enabled: !!user && isAdmin,
+    refetchInterval: 10000 // Auto-refresh stats every 10 seconds
   });
 
   // Fetch shops for approval including document verification
@@ -89,7 +90,8 @@ const AdminPanel = () => {
       console.log('Shops fetched:', data?.length);
       return data || [];
     },
-    enabled: !!user && isAdmin
+    enabled: !!user && isAdmin,
+    refetchInterval: 10000 // Auto-refresh shops every 10 seconds
   });
 
   // Shop approval mutation with document verification
