@@ -25,8 +25,9 @@ export const ContentManagement = () => {
   const [newIndustryName, setNewIndustryName] = useState("");
   const [newIndustryCode, setNewIndustryCode] = useState("");
   const [newIndustryDescription, setNewIndustryDescription] = useState("");
-  const [editingIndustry, setEditingIndustry] = useState(null);
+  const [editingIndustry, setEditingIndustry] = useState<any>(null);
   const [isIndustryDialogOpen, setIsIndustryDialogOpen] = useState(false);
+  const [isEditIndustryDialogOpen, setIsEditIndustryDialogOpen] = useState(false);
 
   // Fetch industries
   const { data: industries = [], isLoading: industriesLoading } = useQuery({
@@ -319,37 +320,111 @@ export const ContentManagement = () => {
                         <TableCell className="text-slate-300">
                           {new Date(industry.created_at).toLocaleDateString()}
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Button variant="outline" size="sm" className="border-slate-600 text-slate-300">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm" className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent className="bg-slate-800 border-slate-700">
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle className="text-white">Delete Industry</AlertDialogTitle>
-                                  <AlertDialogDescription className="text-slate-300">
-                                    Are you sure you want to delete this industry? This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel className="bg-slate-700 text-white hover:bg-slate-600">Cancel</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    onClick={() => deleteIndustryMutation.mutate(industry.id)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
+                         <TableCell>
+                           <div className="flex items-center space-x-2">
+                             <Dialog open={isEditIndustryDialogOpen && editingIndustry?.id === industry.id} onOpenChange={(open) => {
+                               setIsEditIndustryDialogOpen(open);
+                               if (!open) setEditingIndustry(null);
+                             }}>
+                               <DialogTrigger asChild>
+                                 <Button 
+                                   variant="outline" 
+                                   size="sm" 
+                                   className="border-slate-600 text-slate-300 hover:bg-slate-600"
+                                   onClick={() => {
+                                     setEditingIndustry(industry);
+                                     setIsEditIndustryDialogOpen(true);
+                                   }}
+                                 >
+                                   <Edit className="w-4 h-4" />
+                                 </Button>
+                               </DialogTrigger>
+                               <DialogContent className="bg-slate-800 border-slate-700">
+                                 <DialogHeader>
+                                   <DialogTitle className="text-white">Edit Industry</DialogTitle>
+                                 </DialogHeader>
+                                 <div className="space-y-4">
+                                   <div>
+                                     <Label htmlFor="edit-name" className="text-white">Industry Name</Label>
+                                     <Input
+                                       id="edit-name"
+                                       value={editingIndustry?.name || ""}
+                                       onChange={(e) => setEditingIndustry({...editingIndustry, name: e.target.value})}
+                                       className="bg-slate-700 border-slate-600 text-white"
+                                     />
+                                   </div>
+                                   <div>
+                                     <Label htmlFor="edit-code" className="text-white">Industry Code</Label>
+                                     <Input
+                                       id="edit-code"
+                                       value={editingIndustry?.code || ""}
+                                       onChange={(e) => setEditingIndustry({...editingIndustry, code: e.target.value})}
+                                       className="bg-slate-700 border-slate-600 text-white"
+                                     />
+                                   </div>
+                                   <div>
+                                     <Label htmlFor="edit-description" className="text-white">Description</Label>
+                                     <Textarea
+                                       id="edit-description"
+                                       value={editingIndustry?.description || ""}
+                                       onChange={(e) => setEditingIndustry({...editingIndustry, description: e.target.value})}
+                                       className="bg-slate-700 border-slate-600 text-white"
+                                     />
+                                   </div>
+                                   <div>
+                                     <Label htmlFor="edit-status" className="text-white">Status</Label>
+                                     <Select 
+                                       value={editingIndustry?.status || "active"} 
+                                       onValueChange={(value) => setEditingIndustry({...editingIndustry, status: value})}
+                                     >
+                                       <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                                         <SelectValue />
+                                       </SelectTrigger>
+                                       <SelectContent className="bg-slate-700 border-slate-600">
+                                         <SelectItem value="active">Active</SelectItem>
+                                         <SelectItem value="inactive">Inactive</SelectItem>
+                                       </SelectContent>
+                                     </Select>
+                                   </div>
+                                   <Button 
+                                     onClick={() => {
+                                       updateIndustryMutation.mutate(editingIndustry);
+                                       setIsEditIndustryDialogOpen(false);
+                                     }}
+                                     disabled={!editingIndustry?.name || !editingIndustry?.code || updateIndustryMutation.isPending}
+                                     className="w-full bg-blue-600 hover:bg-blue-700"
+                                   >
+                                     {updateIndustryMutation.isPending ? "Updating..." : "Update Industry"}
+                                   </Button>
+                                 </div>
+                               </DialogContent>
+                             </Dialog>
+                             <AlertDialog>
+                               <AlertDialogTrigger asChild>
+                                 <Button variant="outline" size="sm" className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white">
+                                   <Trash2 className="w-4 h-4" />
+                                 </Button>
+                               </AlertDialogTrigger>
+                               <AlertDialogContent className="bg-slate-800 border-slate-700">
+                                 <AlertDialogHeader>
+                                   <AlertDialogTitle className="text-white">Delete Industry</AlertDialogTitle>
+                                   <AlertDialogDescription className="text-slate-300">
+                                     Are you sure you want to delete this industry? This action cannot be undone.
+                                   </AlertDialogDescription>
+                                 </AlertDialogHeader>
+                                 <AlertDialogFooter>
+                                   <AlertDialogCancel className="bg-slate-700 text-white hover:bg-slate-600">Cancel</AlertDialogCancel>
+                                   <AlertDialogAction 
+                                     onClick={() => deleteIndustryMutation.mutate(industry.id)}
+                                     className="bg-red-600 hover:bg-red-700"
+                                   >
+                                     Delete
+                                   </AlertDialogAction>
+                                 </AlertDialogFooter>
+                               </AlertDialogContent>
+                             </AlertDialog>
+                           </div>
+                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
