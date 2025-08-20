@@ -50,6 +50,7 @@ export type Database = {
       admin_users: {
         Row: {
           created_at: string | null
+          created_by: string | null
           email: string | null
           id: string
           is_active: boolean | null
@@ -59,6 +60,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          created_by?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
@@ -68,6 +70,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          created_by?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
@@ -390,6 +393,13 @@ export type Database = {
           admin_role: Database["public"]["Enums"]["admin_role"]
           created_by_id: string
           target_user_id: string
+        }
+        Returns: Json
+      }
+      create_admin_user_safe: {
+        Args: {
+          admin_role?: Database["public"]["Enums"]["admin_role"]
+          user_email: string
         }
         Returns: Json
       }

@@ -38,15 +38,17 @@ export const UserManagement = () => {
   // Create admin user mutation
   const createAdminMutation = useMutation({
     mutationFn: async ({ email, role }: { email: string, role: string }) => {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
       const { data, error } = await supabase
-        .from('admin_users')
-        .insert({
-          user_id: email, // In real app, would create auth user first
-          role: role as "super_admin" | "admin" | "moderator",
-          email: email
-        })
-        .select()
-        .single();
+        .rpc('create_admin_user_safe', {
+          user_email: email,
+          admin_role: role as "super_admin" | "admin" | "moderator"
+        });
 
       if (error) throw error;
       return data;
@@ -62,9 +64,13 @@ export const UserManagement = () => {
       setIsCreateDialogOpen(false);
     },
     onError: (error) => {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Failed to create admin user. User must exist in the system first.";
+      
       toast({
         title: "Error",
-        description: "Failed to create admin user.",
+        description: errorMessage,
         variant: "destructive"
       });
       console.error("Error creating admin user:", error);
@@ -166,6 +172,11 @@ export const UserManagement = () => {
             <DialogHeader>
               <DialogTitle className="text-white">Create Admin User</DialogTitle>
             </DialogHeader>
+            <div className="bg-slate-700 border border-slate-600 rounded-lg p-3 mb-4">
+              <p className="text-sm text-slate-300">
+                <strong>Note:</strong> The user must already be registered in the system. This will grant admin privileges to an existing user account.
+              </p>
+            </div>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="email" className="text-white">Email</Label>
