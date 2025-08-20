@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/AuthModal";
+import ProductRegistrationGuide from "@/components/ProductRegistrationGuide";
 import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const { user, loading } = useAuth();
 
   const handleRegistrationClick = () => {
@@ -105,7 +107,11 @@ const Index = () => {
                   </>
                 )}
                 
-                <Button variant="outline" className="w-full border-nust-blue text-nust-blue hover:bg-nust-blue hover:text-white py-3 text-sm font-medium">
+                <Button 
+                  onClick={() => setIsGuideOpen(true)}
+                  variant="outline" 
+                  className="w-full border-nust-blue text-nust-blue hover:bg-nust-blue hover:text-white py-3 text-sm font-medium"
+                >
                   <FileText className="w-4 h-4 mr-2" />
                   HOW TO REGISTER PRODUCTS
                 </Button>
@@ -283,6 +289,11 @@ const Index = () => {
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
+      />
+      
+      <ProductRegistrationGuide 
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
       />
     </div>
   );
