@@ -19,30 +19,79 @@ ProductHub is a comprehensive digital marketplace platform designed to facilitat
 
 ---
 
-### **2. System Architecture**
+### **2. System Architecture: Microservices Design**
 
-#### **2.1 Frontend Technology Stack**
-- **Framework:** React 18.3.1 with TypeScript
-- **Build Tool:** Vite for fast development and optimized builds
-- **UI Framework:** Tailwind CSS with shadcn/ui component library
-- **State Management:** TanStack Query for server state management
-- **Routing:** React Router DOM for client-side navigation
-- **Authentication:** Supabase Auth with role-based access control
+#### **2.1 Microservice Architecture Overview**
+ProductHub employs a distributed microservices architecture to ensure scalability, maintainability, and independent service deployment. Each microservice is responsible for a specific business domain and operates independently.
 
-#### **2.2 Backend Infrastructure**
-- **Database:** PostgreSQL via Supabase
-- **Authentication:** Supabase Auth with JWT tokens
-- **File Storage:** Supabase Storage for documents and images
-- **API:** Supabase Edge Functions and RPC calls
-- **Real-time Features:** Supabase Realtime subscriptions
+#### **2.2 Core Microservices**
 
-#### **2.3 Security Features**
-- Row Level Security (RLS) policies
-- JWT-based authentication
-- File upload validation and sanitization
-- Product legality verification system
-- Admin role management
-- Audit logging and system monitoring
+**Frontend Services:**
+- **Web Application Service:** React 18.3.1 with TypeScript, Vite build system
+- **Mobile Gateway Service:** Responsive web interface optimized for mobile devices
+- **Admin Dashboard Service:** Dedicated administrative interface with advanced features
+
+**Backend Microservices:**
+- **User Management Service:** Authentication, authorization, and user profile management
+- **Industry Registration Service:** Industry classification, registration, and management
+- **Shop Management Service:** Shop registration, verification, and lifecycle management
+- **Product Catalog Service:** Product registration, inventory, and catalog management
+- **Document Processing Service:** File upload, validation, and verification workflows
+- **Notification Service:** Email, SMS, and in-app notification delivery
+- **Audit & Logging Service:** System monitoring, audit trails, and compliance logging
+- **Payment Processing Service:** Transaction handling and payment gateway integration
+- **Search & Discovery Service:** Advanced search, filtering, and recommendation engine
+- **Reporting & Analytics Service:** Business intelligence and data analytics
+
+#### **2.3 Service Communication**
+- **API Gateway:** Centralized entry point for all client requests
+- **Service Mesh:** Inter-service communication with load balancing and fault tolerance
+- **Event-Driven Architecture:** Asynchronous messaging using pub/sub patterns
+- **Real-time Communication:** WebSocket connections for live updates
+- **Data Synchronization:** Event sourcing and CQRS patterns for data consistency
+
+#### **2.4 Technology Stack per Service**
+
+**Frontend Services:**
+- **Framework:** React with TypeScript and Vite
+- **UI Components:** Tailwind CSS with shadcn/ui library
+- **State Management:** TanStack Query for server state, Zustand for client state
+- **Routing:** React Router DOM with lazy loading
+
+**Backend Services:**
+- **Runtime:** Supabase Edge Functions (Deno runtime)
+- **Database:** PostgreSQL with service-specific schemas
+- **Authentication:** JWT-based with service-to-service authentication
+- **File Storage:** Supabase Storage with CDN integration
+- **Message Queue:** Supabase Realtime for event streaming
+
+#### **2.5 Infrastructure & Deployment**
+- **Container Orchestration:** Docker containers with automatic scaling
+- **Service Discovery:** Automatic service registration and discovery
+- **Load Balancing:** Intelligent traffic distribution across service instances
+- **Circuit Breakers:** Fault tolerance and graceful degradation
+- **Health Monitoring:** Service health checks and automatic recovery
+
+#### **2.6 Data Architecture**
+- **Database per Service:** Each microservice maintains its own database
+- **Data Consistency:** Eventual consistency with compensating transactions
+- **Data Lakes:** Centralized analytics data repository
+- **Caching Layer:** Redis-compatible caching for high-performance data access
+- **Backup Strategy:** Service-specific backup and recovery procedures
+
+#### **2.7 Security Architecture**
+- **Zero Trust Network:** Service-to-service authentication and authorization
+- **API Security:** Rate limiting, input validation, and threat detection
+- **Data Encryption:** End-to-end encryption for sensitive data
+- **Secrets Management:** Centralized secret storage and rotation
+- **Compliance Monitoring:** Automated security scanning and vulnerability assessment
+
+#### **2.8 Monitoring & Observability**
+- **Distributed Tracing:** Request tracing across microservices
+- **Centralized Logging:** Aggregated logs with search and analysis
+- **Metrics Collection:** Service-level and business metrics
+- **Alerting System:** Proactive monitoring with intelligent alerting
+- **Performance Analytics:** Service performance and optimization insights
 
 ---
 
