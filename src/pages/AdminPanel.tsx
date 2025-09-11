@@ -445,6 +445,11 @@ const AdminPanel = () => {
             </div>
           </TabsContent>
 
+          {/* Document Review Tab */}
+          <TabsContent value="documents">
+            <ShopDocumentManagement />
+          </TabsContent>
+
           {/* System Monitor Tab */}
           <TabsContent value="monitor">
             <SystemMonitor />

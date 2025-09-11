@@ -132,8 +132,8 @@ const ShopRegistrationForm = () => {
         const fileName = `${docType}_${Date.now()}.${fileExt}`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('shop-icons')
-          .upload(`documents/${fileName}`, file, {
+          .from('shop-documents')
+          .upload(`temp/${fileName}`, file, {
             cacheControl: '3600',
             upsert: false
           });
@@ -144,8 +144,8 @@ const ShopRegistrationForm = () => {
         }
         
         const { data: { publicUrl } } = supabase.storage
-          .from('shop-icons')
-          .getPublicUrl(`documents/${fileName}`);
+          .from('shop-documents')
+          .getPublicUrl(`temp/${fileName}`);
           
         documentUrls[docType] = publicUrl;
         console.log(`Document uploaded successfully for ${docType}:`, publicUrl);
