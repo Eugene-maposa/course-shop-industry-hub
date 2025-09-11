@@ -21,6 +21,7 @@ import { SystemMonitor } from "@/components/admin/SystemMonitor";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { ContentManagement } from "@/components/admin/ContentManagement";
 import { AuditLogs } from "@/components/admin/AuditLogs";
+import { ShopDocumentManagement } from "@/components/admin/ShopDocumentManagement";
 
 const AdminPanel = () => {
   const { isAdmin, adminRole, loading: adminLoading, logAdminAction } = useAdmin();
@@ -368,6 +369,10 @@ const AdminPanel = () => {
             <TabsTrigger value="shops" className="data-[state=active]:bg-slate-700">
               <Building className="w-4 h-4 mr-2" />
               Shop Approvals
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="data-[state=active]:bg-slate-700">
+              <FileText className="w-4 h-4 mr-2" />
+              Document Review
             </TabsTrigger>
             {isSuperAdmin && (
               <>

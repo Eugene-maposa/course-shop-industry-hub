@@ -377,7 +377,20 @@ class ShopManagementService {
       }
 
       const fileExt = file.name.split('.').pop();
+      // Organize documents by shop ID in folders
       const fileName = `${shopId}/${documentType}_${Date.now()}.${fileExt}`;
+
+      // Create shop-documents bucket if it doesn't exist
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(bucket => bucket.name === 'shop-documents');
+      
+      if (!bucketExists) {
+        await supabase.storage.createBucket('shop-documents', {
+          public: true,
+          fileSizeLimit: 10485760, // 10MB
+          allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png', 'image/gif']
+        });
+      }
 
       const { data, error } = await supabase.storage
         .from('shop-documents')
@@ -394,6 +407,40 @@ class ShopManagementService {
     } catch (error) {
       console.error('Error uploading shop document:', error);
       return null;
+    }
+  }
+
+  async getShopDocuments(shopId: string): Promise<Array<{ name: string; url: string; type: string; size: number }>> {
+    try {
+      const { data, error } = await supabase.storage
+        .from('shop-documents')
+        .list(shopId);
+
+      if (error) throw error;
+
+      return (data || []).map(file => ({
+        name: file.name,
+        url: supabase.storage.from('shop-documents').getPublicUrl(`${shopId}/${file.name}`).data.publicUrl,
+        type: file.name.split('.').pop() || '',
+        size: file.metadata?.size || 0
+      }));
+    } catch (error) {
+      console.error('Error fetching shop documents:', error);
+      return [];
+    }
+  }
+
+  async deleteShopDocument(shopId: string, fileName: string): Promise<boolean> {
+    try {
+      const { error } = await supabase.storage
+        .from('shop-documents')
+        .remove([`${shopId}/${fileName}`]);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error deleting shop document:', error);
+      return false;
     }
   }
 
