@@ -320,7 +320,7 @@ class ProductCatalogService {
 
   async updateProductStatus(
     productId: string,
-    status: 'draft' | 'pending' | 'active' | 'inactive'
+    status: 'pending' | 'active' | 'inactive'
   ): Promise<Product | null> {
     try {
       const { data, error } = await supabase
@@ -510,7 +510,7 @@ class ProductCatalogService {
         priceResult
       ] = await Promise.all([
         supabase.from('products').select('id', { count: 'exact' }),
-        supabase.from('products').select('id', { count: 'exact' }).eq('status', 'draft'),
+        supabase.from('products').select('id', { count: 'exact' }).eq('status', 'pending'),
         supabase.from('products').select('id', { count: 'exact' }).eq('status', 'pending'),
         supabase.from('products').select('id', { count: 'exact' }).eq('status', 'active'),
         supabase.from('products').select('id', { count: 'exact' }).eq('status', 'inactive'),

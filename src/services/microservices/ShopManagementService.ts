@@ -319,7 +319,7 @@ class ShopManagementService {
 
   async updateShopStatus(
     shopId: string,
-    status: 'pending' | 'active' | 'inactive' | 'suspended'
+    status: 'pending' | 'active' | 'inactive'
   ): Promise<Shop | null> {
     try {
       const { data, error } = await supabase
