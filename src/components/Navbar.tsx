@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/hooks/use-toast";
+import NotificationCenter from "./NotificationCenter";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -105,6 +106,7 @@ const Navbar = () => {
             {/* User Menu */}
             {user && (
               <div className="flex items-center space-x-4">
+                <NotificationCenter />
                 <div className="flex items-center space-x-2 text-gray-200">
                   <User className="w-4 h-4" />
                   <span className="text-sm">{user.email}</span>

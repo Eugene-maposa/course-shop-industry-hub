@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface ShopWithDocuments {
   id: string;
@@ -40,6 +41,7 @@ interface ShopWithDocuments {
 
 export const ShopDocumentManagement = () => {
   const { toast } = useToast();
+  const { createNotification } = useNotifications();
   const queryClient = useQueryClient();
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -121,11 +123,42 @@ export const ShopDocumentManagement = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
       toast({
         title: "Success",
         description: `Shop documents ${variables.status === 'approved' ? 'approved' : variables.status === 'rejected' ? 'rejected' : 'marked for review'} successfully!`
       });
+
+      // Create notification for shop owner
+      if (selectedShop) {
+        const notificationTitle = variables.status === 'approved' 
+          ? `Shop Documents Approved - ${selectedShop.name}`
+          : variables.status === 'rejected'
+          ? `Shop Documents Rejected - ${selectedShop.name}`
+          : `Shop Documents Need Review - ${selectedShop.name}`;
+          
+        const notificationMessage = variables.status === 'approved'
+          ? `Congratulations! Your shop "${selectedShop.name}" documents have been approved. Your shop is now active.`
+          : variables.status === 'rejected'
+          ? `Your shop "${selectedShop.name}" documents have been rejected. Please review the feedback and resubmit. Notes: ${variables.notes}`
+          : `Your shop "${selectedShop.name}" documents require additional review. Please check the notes and provide additional information if needed. Notes: ${variables.notes}`;
+
+        // For now, we'll use a placeholder user ID since we don't have user-shop relationship
+        // In a real system, you'd fetch the user ID from the shop record
+        const notificationType = variables.status === 'approved' 
+          ? 'document_approved' 
+          : variables.status === 'rejected'
+          ? 'document_rejected'
+          : 'document_review_needed';
+
+        // Note: This would need the actual shop owner's user ID in a real implementation
+        console.log('Would create notification:', {
+          title: notificationTitle,
+          message: notificationMessage,
+          type: notificationType
+        });
+      }
+
       queryClient.invalidateQueries({ queryKey: ['shops-with-documents'] });
       setSelectedShop(null);
       setVerificationNotes("");
