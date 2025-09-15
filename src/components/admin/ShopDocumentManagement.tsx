@@ -129,7 +129,7 @@ export const ShopDocumentManagement = () => {
         description: `Shop documents ${variables.status === 'approved' ? 'approved' : variables.status === 'rejected' ? 'rejected' : 'marked for review'} successfully!`
       });
 
-      // Create notification for shop owner
+      // Create notification and send email to shop owner
       if (selectedShop) {
         const notificationTitle = variables.status === 'approved' 
           ? `Shop Documents Approved - ${selectedShop.name}`
@@ -143,20 +143,35 @@ export const ShopDocumentManagement = () => {
           ? `Your shop "${selectedShop.name}" documents have been rejected. Please review the feedback and resubmit. Notes: ${variables.notes}`
           : `Your shop "${selectedShop.name}" documents require additional review. Please check the notes and provide additional information if needed. Notes: ${variables.notes}`;
 
-        // For now, we'll use a placeholder user ID since we don't have user-shop relationship
-        // In a real system, you'd fetch the user ID from the shop record
         const notificationType = variables.status === 'approved' 
-          ? 'document_approved' 
+          ? 'shop_approved' 
           : variables.status === 'rejected'
-          ? 'document_rejected'
+          ? 'shop_rejected'
           : 'document_review_needed';
 
-        // Note: This would need the actual shop owner's user ID in a real implementation
-        console.log('Would create notification:', {
-          title: notificationTitle,
-          message: notificationMessage,
-          type: notificationType
-        });
+        try {
+          // Send email notification directly using the shop's email
+          await supabase.functions.invoke('send-notification-email', {
+            body: {
+              userEmail: selectedShop.email,
+              type: notificationType,
+              title: notificationTitle,
+              message: notificationMessage
+            }
+          });
+
+          toast({
+            title: "Notification Sent", 
+            description: "Shop owner has been notified via email."
+          });
+        } catch (error) {
+          console.error('Error sending notification:', error);
+          toast({
+            title: "Warning",
+            description: "Document status updated but notification failed to send.",
+            variant: "destructive"
+          });
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ['shops-with-documents'] });
