@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Package, Store, Building2, User, LogOut, Shield } from "lucide-react";
+import { Menu, X, Package, Store, Building2, User, LogOut, Shield, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -107,6 +107,17 @@ const Navbar = () => {
             {user && (
               <div className="flex items-center space-x-4">
                 <NotificationCenter />
+                <Link
+                  to="/dashboard"
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    location.pathname === '/dashboard'
+                      ? "bg-nust-blue-light text-white"
+                      : "text-gray-200 hover:text-white hover:bg-nust-blue-light"
+                  }`}
+                >
+                  <Settings className="w-4 h-4" />
+                  <span>Dashboard</span>
+                </Link>
                 <div className="flex items-center space-x-2 text-gray-200">
                   <User className="w-4 h-4" />
                   <span className="text-sm">{user.email}</span>
@@ -202,6 +213,18 @@ const Navbar = () => {
                       <span>{user.email}</span>
                     </div>
                   </div>
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setIsOpen(false)}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                      location.pathname === '/dashboard'
+                        ? "bg-nust-blue-light text-white"
+                        : "text-gray-200 hover:text-white hover:bg-nust-blue-light"
+                    }`}
+                  >
+                    <Settings className="w-5 h-5" />
+                    <span>Dashboard</span>
+                  </Link>
                   <button
                     onClick={() => {
                       handleSignOut();

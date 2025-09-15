@@ -39,11 +39,12 @@ const UserProfile = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // Since user_profiles table might not exist yet in the types, we'll use any
+      const { data, error } = await (supabase as any)
         .from('user_profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching profile:', error);
@@ -63,7 +64,7 @@ const UserProfile = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_profiles')
         .upsert({
           user_id: user.id,

@@ -16,8 +16,8 @@ interface UserProduct {
   price?: number;
   sku?: string;
   main_image_url?: string;
-  gallery_images?: string[];
-  status: 'pending' | 'approved' | 'rejected';
+  gallery_images?: any;
+  status: 'pending' | 'active' | 'inactive';
   created_at: string;
   updated_at: string;
   product_type?: {
@@ -80,10 +80,10 @@ const UserProducts = () => {
 
   const getStatusBadge = (status: UserProduct['status']) => {
     switch (status) {
-      case 'approved':
-        return <Badge variant="default">Approved</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive">Rejected</Badge>;
+      case 'active':
+        return <Badge variant="default">Active</Badge>;
+      case 'inactive':
+        return <Badge variant="destructive">Inactive</Badge>;
       default:
         return <Badge variant="outline">Pending</Badge>;
     }
@@ -127,16 +127,7 @@ const UserProducts = () => {
                     Add a new product to your catalog for review and approval.
                   </DialogDescription>
                 </DialogHeader>
-                <ProductRegistrationForm 
-                  onSuccess={() => {
-                    setShowCreateForm(false);
-                    fetchUserProducts();
-                    toast({
-                      title: 'Product Added',
-                      description: 'Your product has been submitted for review.',
-                    });
-                  }}
-                />
+                <ProductRegistrationForm />
               </DialogContent>
             </Dialog>
           </div>

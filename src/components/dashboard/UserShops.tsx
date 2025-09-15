@@ -18,7 +18,7 @@ interface UserShop {
   email?: string;
   website?: string;
   icon_url?: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'active' | 'inactive';
   document_verification_status: string;
   verification_notes?: string;
   created_at: string;
@@ -75,10 +75,10 @@ const UserShops = () => {
 
   const getStatusBadge = (status: UserShop['status']) => {
     switch (status) {
-      case 'approved':
-        return <Badge variant="default">Approved</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive">Rejected</Badge>;
+      case 'active':
+        return <Badge variant="default">Active</Badge>;
+      case 'inactive':
+        return <Badge variant="destructive">Inactive</Badge>;
       default:
         return <Badge variant="outline">Pending</Badge>;
     }
@@ -135,16 +135,7 @@ const UserShops = () => {
                     Fill in your shop details to get started with the verification process.
                   </DialogDescription>
                 </DialogHeader>
-                <ShopRegistrationForm 
-                  onSuccess={() => {
-                    setShowCreateForm(false);
-                    fetchUserShops();
-                    toast({
-                      title: 'Shop Registered',
-                      description: 'Your shop has been registered successfully.',
-                    });
-                  }}
-                />
+                <ShopRegistrationForm />
               </DialogContent>
             </Dialog>
           </div>
@@ -239,7 +230,7 @@ const UserShops = () => {
                       )}
                     </div>
 
-                    {shop.verification_notes && shop.status === 'rejected' && (
+                    {shop.verification_notes && shop.status === 'inactive' && (
                       <div className="bg-red-50 p-3 rounded-lg">
                         <p className="text-sm font-medium text-red-800 mb-1">
                           Rejection Reason:
