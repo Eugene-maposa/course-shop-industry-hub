@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 interface CartItem {
   id: string;
@@ -23,7 +23,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
-  const { toast } = useToast();
+  
 
   const addToCart = (product: Omit<CartItem, 'quantity'>) => {
     setItems(prev => {
