@@ -32,6 +32,7 @@ interface ShopWithDocuments {
   email: string;
   phone: string;
   status: string;
+  user_id: string | null;
   document_verification_status: string;
   verification_notes: string;
   documents: any; // JSON type from Supabase
@@ -64,6 +65,7 @@ export const ShopDocumentManagement = () => {
           email,
           phone,
           status,
+          user_id,
           document_verification_status,
           verification_notes,
           documents,
@@ -150,20 +152,49 @@ export const ShopDocumentManagement = () => {
           : 'document_review_needed';
 
         try {
-          // Send email notification directly using the shop's email
-          await supabase.functions.invoke('send-notification-email', {
-            body: {
-              userEmail: selectedShop.email,
-              type: notificationType,
-              title: notificationTitle,
-              message: notificationMessage
-            }
-          });
+          // If shop has a linked user, create notification and send email
+          if (selectedShop.user_id) {
+            // Create notification in database
+            await supabase.rpc('create_notification', {
+              p_user_id: selectedShop.user_id,
+              p_title: notificationTitle,
+              p_message: notificationMessage,
+              p_type: notificationType,
+              p_related_entity_type: 'shop',
+              p_related_entity_id: selectedShop.id
+            });
 
-          toast({
-            title: "Notification Sent", 
-            description: "Shop owner has been notified via email."
-          });
+            // Send email notification
+            await supabase.functions.invoke('send-notification-email', {
+              body: {
+                userId: selectedShop.user_id,
+                userEmail: selectedShop.email,
+                type: notificationType,
+                title: notificationTitle,
+                message: notificationMessage
+              }
+            });
+
+            toast({
+              title: "Notification Sent",
+              description: "Shop owner has been notified via email and dashboard notification."
+            });
+          } else {
+            // If no user linked, send email notification directly
+            await supabase.functions.invoke('send-notification-email', {
+              body: {
+                userEmail: selectedShop.email,
+                type: notificationType,
+                title: notificationTitle,
+                message: notificationMessage
+              }
+            });
+
+            toast({
+              title: "Email Sent",
+              description: "Shop owner has been notified via email."
+            });
+          }
         } catch (error) {
           console.error('Error sending notification:', error);
           toast({
@@ -365,10 +396,10 @@ export const ShopDocumentManagement = () => {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => {
-                                setSelectedShop(shop);
-                                setVerificationNotes(shop.verification_notes || "");
-                              }}
+                               onClick={() => {
+                                 setSelectedShop(shop);
+                                 setVerificationNotes(shop.verification_notes || "");
+                               }}
                               className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
                             >
                               <Eye className="w-4 h-4" />

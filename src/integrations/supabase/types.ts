@@ -335,6 +335,7 @@ export type Database = {
           registration_date: string | null
           status: Database["public"]["Enums"]["shop_status"] | null
           updated_at: string
+          user_id: string | null
           verification_notes: string | null
           verified_at: string | null
           verified_by: string | null
@@ -355,6 +356,7 @@ export type Database = {
           registration_date?: string | null
           status?: Database["public"]["Enums"]["shop_status"] | null
           updated_at?: string
+          user_id?: string | null
           verification_notes?: string | null
           verified_at?: string | null
           verified_by?: string | null
@@ -375,6 +377,7 @@ export type Database = {
           registration_date?: string | null
           status?: Database["public"]["Enums"]["shop_status"] | null
           updated_at?: string
+          user_id?: string | null
           verification_notes?: string | null
           verified_at?: string | null
           verified_by?: string | null
