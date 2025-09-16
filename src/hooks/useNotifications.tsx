@@ -8,7 +8,7 @@ export interface Notification {
   user_id: string;
   title: string;
   message: string;
-  type: 'shop_approved' | 'shop_rejected' | 'document_approved' | 'document_rejected' | 'document_review_needed' | 'general';
+  type: 'shop_approved' | 'shop_rejected' | 'document_approved' | 'document_rejected' | 'document_review_needed' | 'document_update' | 'general';
   read: boolean;
   related_entity_type?: string;
   related_entity_id?: string;

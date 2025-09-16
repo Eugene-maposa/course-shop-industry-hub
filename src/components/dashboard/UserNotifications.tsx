@@ -22,6 +22,8 @@ const UserNotifications = () => {
         return <FileText className="w-5 h-5 text-red-500" />;
       case 'document_review_needed':
         return <AlertCircle className="w-5 h-5 text-yellow-500" />;
+      case 'document_update':
+        return <FileText className="w-5 h-5 text-blue-500" />;
       default:
         return <Bell className="w-5 h-5 text-blue-500" />;
     }
@@ -37,6 +39,8 @@ const UserNotifications = () => {
         return 'destructive';
       case 'document_review_needed':
         return 'secondary';
+      case 'document_update':
+        return 'outline';
       default:
         return 'outline';
     }

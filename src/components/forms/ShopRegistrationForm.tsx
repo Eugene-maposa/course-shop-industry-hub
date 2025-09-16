@@ -90,11 +90,17 @@ const ShopRegistrationForm = () => {
       console.log('Shop registered successfully:', data);
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Handle document upload completion notifications
+      if (Object.keys(documents).length > 0) {
+        await handleDocumentUploadComplete(data.id);
+      }
+
       toast({
         title: "Success",
         description: "Shop registered successfully! Your application and documents are pending admin approval."
       });
+      
       // Reset form
       setFormData({
         name: "",
@@ -156,6 +162,69 @@ const ShopRegistrationForm = () => {
     }
     
     return documentUrls;
+  };
+
+  // Function to handle document upload completion notifications
+  const handleDocumentUploadComplete = async (shopId: string) => {
+    try {
+      // Mark any document-related email notifications as read (automatically "disappear")
+      const { data: notifications } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('type', 'document_review_needed')
+        .eq('read', false);
+
+      if (notifications && notifications.length > 0) {
+        const notificationIds = notifications.map(n => n.id);
+        await supabase
+          .from('notifications')
+          .update({ read: true })
+          .in('id', notificationIds);
+      }
+
+      // Create notification for admin about document update
+      const { data: adminUsers } = await supabase
+        .from('admin_users')
+        .select('user_id')
+        .eq('is_active', true);
+
+      if (adminUsers && adminUsers.length > 0) {
+        // Create notifications for all active admins
+        const adminNotifications = adminUsers.map(admin => ({
+          user_id: admin.user_id,
+          title: 'Shop Documents Updated',
+          message: `New shop registration documents have been uploaded and are ready for review.`,
+          type: 'document_update',
+          related_entity_type: 'shop',
+          related_entity_id: shopId
+        }));
+
+        await supabase
+          .from('notifications')
+          .insert(adminNotifications);
+
+        // Send email notification to admins (we'll use the existing edge function)
+        for (const admin of adminUsers) {
+          try {
+            await supabase.functions.invoke('send-notification-email', {
+              body: {
+                user_id: admin.user_id,
+                title: 'Shop Documents Updated',
+                message: `A shop owner has uploaded new registration documents that require your review and approval.`,
+                type: 'document_update'
+              }
+            });
+          } catch (emailError) {
+            console.warn('Failed to send email to admin:', emailError);
+          }
+        }
+      }
+
+      console.log('Document upload completion notifications sent');
+    } catch (error) {
+      console.error('Error handling document upload completion:', error);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

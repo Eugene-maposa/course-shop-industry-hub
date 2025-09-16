@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Plus, Edit, Eye, MapPin, Phone, Mail, Globe } from 'lucide-react';
+import { Building2, Plus, Edit, Eye, MapPin, Phone, Mail, Globe, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ShopRegistrationForm from '@/components/forms/ShopRegistrationForm';
+import DocumentUpdateModal from '@/components/DocumentUpdateModal';
 
 interface UserShop {
   id: string;
@@ -36,6 +37,8 @@ const UserShops = () => {
   const [shops, setShops] = useState<UserShop[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedShop, setSelectedShop] = useState<UserShop | null>(null);
+  const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -96,6 +99,18 @@ const UserShops = () => {
       default:
         return <Badge variant="outline" className="text-xs">Docs Pending</Badge>;
     }
+  };
+
+  const handleUpdateDocuments = (shop: UserShop) => {
+    setSelectedShop(shop);
+    setIsDocumentModalOpen(true);
+  };
+
+  const closeDocumentModal = () => {
+    setSelectedShop(null);
+    setIsDocumentModalOpen(false);
+    // Refresh shops to show updated status
+    fetchUserShops();
   };
 
   if (loading) {
@@ -255,6 +270,19 @@ const UserShops = () => {
                       </Button>
                     </div>
 
+                    {/* Document Update Button */}
+                    <div className="pt-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => handleUpdateDocuments(shop)}
+                      >
+                        <FileText className="w-4 h-4 mr-1" />
+                        Update Documents
+                      </Button>
+                    </div>
+
                     <div className="text-xs text-muted-foreground pt-2 border-t">
                       Registered: {new Date(shop.created_at).toLocaleDateString()}
                     </div>
@@ -265,6 +293,13 @@ const UserShops = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Document Update Modal */}
+      <DocumentUpdateModal
+        shop={selectedShop}
+        isOpen={isDocumentModalOpen}
+        onClose={closeDocumentModal}
+      />
     </div>
   );
 };
