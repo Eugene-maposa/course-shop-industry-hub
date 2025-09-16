@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Camera, Save, User, Mail, Phone, MapPin, Calendar } from 'lucide-react';
+import { Save, User, Mail, Phone, MapPin, Calendar } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import ProfilePhotoUpload from '@/components/ProfilePhotoUpload';
 
 interface UserProfileData {
   id?: string;
@@ -99,6 +99,10 @@ const UserProfile = () => {
     }));
   };
 
+  const handleAvatarUpdate = (url: string) => {
+    handleInputChange('avatar_url', url);
+  };
+
   const initials = `${profileData.first_name?.[0] || ''}${profileData.last_name?.[0] || ''}`.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U';
 
   return (
@@ -115,29 +119,12 @@ const UserProfile = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Avatar Section */}
-          <div className="flex items-center gap-6">
-            <div className="relative">
-              <Avatar className="w-24 h-24">
-                <AvatarImage src={profileData.avatar_url} />
-                <AvatarFallback className="text-lg font-bold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <Button
-                size="icon"
-                variant="outline"
-                className="absolute -bottom-2 -right-2 h-8 w-8"
-              >
-                <Camera className="w-4 h-4" />
-              </Button>
-            </div>
-            <div>
-              <h3 className="font-semibold">Profile Photo</h3>
-              <p className="text-sm text-muted-foreground">
-                Upload a photo to personalize your profile
-              </p>
-            </div>
-          </div>
+          <ProfilePhotoUpload
+            currentAvatar={profileData.avatar_url}
+            initials={initials}
+            userId={user?.id || ''}
+            onAvatarUpdate={handleAvatarUpdate}
+          />
 
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
