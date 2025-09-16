@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Package, Plus, Edit, Eye, DollarSign, Building2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -120,14 +121,16 @@ const UserProducts = () => {
                   Add New Product
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl max-h-[90vh]">
                 <DialogHeader>
                   <DialogTitle>Register New Product</DialogTitle>
                   <DialogDescription>
                     Add a new product to your catalog for review and approval.
                   </DialogDescription>
                 </DialogHeader>
-                <ProductRegistrationForm />
+                <ScrollArea className="max-h-[calc(90vh-120px)]">
+                  <ProductRegistrationForm />
+                </ScrollArea>
               </DialogContent>
             </Dialog>
           </div>

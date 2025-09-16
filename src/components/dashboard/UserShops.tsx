@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Plus, Edit, Eye, MapPin, Phone, Mail, Globe } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -128,14 +129,16 @@ const UserShops = () => {
                   Register New Shop
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl max-h-[90vh]">
                 <DialogHeader>
                   <DialogTitle>Register New Shop</DialogTitle>
                   <DialogDescription>
                     Fill in your shop details to get started with the verification process.
                   </DialogDescription>
                 </DialogHeader>
-                <ShopRegistrationForm />
+                <ScrollArea className="max-h-[calc(90vh-120px)]">
+                  <ShopRegistrationForm />
+                </ScrollArea>
               </DialogContent>
             </Dialog>
           </div>
