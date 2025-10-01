@@ -276,6 +276,14 @@ const AdminPanel = () => {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <Button 
+                variant="outline"
+                onClick={() => window.location.href = '/ministry'}
+                className="bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
+              >
+                <Building className="w-4 h-4 mr-2" />
+                Ministry Dashboard
+              </Button>
               <Badge className="bg-blue-500 text-white">{adminRole}</Badge>
               <span className="text-slate-300">{user?.email}</span>
             </div>
