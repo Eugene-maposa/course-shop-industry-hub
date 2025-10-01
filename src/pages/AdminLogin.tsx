@@ -23,7 +23,7 @@ const AdminLogin = () => {
   // Redirect if already admin
   useEffect(() => {
     if (user && !adminLoading && isAdmin) {
-      navigate('/admin');
+      navigate('/site-ops');
     }
   }, [user, isAdmin, adminLoading, navigate]);
 
@@ -78,7 +78,7 @@ const AdminLogin = () => {
   }
 
   if (user && !adminLoading && isAdmin) {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/site-ops" replace />;
   }
 
   return (

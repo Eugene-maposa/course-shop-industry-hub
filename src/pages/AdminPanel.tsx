@@ -238,7 +238,7 @@ const AdminPanel = () => {
 
   // Redirect to login if not authenticated
   if (!user) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/site-ops/login" replace />;
   }
 
   // Show access denied if not admin
@@ -278,7 +278,7 @@ const AdminPanel = () => {
             <div className="flex items-center space-x-2">
               <Button 
                 variant="outline"
-                onClick={() => window.location.href = '/ministry'}
+                onClick={() => window.location.href = '/site-ops/ministry'}
                 className="bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
               >
                 <Building className="w-4 h-4 mr-2" />

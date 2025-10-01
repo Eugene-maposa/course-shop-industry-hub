@@ -252,7 +252,7 @@ const MinistryDashboard = () => {
 
   // Redirect to login if not authenticated
   if (!user) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/site-ops/login" replace />;
   }
 
   // Show access denied if not admin
