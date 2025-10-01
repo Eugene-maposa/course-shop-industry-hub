@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Building, Package, Briefcase, Download, Search, Filter, TrendingUp, Eye, FileText } from "lucide-react";
+import { Building, Package, Briefcase, Download, Search, Filter, TrendingUp, Eye, FileText, Shield } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,17 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/hooks/useAdmin";
+import { Navigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const MinistryDashboard = () => {
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const { isAdmin, loading: adminLoading } = useAdmin();
   const [shopSearch, setShopSearch] = useState("");
   const [productSearch, setProductSearch] = useState("");
   const [industrySearch, setIndustrySearch] = useState("");
@@ -232,6 +237,48 @@ const MinistryDashboard = () => {
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
+
+  // Show loading state while checking authentication
+  if (authLoading || adminLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="w-16 h-16 text-primary mx-auto mb-4 animate-pulse" />
+          <p className="text-muted-foreground">Verifying access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  // Show access denied if not admin
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <div className="flex items-center justify-center mb-4">
+              <Shield className="w-16 h-16 text-destructive" />
+            </div>
+            <CardTitle className="text-center text-2xl">Access Denied</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-muted-foreground">
+              You do not have permission to access the Ministry Dashboard. 
+              This area is restricted to authorized administrators only.
+            </p>
+            <Button onClick={() => window.location.href = '/'} className="w-full">
+              Return to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
