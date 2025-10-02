@@ -92,12 +92,9 @@ const AdminLogin = () => {
       >
         <Card className="w-full max-w-md bg-slate-800 border-slate-700">
           <CardContent className="p-8 text-center">
-            <Shield className="w-16 h-16 text-green-400 mx-auto mb-4" />
+            <Shield className="w-16 h-16 text-green-400 mx-auto mb-4 animate-pulse" />
             <h2 className="text-2xl font-bold text-white mb-2">Authentication Successful</h2>
-            <p className="text-slate-300 mb-6">Double-click anywhere on the screen to access the admin panel</p>
-            <div className="text-slate-400 text-sm">
-              <p>Security verification required</p>
-            </div>
+            <p className="text-slate-400 text-sm">Verifying security clearance...</p>
           </CardContent>
         </Card>
       </div>
