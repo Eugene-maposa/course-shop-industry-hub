@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Shield, Users, Building, Package, Activity, UserPlus, MoreHorizontal, CheckCircle, XCircle, Clock, FileText, Eye, Settings, Plus, Trash2, Edit, Database, BarChart3, Monitor } from "lucide-react";
+import { Shield, Users, Building, Package, Activity, UserPlus, MoreHorizontal, CheckCircle, XCircle, Clock, FileText, Eye, Settings, Plus, Trash2, Edit, Database, BarChart3, Monitor, Palette } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ import { UserManagement } from "@/components/admin/UserManagement";
 import { ContentManagement } from "@/components/admin/ContentManagement";
 import { AuditLogs } from "@/components/admin/AuditLogs";
 import { ShopDocumentManagement } from "@/components/admin/ShopDocumentManagement";
+import { ThemeCustomizer } from "@/components/admin/ThemeCustomizer";
 
 const AdminPanel = () => {
   const { isAdmin, adminRole, loading: adminLoading, logAdminAction } = useAdmin();
@@ -396,6 +397,10 @@ const AdminPanel = () => {
                   <FileText className="w-4 h-4 mr-2" />
                   Audit Logs
                 </TabsTrigger>
+                <TabsTrigger value="theme" className="data-[state=active]:bg-slate-700">
+                  <Palette className="w-4 h-4 mr-2" />
+                  Theme Customization
+                </TabsTrigger>
                 <TabsTrigger value="system" className="data-[state=active]:bg-slate-700">
                   <Database className="w-4 h-4 mr-2" />
                   System Details
@@ -541,6 +546,12 @@ const AdminPanel = () => {
           {isSuperAdmin && (
             <TabsContent value="audit">
               <AuditLogs />
+            </TabsContent>
+          )}
+
+          {isSuperAdmin && (
+            <TabsContent value="theme">
+              <ThemeCustomizer />
             </TabsContent>
           )}
 
