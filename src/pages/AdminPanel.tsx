@@ -266,90 +266,91 @@ const AdminPanel = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
       {/* Header */}
-      <div className="bg-slate-800 border-b border-slate-700 px-6 py-4">
+      <div className="bg-slate-800 border-b border-slate-700 px-4 py-3">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center space-x-3">
-              <Shield className="w-8 h-8 text-blue-400" />
+              <Shield className="w-6 h-6 text-blue-400" />
               <div>
-                <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-                <p className="text-slate-400">System Administration Dashboard</p>
+                <h1 className="text-xl font-bold text-white">Admin Panel</h1>
+                <p className="text-sm text-slate-400">System Administration</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-wrap gap-2">
               <Button 
                 variant="outline"
                 onClick={() => window.location.href = '/site-ops/ministry'}
-                className="bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
+                className="bg-slate-700 hover:bg-slate-600 text-white border-slate-600 text-sm"
+                size="sm"
               >
-                <Building className="w-4 h-4 mr-2" />
-                Ministry Dashboard
+                <Building className="w-4 h-4 mr-1" />
+                Ministry
               </Button>
-              <Badge className="bg-blue-500 text-white">{adminRole}</Badge>
-              <span className="text-slate-300">{user?.email}</span>
+              <Badge className="bg-blue-500 text-white text-xs">{adminRole}</Badge>
+              <span className="text-slate-300 text-sm hidden md:inline">{user?.email}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
           <Card className="bg-slate-800 border-slate-700">
-            <CardContent className="p-6">
+            <CardContent className="p-3">
               <div className="flex items-center space-x-2">
-                <Building className="w-8 h-8 text-blue-400" />
+                <Building className="w-6 h-6 text-blue-400" />
                 <div>
-                  <p className="text-slate-400">Total Shops</p>
-                  <p className="text-2xl font-bold text-white">{stats?.totalShops || 0}</p>
+                  <p className="text-xs text-slate-400">Total Shops</p>
+                  <p className="text-xl font-bold text-white">{stats?.totalShops || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-slate-800 border-slate-700">
-            <CardContent className="p-6">
+            <CardContent className="p-3">
               <div className="flex items-center space-x-2">
-                <Clock className="w-8 h-8 text-yellow-400" />
+                <Clock className="w-6 h-6 text-yellow-400" />
                 <div>
-                  <p className="text-slate-400">Pending Shops</p>
-                  <p className="text-2xl font-bold text-white">{stats?.pendingShops || 0}</p>
+                  <p className="text-xs text-slate-400">Pending</p>
+                  <p className="text-xl font-bold text-white">{stats?.pendingShops || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-slate-800 border-slate-700">
-            <CardContent className="p-6">
+            <CardContent className="p-3">
               <div className="flex items-center space-x-2">
-                <Package className="w-8 h-8 text-green-400" />
+                <Package className="w-6 h-6 text-green-400" />
                 <div>
-                  <p className="text-slate-400">Total Products</p>
-                  <p className="text-2xl font-bold text-white">{stats?.totalProducts || 0}</p>
+                  <p className="text-xs text-slate-400">Products</p>
+                  <p className="text-xl font-bold text-white">{stats?.totalProducts || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-slate-800 border-slate-700">
-            <CardContent className="p-6">
+            <CardContent className="p-3">
               <div className="flex items-center space-x-2">
-                <Shield className="w-8 h-8 text-purple-400" />
+                <Shield className="w-6 h-6 text-purple-400" />
                 <div>
-                  <p className="text-slate-400">Admin Users</p>
-                  <p className="text-2xl font-bold text-white">{stats?.totalAdmins || 0}</p>
+                  <p className="text-xs text-slate-400">Admins</p>
+                  <p className="text-xl font-bold text-white">{stats?.totalAdmins || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-slate-800 border-slate-700">
-            <CardContent className="p-6">
+            <CardContent className="p-3">
               <div className="flex items-center space-x-2">
-                <Users className="w-8 h-8 text-orange-400" />
+                <Users className="w-6 h-6 text-orange-400" />
                 <div>
-                  <p className="text-slate-400">Total Users</p>
-                  <p className="text-2xl font-bold text-white">{stats?.totalUsers || 0}</p>
+                  <p className="text-xs text-slate-400">Users</p>
+                  <p className="text-xl font-bold text-white">{stats?.totalUsers || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -357,53 +358,53 @@ const AdminPanel = () => {
         </div>
 
         {/* Main Content */}
-        <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="bg-slate-800 border-slate-700">
+        <Tabs defaultValue="dashboard" className="space-y-4">
+          <TabsList className="bg-slate-800 border-slate-700 h-auto flex-wrap gap-1 p-1">
             <TabsTrigger 
               value="home" 
-              className="data-[state=active]:bg-slate-700"
+              className="data-[state=active]:bg-slate-700 text-xs px-2 py-1"
               onClick={() => window.location.href = '/'}
             >
-              <Shield className="w-4 h-4 mr-2" />
+              <Shield className="w-3 h-3 mr-1" />
               Home
             </TabsTrigger>
-            <TabsTrigger value="dashboard" className="data-[state=active]:bg-slate-700">
-              <BarChart3 className="w-4 h-4 mr-2" />
+            <TabsTrigger value="dashboard" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
+              <BarChart3 className="w-3 h-3 mr-1" />
               Dashboard
             </TabsTrigger>
-            <TabsTrigger value="monitor" className="data-[state=active]:bg-slate-700">
-              <Monitor className="w-4 h-4 mr-2" />
-              System Monitor
+            <TabsTrigger value="monitor" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
+              <Monitor className="w-3 h-3 mr-1" />
+              Monitor
             </TabsTrigger>
-            <TabsTrigger value="shops" className="data-[state=active]:bg-slate-700">
-              <Building className="w-4 h-4 mr-2" />
-              Shop Approvals
+            <TabsTrigger value="shops" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
+              <Building className="w-3 h-3 mr-1" />
+              Shops
             </TabsTrigger>
-            <TabsTrigger value="documents" className="data-[state=active]:bg-slate-700">
-              <FileText className="w-4 h-4 mr-2" />
-              Document Review
+            <TabsTrigger value="documents" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
+              <FileText className="w-3 h-3 mr-1" />
+              Documents
             </TabsTrigger>
             {isSuperAdmin && (
               <>
-                <TabsTrigger value="users" className="data-[state=active]:bg-slate-700">
-                  <Users className="w-4 h-4 mr-2" />
-                  User Management
+                <TabsTrigger value="users" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
+                  <Users className="w-3 h-3 mr-1" />
+                  Users
                 </TabsTrigger>
-                <TabsTrigger value="content" className="data-[state=active]:bg-slate-700">
-                  <Package className="w-4 h-4 mr-2" />
-                  Content Management
+                <TabsTrigger value="content" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
+                  <Package className="w-3 h-3 mr-1" />
+                  Content
                 </TabsTrigger>
-                <TabsTrigger value="audit" className="data-[state=active]:bg-slate-700">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Audit Logs
+                <TabsTrigger value="audit" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
+                  <FileText className="w-3 h-3 mr-1" />
+                  Audit
                 </TabsTrigger>
-                <TabsTrigger value="theme" className="data-[state=active]:bg-slate-700">
-                  <Palette className="w-4 h-4 mr-2" />
-                  Theme Customization
+                <TabsTrigger value="theme" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
+                  <Palette className="w-3 h-3 mr-1" />
+                  Theme
                 </TabsTrigger>
-                <TabsTrigger value="system" className="data-[state=active]:bg-slate-700">
-                  <Database className="w-4 h-4 mr-2" />
-                  System Details
+                <TabsTrigger value="system" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
+                  <Database className="w-3 h-3 mr-1" />
+                  System
                 </TabsTrigger>
               </>
             )}
@@ -411,46 +412,47 @@ const AdminPanel = () => {
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <Card className="bg-slate-800 border-slate-700 lg:col-span-1">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center space-x-2">
-                    <Settings className="w-5 h-5" />
+                <CardHeader className="p-4">
+                  <CardTitle className="text-white flex items-center space-x-2 text-sm">
+                    <Settings className="w-4 h-4" />
                     <span>Quick Actions</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="p-4 pt-0">
                   <Button 
                     onClick={() => bulkApproveMutation.mutate()}
                     disabled={!stats?.pendingShops || bulkApproveMutation.isPending}
-                    className="w-full bg-green-600 hover:bg-green-700"
+                    className="w-full bg-green-600 hover:bg-green-700 text-sm"
+                    size="sm"
                   >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Bulk Approve Shops ({stats?.pendingShops || 0})
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Bulk Approve ({stats?.pendingShops || 0})
                   </Button>
                 </CardContent>
               </Card>
 
               <Card className="bg-slate-800 border-slate-700 lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center space-x-2">
-                    <Activity className="w-5 h-5" />
+                <CardHeader className="p-4">
+                  <CardTitle className="text-white flex items-center space-x-2 text-sm">
+                    <Activity className="w-4 h-4" />
                     <span>System Performance</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 pt-0">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-green-400 mb-1">
+                      <div className="text-2xl font-bold text-green-400 mb-1">
                         {stats ? Math.round((stats.activeShops / (stats.totalShops || 1)) * 100) : 0}%
                       </div>
-                      <div className="text-slate-400 text-sm">Shop Approval Rate</div>
+                      <div className="text-slate-400 text-xs">Shop Approval Rate</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-blue-400 mb-1">
+                      <div className="text-2xl font-bold text-blue-400 mb-1">
                         {stats?.totalUsers || 0}
                       </div>
-                      <div className="text-slate-400 text-sm">Total Platform Users</div>
+                      <div className="text-slate-400 text-xs">Platform Users</div>
                     </div>
                   </div>
                 </CardContent>
@@ -470,10 +472,10 @@ const AdminPanel = () => {
 
           <TabsContent value="shops">
             <Card className="bg-slate-800 border-slate-700">
-              <CardHeader>
-                <CardTitle className="text-white">Shop Approvals & Document Verification</CardTitle>
+              <CardHeader className="p-4">
+                <CardTitle className="text-white text-sm">Shop Approvals & Document Verification</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0">
                 {shopsLoading ? (
                   <div className="text-center py-8">
                     <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
@@ -558,17 +560,17 @@ const AdminPanel = () => {
           {isSuperAdmin && (
             <TabsContent value="system">
               <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-white">System Information</CardTitle>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-white text-sm">System Information</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <CardContent className="p-4 pt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <h4 className="text-lg font-semibold text-white mb-3">Database Status</h4>
-                      <div className="space-y-2">
+                      <h4 className="text-sm font-semibold text-white mb-2">Database Status</h4>
+                      <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-slate-400">Connection:</span>
-                          <Badge className="bg-green-500 text-white">Active</Badge>
+                          <Badge className="bg-green-500 text-white text-xs">Active</Badge>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-400">Total Tables:</span>
@@ -577,8 +579,8 @@ const AdminPanel = () => {
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-lg font-semibold text-white mb-3">Application Health</h4>
-                      <div className="space-y-2">
+                      <h4 className="text-sm font-semibold text-white mb-2">Application Health</h4>
+                      <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-slate-400">Uptime:</span>
                           <span className="text-white">99.9%</span>
