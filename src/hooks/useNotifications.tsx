@@ -31,6 +31,7 @@ export const useNotifications = () => {
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
+        .eq('read', false)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -39,7 +40,7 @@ export const useNotifications = () => {
       }
 
       setNotifications((data as Notification[]) || []);
-      setUnreadCount(data?.filter(n => !n.read).length || 0);
+      setUnreadCount(data?.length || 0);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -59,11 +60,7 @@ export const useNotifications = () => {
         return;
       }
 
-      setNotifications(prev => 
-        prev.map(n => 
-          n.id === notificationId ? { ...n, read: true } : n
-        )
-      );
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -85,9 +82,7 @@ export const useNotifications = () => {
         return;
       }
 
-      setNotifications(prev => 
-        prev.map(n => ({ ...n, read: true }))
-      );
+      setNotifications([]);
       setUnreadCount(0);
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
