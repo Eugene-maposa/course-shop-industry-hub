@@ -40,35 +40,35 @@ const UserDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 gap-2">
+            <TabsTrigger value="profile" className="flex items-center gap-2 min-w-fit">
               <User className="w-4 h-4" />
-              <span className="hidden sm:inline">Profile</span>
+              <span className="text-xs sm:text-sm">Profile</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2 relative">
+            <TabsTrigger value="notifications" className="flex items-center gap-2 relative min-w-fit">
               <Bell className="w-4 h-4" />
-              <span className="hidden sm:inline">Notifications</span>
+              <span className="text-xs sm:text-sm">Notifications</span>
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="documents" className="flex items-center gap-2">
+            <TabsTrigger value="documents" className="flex items-center gap-2 min-w-fit">
               <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Documents</span>
+              <span className="text-xs sm:text-sm">Documents</span>
             </TabsTrigger>
-            <TabsTrigger value="shops" className="flex items-center gap-2">
+            <TabsTrigger value="shops" className="flex items-center gap-2 min-w-fit">
               <Building2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Shops</span>
+              <span className="text-xs sm:text-sm">Shops</span>
             </TabsTrigger>
-            <TabsTrigger value="products" className="flex items-center gap-2">
+            <TabsTrigger value="products" className="flex items-center gap-2 min-w-fit">
               <Package className="w-4 h-4" />
-              <span className="hidden sm:inline">Products</span>
+              <span className="text-xs sm:text-sm">Products</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
+            <TabsTrigger value="settings" className="flex items-center gap-2 min-w-fit">
               <Settings className="w-4 h-4" />
-              <span className="hidden sm:inline">Settings</span>
+              <span className="text-xs sm:text-sm">Settings</span>
             </TabsTrigger>
           </TabsList>
 
