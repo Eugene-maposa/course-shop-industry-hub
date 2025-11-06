@@ -39,6 +39,8 @@ const UserShops = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedShop, setSelectedShop] = useState<UserShop | null>(null);
   const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -110,6 +112,27 @@ const UserShops = () => {
     setSelectedShop(null);
     setIsDocumentModalOpen(false);
     // Refresh shops to show updated status
+    fetchUserShops();
+  };
+
+  const handleViewDetails = (shop: UserShop) => {
+    setSelectedShop(shop);
+    setIsViewModalOpen(true);
+  };
+
+  const handleEditShop = (shop: UserShop) => {
+    setSelectedShop(shop);
+    setIsEditModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setSelectedShop(null);
+    setIsViewModalOpen(false);
+  };
+
+  const closeEditModal = () => {
+    setSelectedShop(null);
+    setIsEditModalOpen(false);
     fetchUserShops();
   };
 
@@ -260,11 +283,21 @@ const UserShops = () => {
                     )}
 
                     <div className="flex gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleViewDetails(shop)}
+                      >
                         <Eye className="w-4 h-4 mr-1" />
                         View Details
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleEditShop(shop)}
+                      >
                         <Edit className="w-4 h-4 mr-1" />
                         Edit Shop
                       </Button>
@@ -300,6 +333,141 @@ const UserShops = () => {
         isOpen={isDocumentModalOpen}
         onClose={closeDocumentModal}
       />
+
+      {/* View Shop Details Modal */}
+      <Dialog open={isViewModalOpen} onOpenChange={closeViewModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Shop Details</DialogTitle>
+            <DialogDescription>
+              Complete information about {selectedShop?.name}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedShop && (
+            <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
+              <div className="space-y-6">
+                {/* Shop Icon and Basic Info */}
+                <div className="flex items-center gap-4">
+                  {selectedShop.icon_url ? (
+                    <img 
+                      src={selectedShop.icon_url} 
+                      alt={selectedShop.name}
+                      className="w-20 h-20 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <Building2 className="w-10 h-10 text-primary" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold">{selectedShop.name}</h3>
+                    {selectedShop.industry && (
+                      <p className="text-muted-foreground">{selectedShop.industry.name}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2 items-end">
+                    {getStatusBadge(selectedShop.status)}
+                    {getDocumentStatusBadge(selectedShop.document_verification_status)}
+                  </div>
+                </div>
+
+                {/* Description */}
+                {selectedShop.description && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Description</h4>
+                    <p className="text-muted-foreground">{selectedShop.description}</p>
+                  </div>
+                )}
+
+                {/* Contact Information */}
+                <div>
+                  <h4 className="font-semibold mb-3">Contact Information</h4>
+                  <div className="space-y-3">
+                    {selectedShop.address && (
+                      <div className="flex items-start gap-3">
+                        <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
+                        <div>
+                          <p className="font-medium text-sm">Address</p>
+                          <p className="text-muted-foreground">{selectedShop.address}</p>
+                        </div>
+                      </div>
+                    )}
+                    {selectedShop.phone && (
+                      <div className="flex items-center gap-3">
+                        <Phone className="w-5 h-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium text-sm">Phone</p>
+                          <p className="text-muted-foreground">{selectedShop.phone}</p>
+                        </div>
+                      </div>
+                    )}
+                    {selectedShop.email && (
+                      <div className="flex items-center gap-3">
+                        <Mail className="w-5 h-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium text-sm">Email</p>
+                          <p className="text-muted-foreground">{selectedShop.email}</p>
+                        </div>
+                      </div>
+                    )}
+                    {selectedShop.website && (
+                      <div className="flex items-center gap-3">
+                        <Globe className="w-5 h-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium text-sm">Website</p>
+                          <a 
+                            href={selectedShop.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            {selectedShop.website}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Verification Notes */}
+                {selectedShop.verification_notes && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Verification Notes</h4>
+                    <div className="bg-muted p-3 rounded-lg">
+                      <p className="text-sm">{selectedShop.verification_notes}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Timestamps */}
+                <div className="flex gap-4 text-sm text-muted-foreground pt-4 border-t">
+                  <div>
+                    <span className="font-medium">Created:</span> {new Date(selectedShop.created_at).toLocaleString()}
+                  </div>
+                  <div>
+                    <span className="font-medium">Updated:</span> {new Date(selectedShop.updated_at).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Shop Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={closeEditModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Edit Shop</DialogTitle>
+            <DialogDescription>
+              Update your shop information
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[calc(90vh-120px)]">
+            <ShopRegistrationForm />
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

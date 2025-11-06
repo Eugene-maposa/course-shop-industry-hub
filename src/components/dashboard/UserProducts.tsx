@@ -37,6 +37,9 @@ const UserProducts = () => {
   const [products, setProducts] = useState<UserProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<UserProduct | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -88,6 +91,27 @@ const UserProducts = () => {
       default:
         return <Badge variant="outline">Pending</Badge>;
     }
+  };
+
+  const handleViewProduct = (product: UserProduct) => {
+    setSelectedProduct(product);
+    setIsViewModalOpen(true);
+  };
+
+  const handleEditProduct = (product: UserProduct) => {
+    setSelectedProduct(product);
+    setIsEditModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setSelectedProduct(null);
+    setIsViewModalOpen(false);
+  };
+
+  const closeEditModal = () => {
+    setSelectedProduct(null);
+    setIsEditModalOpen(false);
+    fetchUserProducts();
   };
 
   if (loading) {
@@ -214,11 +238,21 @@ const UserProducts = () => {
                     )}
 
                     <div className="flex gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleViewProduct(product)}
+                      >
                         <Eye className="w-4 h-4 mr-1" />
                         View
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleEditProduct(product)}
+                      >
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
                       </Button>
@@ -234,6 +268,126 @@ const UserProducts = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* View Product Details Modal */}
+      <Dialog open={isViewModalOpen} onOpenChange={closeViewModal}>
+        <DialogContent className="max-w-3xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Product Details</DialogTitle>
+            <DialogDescription>
+              Complete information about {selectedProduct?.name}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedProduct && (
+            <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
+              <div className="space-y-6">
+                {/* Product Image */}
+                <div className="aspect-video relative bg-muted rounded-lg overflow-hidden">
+                  {selectedProduct.main_image_url ? (
+                    <img 
+                      src={selectedProduct.main_image_url} 
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package className="w-24 h-24 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="absolute top-4 right-4">
+                    {getStatusBadge(selectedProduct.status)}
+                  </div>
+                </div>
+
+                {/* Basic Information */}
+                <div>
+                  <h3 className="text-2xl font-bold mb-2">{selectedProduct.name}</h3>
+                  <div className="flex items-center gap-4 text-muted-foreground">
+                    {selectedProduct.product_type && (
+                      <span>{selectedProduct.product_type.name}</span>
+                    )}
+                    {selectedProduct.sku && (
+                      <span>SKU: {selectedProduct.sku}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Price */}
+                {selectedProduct.price && (
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-6 h-6 text-green-600" />
+                    <span className="text-3xl font-bold text-green-600">
+                      ${selectedProduct.price}
+                    </span>
+                  </div>
+                )}
+
+                {/* Description */}
+                {selectedProduct.description && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Description</h4>
+                    <p className="text-muted-foreground">{selectedProduct.description}</p>
+                  </div>
+                )}
+
+                {/* Shop Information */}
+                {selectedProduct.shop && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Shop</h4>
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-muted-foreground">{selectedProduct.shop.name}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Gallery Images */}
+                {selectedProduct.gallery_images && Array.isArray(selectedProduct.gallery_images) && selectedProduct.gallery_images.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-3">Gallery</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      {selectedProduct.gallery_images.map((img: string, idx: number) => (
+                        <div key={idx} className="aspect-square bg-muted rounded-lg overflow-hidden">
+                          <img 
+                            src={img} 
+                            alt={`Gallery ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Timestamps */}
+                <div className="flex gap-4 text-sm text-muted-foreground pt-4 border-t">
+                  <div>
+                    <span className="font-medium">Created:</span> {new Date(selectedProduct.created_at).toLocaleString()}
+                  </div>
+                  <div>
+                    <span className="font-medium">Updated:</span> {new Date(selectedProduct.updated_at).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Product Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={closeEditModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+            <DialogDescription>
+              Update your product information
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[calc(90vh-120px)]">
+            <ProductRegistrationForm />
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
