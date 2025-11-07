@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Plus, Edit, Eye, MapPin, Phone, Mail, Globe, FileText } from 'lucide-react';
+import { Building2, Plus, Edit, Eye, MapPin, Phone, Mail, Globe, FileText, Trash2 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,6 +42,8 @@ const UserShops = () => {
   const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [shopToDelete, setShopToDelete] = useState<UserShop | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -134,6 +137,41 @@ const UserShops = () => {
     setSelectedShop(null);
     setIsEditModalOpen(false);
     fetchUserShops();
+  };
+
+  const handleDeleteShop = (shop: UserShop) => {
+    setShopToDelete(shop);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!shopToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('shops')
+        .delete()
+        .eq('id', shopToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Shop deleted successfully',
+      });
+
+      fetchUserShops();
+    } catch (error) {
+      console.error('Error deleting shop:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete shop',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setShopToDelete(null);
+    }
   };
 
   if (loading) {
@@ -290,7 +328,7 @@ const UserShops = () => {
                         onClick={() => handleViewDetails(shop)}
                       >
                         <Eye className="w-4 h-4 mr-1" />
-                        View Details
+                        View
                       </Button>
                       <Button 
                         variant="outline" 
@@ -299,7 +337,16 @@ const UserShops = () => {
                         onClick={() => handleEditShop(shop)}
                       >
                         <Edit className="w-4 h-4 mr-1" />
-                        Edit Shop
+                        Edit
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleDeleteShop(shop)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
                       </Button>
                     </div>
 
@@ -468,6 +515,24 @@ const UserShops = () => {
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{shopToDelete?.name}". This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
