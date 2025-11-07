@@ -26,6 +26,7 @@ interface UserShop {
   verification_notes?: string;
   created_at: string;
   updated_at: string;
+  industry_id?: string;
   industry?: {
     name: string;
     code: string;
@@ -55,8 +56,7 @@ const UserShops = () => {
     if (!user) return;
 
     try {
-      // Note: In a real implementation, there would be a user_id field in shops table
-      // For now, we'll fetch all shops as a demo
+      // Fetch shops owned by the current user
       const { data, error } = await supabase
         .from('shops')
         .select(`
@@ -66,8 +66,8 @@ const UserShops = () => {
             code
           )
         `)
-        .order('created_at', { ascending: false })
-        .limit(5); // Limit for demo purposes
+        .eq('user_id', user.id) // Filter by current user
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching shops:', error);
@@ -511,7 +511,20 @@ const UserShops = () => {
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[calc(90vh-120px)]">
-            <ShopRegistrationForm />
+            <ShopRegistrationForm 
+              shopId={selectedShop?.id}
+              initialData={selectedShop ? {
+                name: selectedShop.name,
+                description: selectedShop.description || '',
+                address: selectedShop.address || '',
+                phone: selectedShop.phone || '',
+                email: selectedShop.email || '',
+                website: selectedShop.website || '',
+                industry_id: selectedShop.industry_id || '',
+                icon_url: selectedShop.icon_url || ''
+              } : undefined}
+              onSuccess={closeEditModal}
+            />
           </ScrollArea>
         </DialogContent>
       </Dialog>

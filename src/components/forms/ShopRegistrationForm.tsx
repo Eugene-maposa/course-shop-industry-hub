@@ -12,20 +12,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import StepByStepDocumentUpload from "@/components/StepByStepDocumentUpload";
 
-const ShopRegistrationForm = () => {
+interface ShopRegistrationFormProps {
+  shopId?: string;
+  initialData?: {
+    name: string;
+    description?: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+    website?: string;
+    industry_id?: string;
+    icon_url?: string;
+    documents?: any;
+  };
+  onSuccess?: () => void;
+}
+
+const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrationFormProps = {}) => {
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    address: "",
-    phone: "",
-    email: "",
-    website: "",
-    industry_id: ""
+    name: initialData?.name || "",
+    description: initialData?.description || "",
+    address: initialData?.address || "",
+    phone: initialData?.phone || "",
+    email: initialData?.email || "",
+    website: initialData?.website || "",
+    industry_id: initialData?.industry_id || ""
   });
   const [iconFile, setIconFile] = useState<File | null>(null);
-  const [iconPreview, setIconPreview] = useState<string | null>(null);
+  const [iconPreview, setIconPreview] = useState<string | null>(initialData?.icon_url || null);
   const [documents, setDocuments] = useState<Record<string, File>>({});
-  const [documentProgress, setDocumentProgress] = useState(0);
+  const [documentProgress, setDocumentProgress] = useState(shopId ? 100 : 0); // Set to 100 if editing
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { toast } = useToast();
@@ -72,23 +88,45 @@ const ShopRegistrationForm = () => {
 
   const registerShopMutation = useMutation({
     mutationFn: async (shopData: typeof formData & { icon_url?: string; documents?: Record<string, string> }) => {
-      console.log('Registering shop with data:', shopData);
-      const { data, error } = await supabase
-        .from('shops')
-        .insert({
-          ...shopData,
-          status: 'pending',
-          registration_date: new Date().toISOString().split('T')[0],
-          document_verification_status: 'pending'
-        })
-        .select()
-        .single();
-      if (error) {
-        console.error('Shop registration error:', error);
-        throw error;
+      console.log('Submitting shop with data:', shopData);
+      
+      // Update if shopId exists, otherwise insert
+      if (shopId) {
+        const { data, error } = await supabase
+          .from('shops')
+          .update(shopData)
+          .eq('id', shopId)
+          .select()
+          .single();
+        if (error) {
+          console.error('Shop update error:', error);
+          throw error;
+        }
+        console.log('Shop updated successfully:', data);
+        return data;
+      } else {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User not authenticated');
+        
+        const { data, error } = await supabase
+          .from('shops')
+          .insert({
+            ...shopData,
+            user_id: user.id, // Set the user_id for ownership
+            status: 'pending',
+            registration_date: new Date().toISOString().split('T')[0],
+            document_verification_status: 'pending'
+          })
+          .select()
+          .single();
+        if (error) {
+          console.error('Shop registration error:', error);
+          throw error;
+        }
+        console.log('Shop registered successfully:', data);
+        return data;
       }
-      console.log('Shop registered successfully:', data);
-      return data;
     },
     onSuccess: async (data) => {
       // Handle document upload completion notifications
@@ -98,23 +136,30 @@ const ShopRegistrationForm = () => {
 
       toast({
         title: "Success",
-        description: "Shop registered successfully! Your application and documents are pending admin approval."
+        description: shopId 
+          ? "Shop updated successfully!" 
+          : "Shop registered successfully! Your application and documents are pending admin approval."
       });
       
-      // Reset form
-      setFormData({
-        name: "",
-        description: "",
-        address: "",
-        phone: "",
-        email: "",
-        website: "",
-        industry_id: ""
-      });
-      setIconFile(null);
-      setIconPreview(null);
-      setDocuments({});
-      setDocumentProgress(0);
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        // Reset form only if not in edit mode
+        setFormData({
+          name: "",
+          description: "",
+          address: "",
+          phone: "",
+          email: "",
+          website: "",
+          industry_id: ""
+        });
+        setIconFile(null);
+        setIconPreview(null);
+        setDocuments({});
+        setDocumentProgress(0);
+      }
+      
       setIsSubmitting(false);
       queryClient.invalidateQueries({ queryKey: ['shops'] });
     },
@@ -255,18 +300,20 @@ const ShopRegistrationForm = () => {
       return;
     }
 
-    // Check if all required documents are uploaded
-    const requiredDocs = documentRequirements.filter(req => req.is_required);
-    const missingDocs = requiredDocs.filter(req => !documents[req.document_type]);
-    
-    if (missingDocs.length > 0) {
-      const missingDocNames = missingDocs.map(doc => doc.document_name).join(', ');
-      toast({
-        title: "Missing Required Documents",
-        description: `Please upload all required documents: ${missingDocNames}`,
-        variant: "destructive"
-      });
-      return;
+    // Check if all required documents are uploaded (only for new shops)
+    if (!shopId) {
+      const requiredDocs = documentRequirements.filter(req => req.is_required);
+      const missingDocs = requiredDocs.filter(req => !documents[req.document_type]);
+      
+      if (missingDocs.length > 0) {
+        const missingDocNames = missingDocs.map(doc => doc.document_name).join(', ');
+        toast({
+          title: "Missing Required Documents",
+          description: `Please upload all required documents: ${missingDocNames}`,
+          variant: "destructive"
+        });
+        return;
+      }
     }
     
     setIsSubmitting(true);
@@ -394,7 +441,7 @@ const ShopRegistrationForm = () => {
     setDocumentProgress(0);
   };
 
-  const isFormValid = formData.name.trim() && formData.industry_id && documentProgress === 100;
+  const isFormValid = formData.name.trim() && formData.industry_id && (shopId || documentProgress === 100);
 
   if (industriesLoading || documentsLoading) {
     return (
@@ -411,7 +458,7 @@ const ShopRegistrationForm = () => {
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader className="text-center bg-nust-blue text-white">
-        <CardTitle className="text-2xl">Register New Shop - Zimbabwe</CardTitle>
+        <CardTitle className="text-2xl">{shopId ? 'Edit Shop' : 'Register New Shop - Zimbabwe'}</CardTitle>
       </CardHeader>
       
       <CardContent className="p-6 space-y-6">
@@ -574,10 +621,10 @@ const ShopRegistrationForm = () => {
             <Button 
               type="submit" 
               className={`flex-1 ${isFormValid ? 'bg-nust-blue hover:bg-nust-blue-dark' : 'bg-gray-400'}`}
-              disabled={isSubmitting || !isFormValid}
-            >
-              {isSubmitting ? "Registering..." : "Register Shop"}
-            </Button>
+            disabled={isSubmitting || !isFormValid}
+          >
+            {isSubmitting ? (shopId ? "Updating..." : "Registering...") : (shopId ? "Update Shop" : "Register Shop")}
+          </Button>
             <Button 
               type="button" 
               variant="outline" 

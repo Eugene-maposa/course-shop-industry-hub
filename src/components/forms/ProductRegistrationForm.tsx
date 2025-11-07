@@ -12,18 +12,35 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ProductImageUpload from "@/components/ProductImageUpload";
 
-const ProductRegistrationForm = () => {
+interface ProductRegistrationFormProps {
+  productId?: string;
+  initialData?: {
+    name: string;
+    description?: string;
+    price?: number;
+    sku?: string;
+    product_type_id?: string;
+    shop_id?: string;
+    main_image_url?: string;
+    gallery_images?: any;
+  };
+  onSuccess?: () => void;
+}
+
+const ProductRegistrationForm = ({ productId, initialData, onSuccess }: ProductRegistrationFormProps = {}) => {
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    sku: "",
-    product_type_id: "",
-    shop_id: ""
+    name: initialData?.name || "",
+    description: initialData?.description || "",
+    price: initialData?.price?.toString() || "",
+    sku: initialData?.sku || "",
+    product_type_id: initialData?.product_type_id || "",
+    shop_id: initialData?.shop_id || ""
   });
 
-  const [mainImage, setMainImage] = useState<string | null>(null);
-  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [mainImage, setMainImage] = useState<string | null>(initialData?.main_image_url || null);
+  const [galleryImages, setGalleryImages] = useState<string[]>(
+    Array.isArray(initialData?.gallery_images) ? initialData.gallery_images : []
+  );
 
   const [validationStatus, setValidationStatus] = useState<{
     isChecked: boolean;
@@ -131,29 +148,47 @@ const ProductRegistrationForm = () => {
       
       console.log("Cleaned product data:", cleanedData);
       
-      const { data, error } = await supabase
-        .from('products')
-        .insert(cleanedData)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
+      // Update if productId exists, otherwise insert
+      if (productId) {
+        const { data, error } = await supabase
+          .from('products')
+          .update(cleanedData)
+          .eq('id', productId)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      } else {
+        const { data, error } = await supabase
+          .from('products')
+          .insert(cleanedData)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      }
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Product registered successfully!"
+        description: productId ? "Product updated successfully!" : "Product registered successfully!"
       });
-      setFormData({
-        name: "",
-        description: "",
-        price: "",
-        sku: "",
-        product_type_id: "",
-        shop_id: ""
-      });
-      setMainImage(null);
-      setGalleryImages([]);
+      
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        setFormData({
+          name: "",
+          description: "",
+          price: "",
+          sku: "",
+          product_type_id: "",
+          shop_id: ""
+        });
+        setMainImage(null);
+        setGalleryImages([]);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },
     onError: (error) => {
@@ -247,7 +282,7 @@ const ProductRegistrationForm = () => {
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader className="text-center bg-nust-blue text-white">
-        <CardTitle className="text-2xl">Register New Product</CardTitle>
+        <CardTitle className="text-2xl">{productId ? 'Edit Product' : 'Register New Product'}</CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -400,7 +435,10 @@ const ProductRegistrationForm = () => {
               className="flex-1 bg-nust-blue hover:bg-nust-blue-dark"
               disabled={registerProductMutation.isPending || (validationStatus.isChecked && !validationStatus.isLegal)}
             >
-              {registerProductMutation.isPending ? "Registering..." : "Register Product"}
+              {registerProductMutation.isPending 
+                ? (productId ? "Updating..." : "Registering...") 
+                : (productId ? "Update Product" : "Register Product")
+              }
             </Button>
             <Button 
               type="button" 

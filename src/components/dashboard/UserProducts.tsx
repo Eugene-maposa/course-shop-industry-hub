@@ -22,6 +22,8 @@ interface UserProduct {
   status: 'pending' | 'active' | 'inactive';
   created_at: string;
   updated_at: string;
+  product_type_id?: string;
+  shop_id?: string;
   product_type?: {
     name: string;
     code: string;
@@ -54,8 +56,7 @@ const UserProducts = () => {
     if (!user) return;
 
     try {
-      // Note: In a real implementation, there would be a user_id field to filter by
-      // For now, we'll fetch all products as a demo
+      // Fetch products that belong to shops owned by the current user
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -64,13 +65,14 @@ const UserProducts = () => {
             name,
             code
           ),
-          shops (
+          shops!inner (
             name,
-            id
+            id,
+            user_id
           )
         `)
-        .order('created_at', { ascending: false })
-        .limit(10); // Limit for demo purposes
+        .eq('shops.user_id', user.id) // Filter by shops owned by current user
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching products:', error);
@@ -431,7 +433,20 @@ const UserProducts = () => {
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[calc(90vh-120px)]">
-            <ProductRegistrationForm />
+            <ProductRegistrationForm 
+              productId={selectedProduct?.id}
+              initialData={selectedProduct ? {
+                name: selectedProduct.name,
+                description: selectedProduct.description || '',
+                price: selectedProduct.price,
+                sku: selectedProduct.sku || '',
+                product_type_id: selectedProduct.product_type_id || '',
+                shop_id: selectedProduct.shop_id || '',
+                main_image_url: selectedProduct.main_image_url || '',
+                gallery_images: selectedProduct.gallery_images
+              } : undefined}
+              onSuccess={closeEditModal}
+            />
           </ScrollArea>
         </DialogContent>
       </Dialog>
