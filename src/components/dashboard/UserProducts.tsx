@@ -265,7 +265,7 @@ const UserProducts = () => {
                       
                       {product.sku && (
                         <span className="text-xs text-muted-foreground">
-                          SKU: {product.sku}
+                          P#: {product.sku}
                         </span>
                       )}
                     </div>
@@ -356,7 +356,7 @@ const UserProducts = () => {
                       <span>{selectedProduct.product_type.name}</span>
                     )}
                     {selectedProduct.sku && (
-                      <span>SKU: {selectedProduct.sku}</span>
+                      <span>P#: {selectedProduct.sku}</span>
                     )}
                   </div>
                 </div>

@@ -176,7 +176,7 @@ const MinistryDashboard = () => {
 
     autoTable(doc, {
       startY: 40,
-      head: [['Product Name', 'Shop', 'Type', 'SKU', 'Price', 'Status']],
+      head: [['Product Name', 'Shop', 'Type', 'P Number', 'Price', 'Status']],
       body: tableData,
       theme: 'striped',
       headStyles: { fillColor: [51, 65, 85] }
@@ -470,7 +470,7 @@ const MinistryDashboard = () => {
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
-                        placeholder="Search products by name, SKU, or description..."
+                        placeholder="Search products by name, P Number, or description..."
                         value={productSearch}
                         onChange={(e) => setProductSearch(e.target.value)}
                         className="pl-10"
@@ -501,7 +501,7 @@ const MinistryDashboard = () => {
                         <TableHead>Product Name</TableHead>
                         <TableHead>Shop</TableHead>
                         <TableHead>Category</TableHead>
-                        <TableHead>SKU</TableHead>
+                        <TableHead>P Number</TableHead>
                         <TableHead>Price</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Actions</TableHead>
@@ -660,7 +660,7 @@ const MinistryDashboard = () => {
                   <p className="text-sm text-muted-foreground">{selectedProduct.shops?.name || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium">SKU</label>
+                  <label className="text-sm font-medium">P Number</label>
                   <p className="text-sm text-muted-foreground font-mono">{selectedProduct.sku || 'N/A'}</p>
                 </div>
                 <div>

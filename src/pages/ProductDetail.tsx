@@ -269,7 +269,7 @@ const ProductDetail = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Product Code</span>
+                <span className="text-sm text-muted-foreground">P Number</span>
                 <span className="text-sm font-medium">{product.sku || 'N/A'}</span>
               </div>
               <div className="flex justify-between items-center">
