@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Building, Package, Briefcase, Download, Search, Filter, TrendingUp, Eye, FileText, Shield } from "lucide-react";
+import { Building, Package, Briefcase, Download, Search, Filter, TrendingUp, Eye, Users, BarChart3, Shield } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,8 @@ import { Navigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend, Tooltip } from "recharts";
 
 const MinistryDashboard = () => {
   const { toast } = useToast();
@@ -24,10 +26,12 @@ const MinistryDashboard = () => {
   const [shopSearch, setShopSearch] = useState("");
   const [productSearch, setProductSearch] = useState("");
   const [industrySearch, setIndustrySearch] = useState("");
+  const [ownerSearch, setOwnerSearch] = useState("");
   const [shopStatusFilter, setShopStatusFilter] = useState("all");
   const [productStatusFilter, setProductStatusFilter] = useState("all");
   const [selectedShop, setSelectedShop] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedOwner, setSelectedOwner] = useState<any>(null);
 
   // Fetch all shops with industry details
   const { data: shops = [], isLoading: shopsLoading } = useQuery({
@@ -54,7 +58,7 @@ const MinistryDashboard = () => {
         .from('products')
         .select(`
           *,
-          shops(name, address),
+          shops(name, address, user_id),
           product_types(name, code, industries(name))
         `)
         .order('created_at', { ascending: false });
@@ -82,6 +86,139 @@ const MinistryDashboard = () => {
     }
   });
 
+  // Fetch user profiles for business owners
+  const { data: userProfiles = [], isLoading: profilesLoading } = useQuery({
+    queryKey: ['ministry-user-profiles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Get unique business owners (users who have shops)
+  const businessOwners = useMemo(() => {
+    const ownerMap = new Map();
+    
+    shops.forEach(shop => {
+      if (shop.user_id) {
+        if (!ownerMap.has(shop.user_id)) {
+          const profile = userProfiles.find(p => p.user_id === shop.user_id);
+          ownerMap.set(shop.user_id, {
+            user_id: shop.user_id,
+            profile,
+            shops: [shop],
+            totalProducts: 0,
+            firstShopDate: shop.registration_date || shop.created_at
+          });
+        } else {
+          const existing = ownerMap.get(shop.user_id);
+          existing.shops.push(shop);
+          if (new Date(shop.registration_date || shop.created_at) < new Date(existing.firstShopDate)) {
+            existing.firstShopDate = shop.registration_date || shop.created_at;
+          }
+        }
+      }
+    });
+
+    // Count products per owner
+    products.forEach(product => {
+      if (product.shops?.user_id && ownerMap.has(product.shops.user_id)) {
+        ownerMap.get(product.shops.user_id).totalProducts++;
+      }
+    });
+
+    return Array.from(ownerMap.values());
+  }, [shops, products, userProfiles]);
+
+  // Analytics data
+  const analyticsData = useMemo(() => {
+    // Shops by industry
+    const shopsByIndustry = industries.map(industry => ({
+      name: industry.name.length > 15 ? industry.name.substring(0, 15) + '...' : industry.name,
+      fullName: industry.name,
+      shops: shops.filter(s => s.industry_id === industry.id).length,
+      products: products.filter(p => {
+        const shop = shops.find(s => s.id === p.shop_id);
+        return shop?.industry_id === industry.id;
+      }).length
+    })).filter(i => i.shops > 0 || i.products > 0);
+
+    // Status distribution for shops
+    const shopStatusData = [
+      { name: 'Active', value: shops.filter(s => s.status === 'active').length, color: '#22c55e' },
+      { name: 'Pending', value: shops.filter(s => s.status === 'pending').length, color: '#eab308' },
+      { name: 'Inactive', value: shops.filter(s => s.status === 'inactive').length, color: '#ef4444' }
+    ].filter(s => s.value > 0);
+
+    // Status distribution for products
+    const productStatusData = [
+      { name: 'Active', value: products.filter(p => p.status === 'active').length, color: '#22c55e' },
+      { name: 'Pending', value: products.filter(p => p.status === 'pending').length, color: '#eab308' },
+      { name: 'Inactive', value: products.filter(p => p.status === 'inactive').length, color: '#ef4444' }
+    ].filter(s => s.value > 0);
+
+    // Registration trends (last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    const monthlyTrends: Record<string, { month: string; shops: number; products: number }> = {};
+    
+    for (let i = 0; i < 6; i++) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKey = date.toLocaleString('default', { month: 'short', year: '2-digit' });
+      monthlyTrends[monthKey] = { month: monthKey, shops: 0, products: 0 };
+    }
+
+    shops.forEach(shop => {
+      const date = new Date(shop.registration_date || shop.created_at);
+      if (date >= sixMonthsAgo) {
+        const monthKey = date.toLocaleString('default', { month: 'short', year: '2-digit' });
+        if (monthlyTrends[monthKey]) {
+          monthlyTrends[monthKey].shops++;
+        }
+      }
+    });
+
+    products.forEach(product => {
+      const date = new Date(product.registration_date || product.created_at);
+      if (date >= sixMonthsAgo) {
+        const monthKey = date.toLocaleString('default', { month: 'short', year: '2-digit' });
+        if (monthlyTrends[monthKey]) {
+          monthlyTrends[monthKey].products++;
+        }
+      }
+    });
+
+    const trendsArray = Object.values(monthlyTrends).reverse();
+
+    // Top industries by shops
+    const topIndustries = [...shopsByIndustry]
+      .sort((a, b) => b.shops - a.shops)
+      .slice(0, 5);
+
+    // Business owner activity
+    const ownerActivityData = [
+      { name: '1 Shop', value: businessOwners.filter(o => o.shops.length === 1).length },
+      { name: '2-3 Shops', value: businessOwners.filter(o => o.shops.length >= 2 && o.shops.length <= 3).length },
+      { name: '4+ Shops', value: businessOwners.filter(o => o.shops.length >= 4).length }
+    ].filter(d => d.value > 0);
+
+    return {
+      shopsByIndustry,
+      shopStatusData,
+      productStatusData,
+      trendsArray,
+      topIndustries,
+      ownerActivityData
+    };
+  }, [shops, products, industries, businessOwners]);
+
   // Calculate statistics
   const stats = {
     totalShops: shops.length,
@@ -92,6 +229,7 @@ const MinistryDashboard = () => {
     pendingProducts: products.filter(p => p.status === 'pending').length,
     totalIndustries: industries.length,
     activeIndustries: industries.filter(i => i.status === 'active').length,
+    totalBusinessOwners: businessOwners.length,
   };
 
   // Filter shops
@@ -117,6 +255,20 @@ const MinistryDashboard = () => {
     industry.name.toLowerCase().includes(industrySearch.toLowerCase()) ||
     industry.code.toLowerCase().includes(industrySearch.toLowerCase())
   );
+
+  // Filter business owners
+  const filteredOwners = businessOwners.filter(owner => {
+    const searchLower = ownerSearch.toLowerCase();
+    const fullName = `${owner.profile?.first_name || ''} ${owner.profile?.last_name || ''}`.toLowerCase();
+    const email = owner.profile?.phone?.toLowerCase() || '';
+    const company = owner.profile?.company?.toLowerCase() || '';
+    const shopNames = owner.shops.map((s: any) => s.name.toLowerCase()).join(' ');
+    
+    return fullName.includes(searchLower) ||
+      email.includes(searchLower) ||
+      company.includes(searchLower) ||
+      shopNames.includes(searchLower);
+  });
 
   // Export shops to PDF
   const exportShopsPDF = () => {
@@ -225,6 +377,42 @@ const MinistryDashboard = () => {
     });
   };
 
+  // Export business owners to PDF
+  const exportOwnersPDF = () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text("Ministry of Industry and Commerce", 14, 20);
+    doc.setFontSize(14);
+    doc.text("Business Owners Report", 14, 28);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 35);
+
+    const tableData = filteredOwners.map(owner => [
+      `${owner.profile?.first_name || ''} ${owner.profile?.last_name || ''}`.trim() || 'N/A',
+      owner.profile?.company || 'N/A',
+      owner.profile?.phone || 'N/A',
+      owner.shops.length,
+      owner.totalProducts,
+      new Date(owner.firstShopDate).toLocaleDateString()
+    ]);
+
+    autoTable(doc, {
+      startY: 40,
+      head: [['Owner Name', 'Company', 'Phone', 'Total Shops', 'Total Products', 'First Registration']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: { fillColor: [51, 65, 85] }
+    });
+
+    doc.save(`business-owners-report-${new Date().toISOString().split('T')[0]}.pdf`);
+    
+    toast({
+      title: "Success",
+      description: "Business owners report downloaded successfully!"
+    });
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -280,6 +468,8 @@ const MinistryDashboard = () => {
     );
   }
 
+  const CHART_COLORS = ['#3b82f6', '#22c55e', '#eab308', '#ef4444', '#8b5cf6', '#ec4899'];
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -297,7 +487,7 @@ const MinistryDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Statistics Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -341,6 +531,19 @@ const MinistryDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
+                  <p className="text-sm text-muted-foreground">Business Owners</p>
+                  <p className="text-3xl font-bold">{stats.totalBusinessOwners}</p>
+                  <p className="text-xs text-muted-foreground">Registered users</p>
+                </div>
+                <Users className="w-12 h-12 text-indigo-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
                   <p className="text-sm text-muted-foreground">Pending Reviews</p>
                   <p className="text-3xl font-bold">{stats.pendingShops + stats.pendingProducts}</p>
                   <p className="text-xs text-yellow-500">Requires attention</p>
@@ -352,8 +555,16 @@ const MinistryDashboard = () => {
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="shops" className="space-y-6">
-          <TabsList>
+        <Tabs defaultValue="analytics" className="space-y-6">
+          <TabsList className="flex-wrap">
+            <TabsTrigger value="analytics">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="owners">
+              <Users className="w-4 h-4 mr-2" />
+              Business Owners ({stats.totalBusinessOwners})
+            </TabsTrigger>
             <TabsTrigger value="shops">
               <Building className="w-4 h-4 mr-2" />
               Shops ({stats.totalShops})
@@ -367,6 +578,250 @@ const MinistryDashboard = () => {
               Industries ({stats.totalIndustries})
             </TabsTrigger>
           </TabsList>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Registration Trends */}
+              <Card className="col-span-1 lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Registration Trends (Last 6 Months)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={analyticsData.trendsArray}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="shops" stroke="#3b82f6" strokeWidth={2} name="Shops" />
+                        <Line type="monotone" dataKey="products" stroke="#22c55e" strokeWidth={2} name="Products" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Shops by Industry */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Shops by Industry</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analyticsData.topIndustries} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis type="category" dataKey="name" width={100} />
+                        <Tooltip 
+                          formatter={(value, name) => [value, name === 'shops' ? 'Shops' : 'Products']}
+                          labelFormatter={(label) => analyticsData.topIndustries.find(i => i.name === label)?.fullName || label}
+                        />
+                        <Bar dataKey="shops" fill="#3b82f6" name="Shops" />
+                        <Bar dataKey="products" fill="#22c55e" name="Products" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Shop Status Distribution */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Shop Status Distribution</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={analyticsData.shopStatusData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                          outerRadius={100}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {analyticsData.shopStatusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Product Status Distribution */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Product Status Distribution</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={analyticsData.productStatusData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                          outerRadius={100}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {analyticsData.productStatusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Business Owner Activity */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Business Owner Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analyticsData.ownerActivityData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="value" fill="#8b5cf6" name="Owners" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Key Metrics Summary */}
+              <Card className="col-span-1 lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Key Metrics Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div className="text-center p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                      <p className="text-4xl font-bold text-blue-600">{stats.totalShops > 0 ? (stats.activeShops / stats.totalShops * 100).toFixed(0) : 0}%</p>
+                      <p className="text-sm text-muted-foreground">Shop Activation Rate</p>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 dark:bg-green-950 rounded-lg">
+                      <p className="text-4xl font-bold text-green-600">{stats.totalProducts > 0 ? (stats.activeProducts / stats.totalProducts * 100).toFixed(0) : 0}%</p>
+                      <p className="text-sm text-muted-foreground">Product Activation Rate</p>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 dark:bg-purple-950 rounded-lg">
+                      <p className="text-4xl font-bold text-purple-600">{stats.totalBusinessOwners > 0 ? (stats.totalShops / stats.totalBusinessOwners).toFixed(1) : 0}</p>
+                      <p className="text-sm text-muted-foreground">Avg Shops per Owner</p>
+                    </div>
+                    <div className="text-center p-4 bg-orange-50 dark:bg-orange-950 rounded-lg">
+                      <p className="text-4xl font-bold text-orange-600">{stats.totalShops > 0 ? (stats.totalProducts / stats.totalShops).toFixed(1) : 0}</p>
+                      <p className="text-sm text-muted-foreground">Avg Products per Shop</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Business Owners Tab */}
+          <TabsContent value="owners">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Business Owners</CardTitle>
+                  <Button onClick={exportOwnersPDF} variant="outline">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export PDF
+                  </Button>
+                </div>
+                <div className="mt-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by name, company, phone, or shop name..."
+                      value={ownerSearch}
+                      onChange={(e) => setOwnerSearch(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {profilesLoading || shopsLoading ? (
+                  <div className="text-center py-8">Loading business owners...</div>
+                ) : filteredOwners.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No business owners found
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Owner Name</TableHead>
+                        <TableHead>Company</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Shops</TableHead>
+                        <TableHead>Products</TableHead>
+                        <TableHead>First Registration</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOwners.map((owner) => (
+                        <TableRow key={owner.user_id}>
+                          <TableCell className="font-medium">
+                            {`${owner.profile?.first_name || ''} ${owner.profile?.last_name || ''}`.trim() || 'Unknown'}
+                          </TableCell>
+                          <TableCell>{owner.profile?.company || 'N/A'}</TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <div>{owner.profile?.phone || 'N/A'}</div>
+                              {owner.profile?.address && (
+                                <div className="text-muted-foreground text-xs">{owner.profile.address}</div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{owner.shops.length}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{owner.totalProducts}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(owner.firstShopDate).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedOwner(owner)}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Shops Tab */}
           <TabsContent value="shops">
@@ -681,6 +1136,102 @@ const MinistryDashboard = () => {
                     <p className="text-sm text-muted-foreground">{selectedProduct.description}</p>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Business Owner Details Dialog */}
+      <Dialog open={!!selectedOwner} onOpenChange={() => setSelectedOwner(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Business Owner Details</DialogTitle>
+          </DialogHeader>
+          {selectedOwner && (
+            <div className="space-y-6">
+              {/* Owner Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Full Name</label>
+                  <p className="text-sm text-muted-foreground">
+                    {`${selectedOwner.profile?.first_name || ''} ${selectedOwner.profile?.last_name || ''}`.trim() || 'Unknown'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Company</label>
+                  <p className="text-sm text-muted-foreground">{selectedOwner.profile?.company || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Phone</label>
+                  <p className="text-sm text-muted-foreground">{selectedOwner.profile?.phone || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Website</label>
+                  <p className="text-sm text-muted-foreground">{selectedOwner.profile?.website || 'N/A'}</p>
+                </div>
+                <div className="col-span-2">
+                  <label className="text-sm font-medium">Address</label>
+                  <p className="text-sm text-muted-foreground">{selectedOwner.profile?.address || 'N/A'}</p>
+                </div>
+                {selectedOwner.profile?.bio && (
+                  <div className="col-span-2">
+                    <label className="text-sm font-medium">Bio</label>
+                    <p className="text-sm text-muted-foreground">{selectedOwner.profile.bio}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Statistics */}
+              <div className="grid grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold">{selectedOwner.shops.length}</p>
+                    <p className="text-sm text-muted-foreground">Total Shops</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold">{selectedOwner.totalProducts}</p>
+                    <p className="text-sm text-muted-foreground">Total Products</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold">
+                      {new Date(selectedOwner.firstShopDate).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Member Since</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Owned Shops */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Owned Shops</label>
+                <div className="space-y-2">
+                  {selectedOwner.shops.map((shop: any) => (
+                    <div key={shop.id} className="p-3 border rounded-lg flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{shop.name}</p>
+                        <p className="text-sm text-muted-foreground">{shop.industries?.name || 'No Industry'}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(shop.status)}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedOwner(null);
+                            setSelectedShop(shop);
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
