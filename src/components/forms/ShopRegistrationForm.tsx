@@ -11,6 +11,7 @@ import { Upload, X, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import StepByStepDocumentUpload from "@/components/StepByStepDocumentUpload";
+import LocationPicker from "@/components/LocationPicker";
 
 interface ShopRegistrationFormProps {
   shopId?: string;
@@ -575,33 +576,13 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="latitude">Latitude</Label>
-                <Input
-                  id="latitude"
-                  type="number"
-                  step="any"
-                  value={formData.latitude}
-                  onChange={(e) => handleInputChange("latitude", e.target.value)}
-                  placeholder="e.g. -17.8252"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="longitude">Longitude</Label>
-                <Input
-                  id="longitude"
-                  type="number"
-                  step="any"
-                  value={formData.longitude}
-                  onChange={(e) => handleInputChange("longitude", e.target.value)}
-                  placeholder="e.g. 31.0335"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground md:col-span-2">
-                Provide your shop's GPS coordinates so it appears on the Ministry map. You can find these on Google Maps.
-              </p>
-            </div>
+            <LocationPicker
+              latitude={formData.latitude}
+              longitude={formData.longitude}
+              onLocationChange={(lat, lng) => {
+                setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+              }}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
