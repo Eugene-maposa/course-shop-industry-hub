@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Building, Package, Briefcase, Download, Search, Filter, TrendingUp, Eye, Users, BarChart3, Shield } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Building, Package, Briefcase, Download, Search, Filter, TrendingUp, Eye, Users, BarChart3, Shield, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,11 +18,13 @@ import autoTable from "jspdf-autotable";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend, Tooltip } from "recharts";
+import ShopMap from "@/components/ShopMap";
 
 const MinistryDashboard = () => {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
+  const queryClient = useQueryClient();
   const [shopSearch, setShopSearch] = useState("");
   const [productSearch, setProductSearch] = useState("");
   const [industrySearch, setIndustrySearch] = useState("");
@@ -99,6 +101,20 @@ const MinistryDashboard = () => {
       return data || [];
     }
   });
+
+  // Real-time subscription for shops
+  useEffect(() => {
+    const channel = supabase
+      .channel('ministry-shops-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'shops' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['ministry-shops'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Get unique business owners (users who have shops)
   const businessOwners = useMemo(() => {
@@ -577,6 +593,10 @@ const MinistryDashboard = () => {
               <Briefcase className="w-4 h-4 mr-2" />
               Industries ({stats.totalIndustries})
             </TabsTrigger>
+            <TabsTrigger value="map">
+              <MapPin className="w-4 h-4 mr-2" />
+              Shop Map
+            </TabsTrigger>
           </TabsList>
 
           {/* Analytics Tab */}
@@ -1040,6 +1060,21 @@ const MinistryDashboard = () => {
                     </TableBody>
                   </Table>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Map Tab */}
+          <TabsContent value="map">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5" />
+                  Real-Time Shop Location Map
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ShopMap shops={shops} />
               </CardContent>
             </Card>
           </TabsContent>

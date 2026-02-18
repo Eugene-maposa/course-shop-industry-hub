@@ -27,6 +27,8 @@ interface UserShop {
   created_at: string;
   updated_at: string;
   industry_id?: string;
+  latitude?: number;
+  longitude?: number;
   industry?: {
     name: string;
     code: string;
@@ -521,7 +523,9 @@ const UserShops = () => {
                 email: selectedShop.email || '',
                 website: selectedShop.website || '',
                 industry_id: selectedShop.industry_id || '',
-                icon_url: selectedShop.icon_url || ''
+                icon_url: selectedShop.icon_url || '',
+                latitude: selectedShop.latitude,
+                longitude: selectedShop.longitude,
               } : undefined}
               onSuccess={closeEditModal}
             />

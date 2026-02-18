@@ -24,6 +24,8 @@ interface ShopRegistrationFormProps {
     industry_id?: string;
     icon_url?: string;
     documents?: any;
+    latitude?: number;
+    longitude?: number;
   };
   onSuccess?: () => void;
 }
@@ -36,7 +38,9 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
     phone: initialData?.phone || "",
     email: initialData?.email || "",
     website: initialData?.website || "",
-    industry_id: initialData?.industry_id || ""
+    industry_id: initialData?.industry_id || "",
+    latitude: initialData?.latitude?.toString() || "",
+    longitude: initialData?.longitude?.toString() || "",
   });
   const [iconFile, setIconFile] = useState<File | null>(null);
   const [iconPreview, setIconPreview] = useState<string | null>(initialData?.icon_url || null);
@@ -90,11 +94,19 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
     mutationFn: async (shopData: typeof formData & { icon_url?: string; documents?: Record<string, string> }) => {
       console.log('Submitting shop with data:', shopData);
       
+      // Convert lat/lng strings to numbers for DB
+      const { latitude, longitude, ...rest } = shopData;
+      const dbData = {
+        ...rest,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
+      };
+      
       // Update if shopId exists, otherwise insert
       if (shopId) {
         const { data, error } = await supabase
           .from('shops')
-          .update(shopData)
+          .update(dbData)
           .eq('id', shopId)
           .select()
           .single();
@@ -112,9 +124,9 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
         const { data, error } = await supabase
           .from('shops')
           .insert({
-            ...shopData,
-            user_id: user.id, // Set the user_id for ownership
-            status: 'pending',
+            ...dbData,
+            user_id: user.id,
+            status: 'pending' as const,
             registration_date: new Date().toISOString().split('T')[0],
             document_verification_status: 'pending'
           })
@@ -152,7 +164,9 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
           phone: "",
           email: "",
           website: "",
-          industry_id: ""
+          industry_id: "",
+          latitude: "",
+          longitude: "",
         });
         setIconFile(null);
         setIconPreview(null);
@@ -433,7 +447,9 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
       phone: "",
       email: "",
       website: "",
-      industry_id: ""
+      industry_id: "",
+      latitude: "",
+      longitude: "",
     });
     setIconFile(null);
     setIconPreview(null);
@@ -557,6 +573,34 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
                 placeholder="Enter shop address"
                 rows={3}
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="latitude">Latitude</Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  step="any"
+                  value={formData.latitude}
+                  onChange={(e) => handleInputChange("latitude", e.target.value)}
+                  placeholder="e.g. -17.8252"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="longitude">Longitude</Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  step="any"
+                  value={formData.longitude}
+                  onChange={(e) => handleInputChange("longitude", e.target.value)}
+                  placeholder="e.g. 31.0335"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground md:col-span-2">
+                Provide your shop's GPS coordinates so it appears on the Ministry map. You can find these on Google Maps.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
