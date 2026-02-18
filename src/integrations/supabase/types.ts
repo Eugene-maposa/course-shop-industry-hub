@@ -330,6 +330,8 @@ export type Database = {
           icon_url: string | null
           id: string
           industry_id: string | null
+          latitude: number | null
+          longitude: number | null
           name: string
           phone: string | null
           registration_date: string | null
@@ -351,6 +353,8 @@ export type Database = {
           icon_url?: string | null
           id?: string
           industry_id?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name: string
           phone?: string | null
           registration_date?: string | null
@@ -372,6 +376,8 @@ export type Database = {
           icon_url?: string | null
           id?: string
           industry_id?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           phone?: string | null
           registration_date?: string | null
