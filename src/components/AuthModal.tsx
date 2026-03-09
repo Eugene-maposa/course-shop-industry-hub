@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,6 +19,8 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, resetPassword } = useAuth();
   const { toast } = useToast();
@@ -39,6 +42,15 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           onClose();
         }
       } else if (mode === 'signup') {
+        if (password !== confirmPassword) {
+          toast({
+            title: "Error",
+            description: "Passwords do not match.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
         result = await signUp(email, password);
         if (!result.error) {
           toast({
@@ -79,6 +91,8 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const resetForm = () => {
     setEmail('');
     setPassword('');
+    setConfirmPassword('');
+    setRememberMe(false);
   };
 
   const switchMode = (newMode: AuthMode) => {
@@ -121,6 +135,33 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 placeholder="Enter your password"
                 required
               />
+            </div>
+          )}
+
+          {mode === 'signup' && (
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm your password"
+                required
+              />
+            </div>
+          )}
+
+          {mode === 'login' && (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="rememberMe"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked === true)}
+              />
+              <Label htmlFor="rememberMe" className="text-sm font-normal cursor-pointer">
+                Remember me
+              </Label>
             </div>
           )}
 
