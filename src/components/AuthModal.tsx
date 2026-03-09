@@ -105,7 +105,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-nust-blue">
-            {mode === 'login' && 'Login to ProductHub'}
+            {mode === 'login' && 'Login to IndustryHub'}
             {mode === 'signup' && 'Create Account'}
             {mode === 'reset' && 'Reset Password'}
           </DialogTitle>
