@@ -550,6 +550,18 @@ const AdminPanel = () => {
           )}
 
           {isSuperAdmin && (
+            <TabsContent value="registered-users">
+              <RegisteredUsers />
+            </TabsContent>
+          )}
+
+          {isSuperAdmin && (
+            <TabsContent value="visitors">
+              <VisitorAnalytics />
+            </TabsContent>
+          )}
+
+          {isSuperAdmin && (
             <TabsContent value="content">
               <ContentManagement />
             </TabsContent>
