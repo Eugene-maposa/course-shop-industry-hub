@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Bell, FileText, Building2, Package, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { User, Bell, FileText, Building2, Package, Settings, ArrowLeft, Home } from 'lucide-react';
 import UserProfile from '@/components/dashboard/UserProfile';
 import UserNotifications from '@/components/dashboard/UserNotifications';
 import UserDocuments from '@/components/dashboard/UserDocuments';
@@ -12,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 
 const UserDashboard = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { unreadCount } = useNotifications();
   const [activeTab, setActiveTab] = useState('profile');
@@ -32,11 +35,23 @@ const UserDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">User Dashboard</h1>
-          <p className="text-muted-foreground mt-2">
-            Welcome back, {user.email}. Manage your profile, notifications, and business information.
-          </p>
+        <div className="flex items-center gap-4 mb-8">
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/')}>
+              <Home className="w-4 h-4 mr-1" />
+              Home
+            </Button>
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">User Dashboard</h1>
+            <p className="text-muted-foreground mt-1">
+              Welcome back, {user.email}. Manage your profile, notifications, and business information.
+            </p>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
