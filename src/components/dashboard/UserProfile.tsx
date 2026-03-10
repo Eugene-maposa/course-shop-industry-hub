@@ -177,15 +177,16 @@ const UserProfile = () => {
                 value={profileData.phone || ''}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 placeholder="Enter your phone number"
+                className="h-8 text-sm"
               />
             </div>
           </div>
 
           {/* Additional Information */}
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="address" className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="address" className="flex items-center gap-1 text-xs">
+                <MapPin className="w-3 h-3" />
                 Address
               </Label>
               <Textarea
