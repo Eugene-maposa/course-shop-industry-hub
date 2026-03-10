@@ -24,8 +24,8 @@ import MinistryDashboard from "./pages/MinistryDashboard";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  // Initialize theme on app load
   useTheme();
+  useVisitTracker();
   
   return (
     <>
