@@ -219,10 +219,11 @@ const UserProfile = () => {
                   value={profileData.company || ''}
                   onChange={(e) => handleInputChange('company', e.target.value)}
                   placeholder="Your company name"
+                  className="h-8 text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="website">Website</Label>
+              <div className="space-y-1">
+                <Label htmlFor="website" className="text-xs">Website</Label>
                 <Input
                   id="website"
                   value={profileData.website || ''}
