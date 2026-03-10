@@ -206,13 +206,14 @@ const UserProfile = () => {
                 value={profileData.bio || ''}
                 onChange={(e) => handleInputChange('bio', e.target.value)}
                 placeholder="Tell us about yourself"
-                rows={4}
+                rows={2}
+                className="text-sm"
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="company">Company</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="company" className="text-xs">Company</Label>
                 <Input
                   id="company"
                   value={profileData.company || ''}
