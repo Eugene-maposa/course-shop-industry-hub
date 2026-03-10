@@ -19,6 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import { SystemMonitor } from "@/components/admin/SystemMonitor";
 import { UserManagement } from "@/components/admin/UserManagement";
+import { RegisteredUsers } from "@/components/admin/RegisteredUsers";
+import { VisitorAnalytics } from "@/components/admin/VisitorAnalytics";
 import { ContentManagement } from "@/components/admin/ContentManagement";
 import { AuditLogs } from "@/components/admin/AuditLogs";
 import { ShopDocumentManagement } from "@/components/admin/ShopDocumentManagement";
@@ -388,7 +390,15 @@ const AdminPanel = () => {
               <>
                 <TabsTrigger value="users" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
                   <Users className="w-3 h-3 mr-1" />
-                  Users
+                  Admin Users
+                </TabsTrigger>
+                <TabsTrigger value="registered-users" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
+                  <Users className="w-3 h-3 mr-1" />
+                  All Users
+                </TabsTrigger>
+                <TabsTrigger value="visitors" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
+                  <Eye className="w-3 h-3 mr-1" />
+                  Visitors
                 </TabsTrigger>
                 <TabsTrigger value="content" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
                   <Package className="w-3 h-3 mr-1" />
@@ -536,6 +546,18 @@ const AdminPanel = () => {
           {isSuperAdmin && (
             <TabsContent value="users">
               <UserManagement />
+            </TabsContent>
+          )}
+
+          {isSuperAdmin && (
+            <TabsContent value="registered-users">
+              <RegisteredUsers />
+            </TabsContent>
+          )}
+
+          {isSuperAdmin && (
+            <TabsContent value="visitors">
+              <VisitorAnalytics />
             </TabsContent>
           )}
 

@@ -399,6 +399,36 @@ export type Database = {
           },
         ]
       }
+      site_visits: {
+        Row: {
+          created_at: string
+          id: string
+          page_path: string
+          user_agent: string | null
+          user_id: string | null
+          visited_at: string
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_path?: string
+          user_agent?: string | null
+          user_id?: string | null
+          visited_at?: string
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_path?: string
+          user_agent?: string | null
+          user_id?: string | null
+          visited_at?: string
+          visitor_id?: string
+        }
+        Relationships: []
+      }
       theme_settings: {
         Row: {
           category: string
@@ -509,6 +539,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_user_role: {
+        Args: {
+          new_role: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+        }
+        Returns: boolean
+      }
       check_admin_status: { Args: { user_id: string }; Returns: boolean }
       check_product_legality: {
         Args: { product_description?: string; product_name: string }
@@ -548,11 +585,33 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["admin_role"]
       }
+      get_all_users: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          company: string
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          last_sign_in_at: string
+          phone: string
+        }[]
+      }
       get_current_admin_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["admin_role"]
       }
       get_user_count: { Args: never; Returns: number }
+      get_visit_stats: {
+        Args: { period?: string }
+        Returns: {
+          period_label: string
+          unique_visitors: number
+          visit_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

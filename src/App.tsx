@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useTheme } from "@/hooks/useTheme";
+import { useVisitTracker } from "@/hooks/useVisitTracker";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import Shops from "./pages/Shops";
@@ -23,8 +24,8 @@ import MinistryDashboard from "./pages/MinistryDashboard";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  // Initialize theme on app load
   useTheme();
+  useVisitTracker();
   
   return (
     <>
