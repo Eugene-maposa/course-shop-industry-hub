@@ -601,6 +601,12 @@ const MinistryDashboard = () => {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics">
+            <div className="flex justify-end mb-4">
+              <Button onClick={exportAnalyticsPDF} variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                Export Analytics PDF
+              </Button>
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Registration Trends */}
               <Card className="col-span-1 lg:col-span-2">
