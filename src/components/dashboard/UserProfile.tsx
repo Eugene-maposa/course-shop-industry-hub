@@ -229,13 +229,14 @@ const UserProfile = () => {
                   value={profileData.website || ''}
                   onChange={(e) => handleInputChange('website', e.target.value)}
                   placeholder="https://yourwebsite.com"
+                  className="h-8 text-sm"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="dateOfBirth" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
+            <div className="space-y-1">
+              <Label htmlFor="dateOfBirth" className="flex items-center gap-1 text-xs">
+                <Calendar className="w-3 h-3" />
                 Date of Birth
               </Label>
               <Input
