@@ -194,12 +194,13 @@ const UserProfile = () => {
                 value={profileData.address || ''}
                 onChange={(e) => handleInputChange('address', e.target.value)}
                 placeholder="Enter your address"
-                rows={3}
+                rows={2}
+                className="text-sm"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
+            <div className="space-y-1">
+              <Label htmlFor="bio" className="text-xs">Bio</Label>
               <Textarea
                 id="bio"
                 value={profileData.bio || ''}
