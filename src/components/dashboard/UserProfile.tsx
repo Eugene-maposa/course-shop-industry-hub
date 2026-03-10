@@ -161,15 +161,15 @@ const UserProfile = () => {
                 id="email"
                 value={user?.email || ''}
                 disabled
-                className="bg-muted"
+                className="bg-muted h-8 text-sm"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] text-muted-foreground">
                 Email cannot be changed here
               </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="flex items-center gap-2">
-                <Phone className="w-4 h-4" />
+            <div className="space-y-1">
+              <Label htmlFor="phone" className="flex items-center gap-1 text-xs">
+                <Phone className="w-3 h-3" />
                 Phone Number
               </Label>
               <Input
