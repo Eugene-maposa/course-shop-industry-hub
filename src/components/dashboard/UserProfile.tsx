@@ -244,6 +244,7 @@ const UserProfile = () => {
                 type="date"
                 value={profileData.date_of_birth || ''}
                 onChange={(e) => handleInputChange('date_of_birth', e.target.value)}
+                className="h-8 text-sm"
               />
             </div>
           </div>
