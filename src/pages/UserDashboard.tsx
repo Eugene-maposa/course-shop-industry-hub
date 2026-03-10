@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 
 const UserDashboard = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { unreadCount } = useNotifications();
   const [activeTab, setActiveTab] = useState('profile');
