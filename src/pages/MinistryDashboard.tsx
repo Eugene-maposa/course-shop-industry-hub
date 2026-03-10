@@ -429,6 +429,122 @@ const MinistryDashboard = () => {
     });
   };
 
+  // Export analytics charts and trends to PDF
+  const exportAnalyticsPDF = () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text("Ministry of Industry and Commerce", 14, 20);
+    doc.setFontSize(14);
+    doc.text("Analytics & Trends Report", 14, 28);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 35);
+
+    doc.setFontSize(12);
+    doc.text("Key Metrics Summary", 14, 48);
+    
+    autoTable(doc, {
+      startY: 52,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Total Shops', String(stats.totalShops)],
+        ['Active Shops', String(stats.activeShops)],
+        ['Shop Activation Rate', `${stats.totalShops > 0 ? (stats.activeShops / stats.totalShops * 100).toFixed(0) : 0}%`],
+        ['Total Products', String(stats.totalProducts)],
+        ['Active Products', String(stats.activeProducts)],
+        ['Product Activation Rate', `${stats.totalProducts > 0 ? (stats.activeProducts / stats.totalProducts * 100).toFixed(0) : 0}%`],
+        ['Total Industries', String(stats.totalIndustries)],
+        ['Total Business Owners', String(stats.totalBusinessOwners)],
+        ['Avg Shops per Owner', stats.totalBusinessOwners > 0 ? (stats.totalShops / stats.totalBusinessOwners).toFixed(1) : '0'],
+        ['Avg Products per Shop', stats.totalShops > 0 ? (stats.totalProducts / stats.totalShops).toFixed(1) : '0'],
+      ],
+      theme: 'striped',
+      headStyles: { fillColor: [51, 65, 85] }
+    });
+
+    let currentY = (doc as any).lastAutoTable?.finalY || 120;
+    currentY += 10;
+    doc.setFontSize(12);
+    doc.text("Registration Trends (Last 6 Months)", 14, currentY);
+    
+    autoTable(doc, {
+      startY: currentY + 4,
+      head: [['Month', 'Shops Registered', 'Products Registered']],
+      body: analyticsData.trendsArray.map(t => [t.month, String(t.shops), String(t.products)]),
+      theme: 'striped',
+      headStyles: { fillColor: [51, 65, 85] }
+    });
+
+    currentY = (doc as any).lastAutoTable?.finalY || 200;
+    currentY += 10;
+    if (currentY > 250) { doc.addPage(); currentY = 20; }
+    doc.setFontSize(12);
+    doc.text("Shops & Products by Industry", 14, currentY);
+    
+    autoTable(doc, {
+      startY: currentY + 4,
+      head: [['Industry', 'Shops', 'Products']],
+      body: analyticsData.shopsByIndustry.map(i => [i.fullName || i.name, String(i.shops), String(i.products)]),
+      theme: 'striped',
+      headStyles: { fillColor: [51, 65, 85] }
+    });
+
+    currentY = (doc as any).lastAutoTable?.finalY || 200;
+    currentY += 10;
+    if (currentY > 230) { doc.addPage(); currentY = 20; }
+    doc.setFontSize(12);
+    doc.text("Shop Status Distribution", 14, currentY);
+    
+    autoTable(doc, {
+      startY: currentY + 4,
+      head: [['Status', 'Count', 'Percentage']],
+      body: analyticsData.shopStatusData.map(s => [
+        s.name, String(s.value),
+        `${stats.totalShops > 0 ? (s.value / stats.totalShops * 100).toFixed(1) : 0}%`
+      ]),
+      theme: 'striped',
+      headStyles: { fillColor: [51, 65, 85] }
+    });
+
+    currentY = (doc as any).lastAutoTable?.finalY || 200;
+    currentY += 10;
+    if (currentY > 230) { doc.addPage(); currentY = 20; }
+    doc.setFontSize(12);
+    doc.text("Product Status Distribution", 14, currentY);
+    
+    autoTable(doc, {
+      startY: currentY + 4,
+      head: [['Status', 'Count', 'Percentage']],
+      body: analyticsData.productStatusData.map(s => [
+        s.name, String(s.value),
+        `${stats.totalProducts > 0 ? (s.value / stats.totalProducts * 100).toFixed(1) : 0}%`
+      ]),
+      theme: 'striped',
+      headStyles: { fillColor: [51, 65, 85] }
+    });
+
+    currentY = (doc as any).lastAutoTable?.finalY || 200;
+    currentY += 10;
+    if (currentY > 230) { doc.addPage(); currentY = 20; }
+    doc.setFontSize(12);
+    doc.text("Business Owner Activity", 14, currentY);
+    
+    autoTable(doc, {
+      startY: currentY + 4,
+      head: [['Category', 'Count']],
+      body: analyticsData.ownerActivityData.map(d => [d.name, String(d.value)]),
+      theme: 'striped',
+      headStyles: { fillColor: [51, 65, 85] }
+    });
+
+    doc.save(`analytics-report-${new Date().toISOString().split('T')[0]}.pdf`);
+    
+    toast({
+      title: "Success",
+      description: "Analytics report downloaded successfully!"
+    });
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -601,6 +717,12 @@ const MinistryDashboard = () => {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics">
+            <div className="flex justify-end mb-4">
+              <Button onClick={exportAnalyticsPDF} variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                Export Analytics PDF
+              </Button>
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Registration Trends */}
               <Card className="col-span-1 lg:col-span-2">
