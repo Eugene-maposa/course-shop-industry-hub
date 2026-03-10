@@ -19,6 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import { SystemMonitor } from "@/components/admin/SystemMonitor";
 import { UserManagement } from "@/components/admin/UserManagement";
+import { RegisteredUsers } from "@/components/admin/RegisteredUsers";
+import { VisitorAnalytics } from "@/components/admin/VisitorAnalytics";
 import { ContentManagement } from "@/components/admin/ContentManagement";
 import { AuditLogs } from "@/components/admin/AuditLogs";
 import { ShopDocumentManagement } from "@/components/admin/ShopDocumentManagement";
