@@ -106,18 +106,18 @@ const UserProfile = () => {
   const initials = `${profileData.first_name?.[0] || ''}${profileData.last_name?.[0] || ''}`.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U';
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-2xl mx-auto">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="w-5 h-5" />
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <User className="w-4 h-4" />
             Personal Information
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs">
             Update your personal details and profile information.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           {/* Avatar Section */}
           <ProfilePhotoUpload
             currentAvatar={profileData.avatar_url}
