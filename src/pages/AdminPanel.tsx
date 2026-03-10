@@ -390,7 +390,15 @@ const AdminPanel = () => {
               <>
                 <TabsTrigger value="users" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
                   <Users className="w-3 h-3 mr-1" />
-                  Users
+                  Admin Users
+                </TabsTrigger>
+                <TabsTrigger value="registered-users" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
+                  <Users className="w-3 h-3 mr-1" />
+                  All Users
+                </TabsTrigger>
+                <TabsTrigger value="visitors" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
+                  <Eye className="w-3 h-3 mr-1" />
+                  Visitors
                 </TabsTrigger>
                 <TabsTrigger value="content" className="data-[state=active]:bg-slate-700 text-xs px-2 py-1">
                   <Package className="w-3 h-3 mr-1" />
