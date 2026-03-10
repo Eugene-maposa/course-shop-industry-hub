@@ -127,9 +127,9 @@ const UserProfile = () => {
           />
 
           {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="firstName" className="text-xs">First Name</Label>
               <Input
                 id="firstName"
                 value={profileData.first_name || ''}
