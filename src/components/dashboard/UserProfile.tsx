@@ -135,10 +135,11 @@ const UserProfile = () => {
                 value={profileData.first_name || ''}
                 onChange={(e) => handleInputChange('first_name', e.target.value)}
                 placeholder="Enter your first name"
+                className="h-8 text-sm"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
+            <div className="space-y-1">
+              <Label htmlFor="lastName" className="text-xs">Last Name</Label>
               <Input
                 id="lastName"
                 value={profileData.last_name || ''}
