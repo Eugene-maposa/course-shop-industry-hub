@@ -23,30 +23,37 @@ import MinistryDashboard from "./pages/MinistryDashboard";
 
 const queryClient = new QueryClient();
 
+const AppRoutes = () => {
+  useVisitTracker();
+  
+  return (
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/products" element={<Products />} />
+      <Route path="/shops" element={<Shops />} />
+      <Route path="/industries" element={<Industries />} />
+      <Route path="/product/:id" element={<ProductDetail />} />
+      <Route path="/help" element={<Help />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-of-service" element={<TermsOfService />} />
+      <Route path="/dashboard" element={<UserDashboard />} />
+      <Route path="/site-ops/login" element={<AdminLogin />} />
+      <Route path="/site-ops" element={<AdminPanel />} />
+      <Route path="/site-ops/ministry" element={<MinistryDashboard />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
 const AppContent = () => {
   useTheme();
-  useVisitTracker();
   
   return (
     <>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/shops" element={<Shops />} />
-          <Route path="/industries" element={<Industries />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/help" element={<Help />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms-of-service" element={<TermsOfService />} />
-          <Route path="/dashboard" element={<UserDashboard />} />
-          <Route path="/site-ops/login" element={<AdminLogin />} />
-          <Route path="/site-ops" element={<AdminPanel />} />
-          <Route path="/site-ops/ministry" element={<MinistryDashboard />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
     </>
   );
