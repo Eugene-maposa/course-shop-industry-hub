@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/AuthModal";
 import ProductRegistrationGuide from "@/components/ProductRegistrationGuide";
+import HomeShopMap from "@/components/HomeShopMap";
 import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
