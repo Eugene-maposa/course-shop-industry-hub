@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/AuthModal";
 import ProductRegistrationGuide from "@/components/ProductRegistrationGuide";
+import HomeShopMap from "@/components/HomeShopMap";
 import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
@@ -215,6 +216,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Shop Map Section */}
+      <HomeShopMap />
 
       {/* Footer */}
       <footer className="bg-nust-blue text-white py-12 px-4 sm:px-6 lg:px-8">
