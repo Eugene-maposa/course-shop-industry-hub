@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin, Store } from "lucide-react";
@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix Leaflet default marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -39,17 +38,13 @@ const HomeShopMap = () => {
     },
   });
 
-  // Initialize map
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    const map = L.map(mapRef.current, {
-      scrollWheelZoom: false,
-    }).setView([-19.015, 29.155], 6);
+    const map = L.map(mapRef.current, { scrollWheelZoom: false }).setView([-19.015, 29.155], 6);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
 
     markersRef.current = L.layerGroup().addTo(map);
@@ -62,10 +57,8 @@ const HomeShopMap = () => {
     };
   }, []);
 
-  // Update markers
   useEffect(() => {
     if (!mapInstanceRef.current || !markersRef.current) return;
-
     markersRef.current.clearLayers();
 
     shops.forEach((shop: any) => {
@@ -77,54 +70,44 @@ const HomeShopMap = () => {
         className: "custom-marker",
         html: `<div style="
           background: ${color};
-          width: 24px; height: 24px;
+          width: 28px; height: 28px;
           border-radius: 50% 50% 50% 0;
           transform: rotate(-45deg);
-          border: 2px solid white;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+          border: 3px solid white;
+          box-shadow: 0 3px 12px rgba(0,0,0,0.3);
           cursor: pointer;
           transition: transform 0.2s;
         "></div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 24],
-        popupAnchor: [0, -24],
+        iconSize: [28, 28],
+        iconAnchor: [14, 28],
+        popupAnchor: [0, -28],
       });
 
       const marker = L.marker([shop.latitude, shop.longitude], { icon });
 
-      // Tooltip on hover with shop details
       const tooltipContent = `
-        <div style="font-family: system-ui, sans-serif; min-width: 160px;">
-          <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">${shop.name}</div>
-          ${shop.industries?.name ? `<div style="color: #6b7280; font-size: 12px; margin-bottom: 2px;">🏭 ${shop.industries.name}</div>` : ""}
-          ${shop.address ? `<div style="font-size: 12px; margin-bottom: 2px;">📍 ${shop.address}</div>` : ""}
-          ${shop.phone ? `<div style="font-size: 12px; margin-bottom: 2px;">📞 ${shop.phone}</div>` : ""}
-          ${shop.email ? `<div style="font-size: 12px; margin-bottom: 2px;">✉️ ${shop.email}</div>` : ""}
-          <div style="
-            display: inline-block; margin-top: 4px; padding: 2px 8px;
-            border-radius: 12px; font-size: 11px; color: white;
-            background: ${color};
-          ">${shop.status || "pending"}</div>
-          <div style="font-size: 11px; color: #3b82f6; margin-top: 6px; font-weight: 500;">Click to view shop →</div>
+        <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 180px;">
+          <div style="font-weight: 700; font-size: 14px; margin-bottom: 6px; color: #111;">${shop.name}</div>
+          ${shop.industries?.name ? `<div style="color: #6b7280; font-size: 12px; margin-bottom: 3px;">🏭 ${shop.industries.name}</div>` : ""}
+          ${shop.address ? `<div style="font-size: 12px; margin-bottom: 3px; color: #374151;">📍 ${shop.address}</div>` : ""}
+          ${shop.phone ? `<div style="font-size: 12px; margin-bottom: 3px; color: #374151;">📞 ${shop.phone}</div>` : ""}
+          ${shop.email ? `<div style="font-size: 12px; margin-bottom: 3px; color: #374151;">✉️ ${shop.email}</div>` : ""}
+          <div style="display:inline-block; margin-top:6px; padding:2px 10px; border-radius:99px; font-size:11px; color:white; background:${color}; font-weight:600;">${shop.status || "pending"}</div>
+          <div style="font-size:11px; color: hsl(210,100%,40%); margin-top:8px; font-weight:600;">Click to view shop →</div>
         </div>
       `;
 
       marker.bindTooltip(tooltipContent, {
         direction: "top",
         sticky: false,
-        opacity: 0.95,
+        opacity: 0.97,
         className: "shop-tooltip",
       });
 
-      // Click to navigate to shop
-      marker.on("click", () => {
-        navigate(`/shops`);
-      });
-
+      marker.on("click", () => navigate(`/shops`));
       marker.addTo(markersRef.current!);
     });
 
-    // Fit bounds
     const withCoords = shops.filter((s: any) => s.latitude && s.longitude);
     if (withCoords.length > 0 && mapInstanceRef.current) {
       const bounds = L.latLngBounds(
@@ -135,57 +118,59 @@ const HomeShopMap = () => {
   }, [shops, navigate]);
 
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/30">
+    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/20">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Store className="w-7 h-7 text-primary" />
-            <h2 className="text-3xl font-bold text-foreground">
-              Registered Shops Map
-            </h2>
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+            <Store className="w-4 h-4" />
+            Interactive Map
           </div>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Explore registered shops across Zimbabwe. Hover over a marker to see shop details, or click to view the shop.
+          <h2 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight mb-3">
+            Registered Shops Map
+          </h2>
+          <p className="text-muted-foreground max-w-lg mx-auto text-sm">
+            Explore registered shops across Zimbabwe. Hover to preview details or click to visit.
           </p>
-          <div className="flex items-center justify-center gap-3 mt-4">
-            <span className="flex items-center gap-1 text-xs">
-              <span className="w-3 h-3 rounded-full bg-green-500 inline-block" /> Active
-            </span>
-            <span className="flex items-center gap-1 text-xs">
-              <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block" /> Pending
-            </span>
-            <span className="flex items-center gap-1 text-xs">
-              <span className="w-3 h-3 rounded-full bg-red-500 inline-block" /> Inactive
-            </span>
+          <div className="flex items-center justify-center gap-5 mt-5">
+            {[
+              { color: "bg-green-500", label: "Active" },
+              { color: "bg-yellow-500", label: "Pending" },
+              { color: "bg-red-500", label: "Inactive" },
+            ].map(({ color, label }) => (
+              <span key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                <span className={`w-2.5 h-2.5 rounded-full ${color} inline-block`} />
+                {label}
+              </span>
+            ))}
           </div>
         </div>
 
         {shops.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            <MapPin className="w-10 h-10 mx-auto mb-2 opacity-40" />
-            <p>No shops with locations registered yet.</p>
+          <div className="text-center py-12 text-muted-foreground">
+            <MapPin className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm">No shops with locations registered yet.</p>
           </div>
         )}
 
         <div
           ref={mapRef}
-          className="w-full rounded-xl border shadow-lg overflow-hidden"
-          style={{ height: "500px" }}
+          className="w-full rounded-2xl border border-border shadow-lg overflow-hidden"
+          style={{ height: "520px" }}
         />
       </div>
 
       <style>{`
         .shop-tooltip {
-          border-radius: 10px !important;
-          padding: 10px 14px !important;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
-          border: none !important;
+          border-radius: 12px !important;
+          padding: 12px 16px !important;
+          box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important;
+          border: 1px solid rgba(0,0,0,0.06) !important;
         }
         .shop-tooltip::before {
           border-top-color: white !important;
         }
         .custom-marker:hover div {
-          transform: rotate(-45deg) scale(1.2) !important;
+          transform: rotate(-45deg) scale(1.25) !important;
         }
       `}</style>
     </section>
