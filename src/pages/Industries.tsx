@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Filter, Building2, Users, TrendingUp, Eye } from "lucide-react";
+import { Search, Building2, Users, TrendingUp, Eye, ShieldCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +20,6 @@ const Industries = () => {
   const [selectedIndustry, setSelectedIndustry] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // Fetch industries with related counts
   const { data: industries = [], isLoading } = useQuery({
     queryKey: ['industriesWithCounts'],
     queryFn: async () => {
@@ -30,20 +29,12 @@ const Industries = () => {
       
       if (industriesError) throw industriesError;
 
-      // Get counts for each industry
       const industriesWithCounts = await Promise.all(
         industriesData.map(async (industry) => {
           const [shopsResult, productTypesResult] = await Promise.all([
-            supabase
-              .from('shops')
-              .select('id', { count: 'exact' })
-              .eq('industry_id', industry.id),
-            supabase
-              .from('product_types')
-              .select('id', { count: 'exact' })
-              .eq('industry_id', industry.id)
+            supabase.from('shops').select('id', { count: 'exact' }).eq('industry_id', industry.id),
+            supabase.from('product_types').select('id', { count: 'exact' }).eq('industry_id', industry.id)
           ]);
-
           return {
             ...industry,
             shopsCount: shopsResult.count || 0,
@@ -51,7 +42,6 @@ const Industries = () => {
           };
         })
       );
-
       return industriesWithCounts;
     }
   });
@@ -71,59 +61,66 @@ const Industries = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'bg-green-500';
-      case 'pending':
-        return 'bg-yellow-500';
-      case 'inactive':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
+      case 'active': return 'bg-green-500/10 text-green-700 border-0';
+      case 'pending': return 'bg-yellow-500/10 text-yellow-700 border-0';
+      case 'inactive': return 'bg-red-500/10 text-red-700 border-0';
+      default: return 'bg-muted text-muted-foreground border-0';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10">
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, hsl(var(--foreground)) 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+            <Building2 className="w-4 h-4" />
+            Global Industry Registry
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight mb-4">
             Industry Management
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Register new industries or browse existing ones
+          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+            Register new industries or browse existing ones across all sectors.
           </p>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="browse" className="text-lg py-3">Browse Industries</TabsTrigger>
-            <TabsTrigger value="register" className="text-lg py-3">Register Industry</TabsTrigger>
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-10 h-12 bg-muted/60 p-1 rounded-xl">
+            <TabsTrigger value="browse" className="rounded-lg text-sm font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm">Browse Industries</TabsTrigger>
+            <TabsTrigger value="register" className="rounded-lg text-sm font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm">Register Industry</TabsTrigger>
           </TabsList>
 
           <TabsContent value="register">
+            <div className="mb-6 max-w-4xl mx-auto rounded-xl border border-primary/20 bg-primary/5 p-4">
+              <p className="text-sm text-foreground">
+                <strong>Industry Registration:</strong> Complete the form below to register a new industry category.
+              </p>
+            </div>
             <IndustryRegistrationForm />
           </TabsContent>
 
           <TabsContent value="browse">
             {/* Search and Filters */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 shadow-lg border border-border">
-              <div className="flex flex-col md:flex-row gap-4">
+            <div className="bg-card rounded-2xl p-4 mb-8 shadow-sm border border-border">
+              <div className="flex flex-col md:flex-row gap-3">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
-                    placeholder="Search industries..."
+                    placeholder="Search industries by name, code or description..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 h-12 text-base"
+                    className="pl-10 h-9 text-sm"
                   />
                 </div>
-                
                 <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                  <SelectTrigger className="w-full md:w-48 h-12">
-                    <SelectValue placeholder="Status" />
+                  <SelectTrigger className="w-full md:w-44 h-9 text-sm">
+                    <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
@@ -132,56 +129,61 @@ const Industries = () => {
                     <SelectItem value="inactive">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
-
-                <Button className="h-12 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  <Filter className="w-5 h-5 mr-2" />
-                  Filter
-                </Button>
               </div>
             </div>
 
-            {/* Industries Grid */}
+            {/* Verified Notice */}
+            <div className="flex items-center gap-2 mb-6 text-xs text-muted-foreground">
+              <ShieldCheck className="w-4 h-4 text-primary" />
+              Showing {filteredIndustries.length} industries
+            </div>
+
             {isLoading ? (
-              <div className="text-center py-12">
-                <p className="text-xl text-muted-foreground">Loading industries...</p>
+              <div className="text-center py-16">
+                <div className="animate-pulse text-muted-foreground">Loading industries...</div>
+              </div>
+            ) : filteredIndustries.length === 0 ? (
+              <div className="text-center py-16">
+                <Building2 className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" />
+                <p className="text-muted-foreground">No industries found matching your criteria.</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredIndustries.map((industry) => (
-                  <Card key={industry.id} className="group bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start mb-2">
-                        <Badge variant="secondary" className={`text-xs text-white ${getStatusColor(industry.status)}`}>
+                  <Card key={industry.id} className="group bg-card border border-border hover:border-primary/30 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+                    <CardHeader className="pb-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Badge className={`text-xs font-medium ${getStatusColor(industry.status)}`}>
                           {industry.status}
                         </Badge>
-                        <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                        <Badge variant="secondary" className="bg-primary/10 text-primary border-0 text-xs font-medium">
                           {industry.code}
                         </Badge>
                       </div>
-                      <CardTitle className="text-lg group-hover:text-blue-600 transition-colors flex items-center gap-2">
-                        <Building2 className="w-5 h-5" />
+                      <CardTitle className="text-base font-bold text-foreground group-hover:text-primary transition-colors leading-snug flex items-center gap-2">
+                        <Building2 className="w-4 h-4 shrink-0" />
                         {industry.name}
                       </CardTitle>
                       {industry.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
+                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                           {industry.description}
                         </p>
                       )}
                     </CardHeader>
                     
-                    <CardContent className="pt-0">
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div className="text-center">
-                          <div className="flex items-center justify-center gap-1 text-blue-600 mb-1">
-                            <Users className="w-4 h-4" />
-                            <span className="text-lg font-bold">{industry.shopsCount}</span>
+                    <CardContent className="pt-0 space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="text-center bg-muted/50 rounded-lg py-2">
+                          <div className="flex items-center justify-center gap-1 text-primary mb-0.5">
+                            <Users className="w-3.5 h-3.5" />
+                            <span className="text-base font-bold">{industry.shopsCount}</span>
                           </div>
                           <p className="text-xs text-muted-foreground">Shops</p>
                         </div>
-                        <div className="text-center">
-                          <div className="flex items-center justify-center gap-1 text-purple-600 mb-1">
-                            <TrendingUp className="w-4 h-4" />
-                            <span className="text-lg font-bold">{industry.productTypesCount}</span>
+                        <div className="text-center bg-muted/50 rounded-lg py-2">
+                          <div className="flex items-center justify-center gap-1 text-primary mb-0.5">
+                            <TrendingUp className="w-3.5 h-3.5" />
+                            <span className="text-base font-bold">{industry.productTypesCount}</span>
                           </div>
                           <p className="text-xs text-muted-foreground">Product Types</p>
                         </div>
@@ -189,10 +191,11 @@ const Industries = () => {
                       
                       <Button 
                         size="sm" 
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                        variant="outline"
+                        className="w-full h-9 text-xs font-semibold"
                         onClick={() => handleViewDetails(industry)}
                       >
-                        <Eye className="w-4 h-4 mr-2" />
+                        <Eye className="w-3.5 h-3.5 mr-1" />
                         View Details
                       </Button>
                     </CardContent>
@@ -200,17 +203,10 @@ const Industries = () => {
                 ))}
               </div>
             )}
-
-            {filteredIndustries.length === 0 && !isLoading && (
-              <div className="text-center py-12">
-                <p className="text-xl text-muted-foreground">No industries found matching your criteria.</p>
-              </div>
-            )}
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* Industry Detail Modal */}
       <IndustryDetailModal 
         industry={selectedIndustry}
         isOpen={showDetailModal}

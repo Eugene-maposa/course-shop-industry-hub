@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Upload, X, AlertCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Upload, X, AlertCircle, Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import StepByStepDocumentUpload from "@/components/StepByStepDocumentUpload";
@@ -46,56 +48,47 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
   const [iconFile, setIconFile] = useState<File | null>(null);
   const [iconPreview, setIconPreview] = useState<string | null>(initialData?.icon_url || null);
   const [documents, setDocuments] = useState<Record<string, File>>({});
-  const [documentProgress, setDocumentProgress] = useState(shopId ? 100 : 0); // Set to 100 if editing
+  const [documentProgress, setDocumentProgress] = useState(shopId ? 100 : 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [industryOpen, setIndustryOpen] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch industries
   const { data: industries = [], isLoading: industriesLoading } = useQuery({
     queryKey: ['industries'],
     queryFn: async () => {
-      console.log('Fetching industries...');
       const { data, error } = await supabase
         .from('industries')
         .select('*')
         .eq('status', 'active')
         .order('name');
-      if (error) {
-        console.error('Error fetching industries:', error);
-        throw error;
-      }
-      console.log('Industries fetched:', data);
+      if (error) throw error;
       return data || [];
     }
   });
 
-  // Fetch document requirements for Zimbabwe
   const { data: documentRequirements = [], isLoading: documentsLoading } = useQuery({
     queryKey: ['document-requirements', 'ZW'],
     queryFn: async () => {
-      console.log('Fetching Zimbabwe document requirements...');
       const { data, error } = await supabase
         .from('shop_document_requirements')
         .select('*')
         .eq('country_code', 'ZW')
         .order('is_required', { ascending: false })
         .order('document_name');
-      if (error) {
-        console.error('Error fetching document requirements:', error);
-        throw error;
-      }
-      console.log('Document requirements fetched:', data);
+      if (error) throw error;
       return data || [];
     }
   });
 
+  const selectedIndustryName = useMemo(() => {
+    const found = industries.find(i => i.id === formData.industry_id);
+    return found ? `${found.name} (${found.code})` : "";
+  }, [formData.industry_id, industries]);
+
   const registerShopMutation = useMutation({
     mutationFn: async (shopData: typeof formData & { icon_url?: string; documents?: Record<string, string> }) => {
-      console.log('Submitting shop with data:', shopData);
-      
-      // Convert lat/lng strings to numbers for DB
       const { latitude, longitude, ...rest } = shopData;
       const dbData = {
         ...rest,
@@ -103,7 +96,6 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
         longitude: longitude ? parseFloat(longitude) : null,
       };
       
-      // Update if shopId exists, otherwise insert
       if (shopId) {
         const { data, error } = await supabase
           .from('shops')
@@ -111,14 +103,9 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
           .eq('id', shopId)
           .select()
           .single();
-        if (error) {
-          console.error('Shop update error:', error);
-          throw error;
-        }
-        console.log('Shop updated successfully:', data);
+        if (error) throw error;
         return data;
       } else {
-        // Get current user
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('User not authenticated');
         
@@ -133,257 +120,129 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
           })
           .select()
           .single();
-        if (error) {
-          console.error('Shop registration error:', error);
-          throw error;
-        }
-        console.log('Shop registered successfully:', data);
+        if (error) throw error;
         return data;
       }
     },
     onSuccess: async (data) => {
-      // Handle document upload completion notifications
       if (Object.keys(documents).length > 0) {
         await handleDocumentUploadComplete(data.id);
       }
-
       toast({
         title: "Success",
         description: shopId 
           ? "Shop updated successfully!" 
           : "Shop registered successfully! Your application and documents are pending admin approval."
       });
-      
       if (onSuccess) {
         onSuccess();
       } else {
-        // Reset form only if not in edit mode
-        setFormData({
-          name: "",
-          description: "",
-          address: "",
-          phone: "",
-          email: "",
-          website: "",
-          industry_id: "",
-          latitude: "",
-          longitude: "",
-        });
+        setFormData({ name: "", description: "", address: "", phone: "", email: "", website: "", industry_id: "", latitude: "", longitude: "" });
         setIconFile(null);
         setIconPreview(null);
         setDocuments({});
         setDocumentProgress(0);
       }
-      
       setIsSubmitting(false);
       queryClient.invalidateQueries({ queryKey: ['shops'] });
     },
     onError: (error) => {
       console.error("Shop registration error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to register shop. Please try again.",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to register shop. Please try again.", variant: "destructive" });
       setIsSubmitting(false);
     }
   });
 
   const uploadDocumentsToStorage = async (documents: Record<string, File>) => {
     const documentUrls: Record<string, string> = {};
-    
     for (const [docType, file] of Object.entries(documents)) {
-      try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${docType}_${Date.now()}.${fileExt}`;
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('shop-documents')
-          .upload(`temp/${fileName}`, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-          
-        if (uploadError) {
-          console.error(`Document upload error for ${docType}:`, uploadError);
-          throw new Error(`Failed to upload ${docType}`);
-        }
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('shop-documents')
-          .getPublicUrl(`temp/${fileName}`);
-          
-        documentUrls[docType] = publicUrl;
-        console.log(`Document uploaded successfully for ${docType}:`, publicUrl);
-      } catch (error) {
-        console.error(`Error uploading document ${docType}:`, error);
-        throw error;
-      }
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${docType}_${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('shop-documents')
+        .upload(`temp/${fileName}`, file, { cacheControl: '3600', upsert: false });
+      if (uploadError) throw new Error(`Failed to upload ${docType}`);
+      const { data: { publicUrl } } = supabase.storage.from('shop-documents').getPublicUrl(`temp/${fileName}`);
+      documentUrls[docType] = publicUrl;
     }
-    
     return documentUrls;
   };
 
-  // Function to handle document upload completion notifications
   const handleDocumentUploadComplete = async (shopId: string) => {
     try {
-      // Mark any document-related email notifications as read (automatically "disappear")
       const { data: notifications } = await supabase
         .from('notifications')
         .select('id')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
         .eq('type', 'document_review_needed')
         .eq('read', false);
-
       if (notifications && notifications.length > 0) {
-        const notificationIds = notifications.map(n => n.id);
-        await supabase
-          .from('notifications')
-          .update({ read: true })
-          .in('id', notificationIds);
+        await supabase.from('notifications').update({ read: true }).in('id', notifications.map(n => n.id));
       }
-
-      // Create notification for admin about document update
-      const { data: adminUsers } = await supabase
-        .from('admin_users')
-        .select('user_id')
-        .eq('is_active', true);
-
+      const { data: adminUsers } = await supabase.from('admin_users').select('user_id').eq('is_active', true);
       if (adminUsers && adminUsers.length > 0) {
-        // Create notifications for all active admins
-        const adminNotifications = adminUsers.map(admin => ({
-          user_id: admin.user_id,
-          title: 'Shop Documents Updated',
-          message: `New shop registration documents have been uploaded and are ready for review.`,
-          type: 'document_update',
-          related_entity_type: 'shop',
-          related_entity_id: shopId
-        }));
-
-        await supabase
-          .from('notifications')
-          .insert(adminNotifications);
-
-        // Send email notification to admins (we'll use the existing edge function)
+        await supabase.from('notifications').insert(
+          adminUsers.map(admin => ({
+            user_id: admin.user_id,
+            title: 'Shop Documents Updated',
+            message: 'New shop registration documents have been uploaded and are ready for review.',
+            type: 'document_update',
+            related_entity_type: 'shop',
+            related_entity_id: shopId
+          }))
+        );
         for (const admin of adminUsers) {
           try {
             await supabase.functions.invoke('send-notification-email', {
-              body: {
-                user_id: admin.user_id,
-                title: 'Shop Documents Updated',
-                message: `A shop owner has uploaded new registration documents that require your review and approval.`,
-                type: 'document_update'
-              }
+              body: { user_id: admin.user_id, title: 'Shop Documents Updated', message: 'A shop owner has uploaded new registration documents that require your review and approval.', type: 'document_update' }
             });
-          } catch (emailError) {
-            console.warn('Failed to send email to admin:', emailError);
-          }
+          } catch (e) { console.warn('Failed to send email to admin:', e); }
         }
       }
-
-      console.log('Document upload completion notifications sent');
-    } catch (error) {
-      console.error('Error handling document upload completion:', error);
-    }
+    } catch (error) { console.error('Error handling document upload completion:', error); }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (isSubmitting) return;
-    
-    console.log('Form submission started');
-    console.log('Current form data:', formData);
-    console.log('Documents:', Object.keys(documents));
-    
-    // Validate required fields
     if (!formData.name.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter a shop name.",
-        variant: "destructive"
-      });
+      toast({ title: "Missing Information", description: "Please enter a shop name.", variant: "destructive" });
       return;
     }
-    
     if (!formData.industry_id) {
-      toast({
-        title: "Missing Information",
-        description: "Please select an industry.",
-        variant: "destructive"
-      });
+      toast({ title: "Missing Information", description: "Please select an industry.", variant: "destructive" });
       return;
     }
-
-    // Check if all required documents are uploaded (only for new shops)
     if (!shopId) {
       const requiredDocs = documentRequirements.filter(req => req.is_required);
       const missingDocs = requiredDocs.filter(req => !documents[req.document_type]);
-      
       if (missingDocs.length > 0) {
-        const missingDocNames = missingDocs.map(doc => doc.document_name).join(', ');
-        toast({
-          title: "Missing Required Documents",
-          description: `Please upload all required documents: ${missingDocNames}`,
-          variant: "destructive"
-        });
+        toast({ title: "Missing Required Documents", description: `Please upload: ${missingDocs.map(d => d.document_name).join(', ')}`, variant: "destructive" });
         return;
       }
     }
-    
     setIsSubmitting(true);
-    
     try {
       let iconUrl = "";
       let documentUrls: Record<string, string> = {};
-      
-      // Upload icon if selected
       if (iconFile) {
-        console.log('Uploading shop icon...');
         const fileExt = iconFile.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('shop-icons')
-          .upload(fileName, iconFile, {
-            cacheControl: '3600',
-            upsert: false
-          });
-          
-        if (uploadError) {
-          console.error('Icon upload error:', uploadError);
-          throw new Error("Failed to upload icon");
-        }
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('shop-icons')
-          .getPublicUrl(fileName);
-          
+        const { error: uploadError } = await supabase.storage.from('shop-icons').upload(fileName, iconFile, { cacheControl: '3600', upsert: false });
+        if (uploadError) throw new Error("Failed to upload icon");
+        const { data: { publicUrl } } = supabase.storage.from('shop-icons').getPublicUrl(fileName);
         iconUrl = publicUrl;
-        console.log('Icon uploaded successfully:', iconUrl);
       }
-
-      // Upload documents
       if (Object.keys(documents).length > 0) {
-        console.log('Uploading documents...');
         documentUrls = await uploadDocumentsToStorage(documents);
-        console.log('All documents uploaded successfully');
       }
-      
-      // Register shop
       await registerShopMutation.mutateAsync({
         ...formData,
         ...(iconUrl && { icon_url: iconUrl }),
         ...(Object.keys(documentUrls).length > 0 && { documents: documentUrls })
       });
-      
     } catch (error) {
-      console.error('Registration process error:', error);
-      toast({
-        title: "Upload Error",
-        description: error instanceof Error ? error.message : "Failed to upload files",
-        variant: "destructive"
-      });
+      toast({ title: "Upload Error", description: error instanceof Error ? error.message : "Failed to upload files", variant: "destructive" });
       setIsSubmitting(false);
     }
   };
@@ -395,63 +254,30 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
   const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload an image file (JPEG, PNG, WebP).",
-          variant: "destructive"
-        });
+        toast({ title: "Invalid file type", description: "Please upload an image file (JPEG, PNG, WebP).", variant: "destructive" });
         e.target.value = '';
         return;
       }
-      
-      // Validate file size (5MB max for icons)
       if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please upload an image smaller than 5MB.",
-          variant: "destructive"
-        });
+        toast({ title: "File too large", description: "Please upload an image smaller than 5MB.", variant: "destructive" });
         e.target.value = '';
         return;
       }
-      
       setIconFile(file);
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setIconPreview(e.target?.result as string);
-      };
+      reader.onload = (e) => setIconPreview(e.target?.result as string);
       reader.readAsDataURL(file);
     }
   };
 
-  const removeIcon = () => {
-    setIconFile(null);
-    setIconPreview(null);
-  };
-
-  const handleDocumentsChange = (newDocuments: Record<string, File>) => {
-    setDocuments(newDocuments);
-  };
-
-  const handleProgressChange = (progress: number) => {
-    setDocumentProgress(progress);
-  };
+  const removeIcon = () => { setIconFile(null); setIconPreview(null); };
+  const handleDocumentsChange = (newDocuments: Record<string, File>) => setDocuments(newDocuments);
+  const handleProgressChange = (progress: number) => setDocumentProgress(progress);
 
   const clearForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      address: "",
-      phone: "",
-      email: "",
-      website: "",
-      industry_id: "",
-      latitude: "",
-      longitude: "",
-    });
+    setFormData({ name: "", description: "", address: "", phone: "", email: "", website: "", industry_id: "", latitude: "", longitude: "" });
     setIconFile(null);
     setIconPreview(null);
     setDocuments({});
@@ -462,118 +288,107 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
 
   if (industriesLoading || documentsLoading) {
     return (
-      <Card className="max-w-4xl mx-auto">
-        <CardContent className="p-6">
-          <div className="text-center">
-            <p className="text-lg">Loading registration form...</p>
-          </div>
+      <Card className="max-w-3xl mx-auto">
+        <CardContent className="p-4">
+          <div className="text-center text-sm">Loading registration form...</div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="max-w-4xl mx-auto">
-      <CardHeader className="text-center bg-nust-blue text-white">
-        <CardTitle className="text-2xl">{shopId ? 'Edit Shop' : 'Register New Shop - Zimbabwe'}</CardTitle>
+    <Card className="max-w-3xl mx-auto">
+      <CardHeader className="text-center bg-primary text-primary-foreground py-4">
+        <CardTitle className="text-lg">{shopId ? 'Edit Shop' : 'Register New Shop - Zimbabwe'}</CardTitle>
       </CardHeader>
       
-      <CardContent className="p-6 space-y-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <CardContent className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Basic Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Basic Information</h3>
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold border-b pb-1.5">Basic Information</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Shop Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  required
-                  placeholder="Enter shop name"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="name" className="text-xs">Shop Name *</Label>
+                <Input id="name" value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} required placeholder="Enter shop name" className="h-9 text-sm" />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="industry">Industry *</Label>
-                <Select value={formData.industry_id} onValueChange={(value) => handleInputChange("industry_id", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select industry" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {industries.map((industry) => (
-                      <SelectItem key={industry.id} value={industry.id}>
-                        {industry.name} ({industry.code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-1.5">
+                <Label htmlFor="industry" className="text-xs">Industry *</Label>
+                <Popover open={industryOpen} onOpenChange={setIndustryOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={industryOpen}
+                      className="w-full h-9 justify-between text-sm font-normal"
+                    >
+                      <span className="truncate">
+                        {selectedIndustryName || "Search & select industry..."}
+                      </span>
+                      <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search industry..." className="h-9 text-sm" />
+                      <CommandList>
+                        <CommandEmpty>No industry found.</CommandEmpty>
+                        <CommandGroup className="max-h-60 overflow-auto">
+                          {industries.map((industry) => (
+                            <CommandItem
+                              key={industry.id}
+                              value={`${industry.name} ${industry.code}`}
+                              onSelect={() => {
+                                handleInputChange("industry_id", industry.id);
+                                setIndustryOpen(false);
+                              }}
+                              className="text-sm"
+                            >
+                              <Check className={cn("mr-2 h-3.5 w-3.5", formData.industry_id === industry.id ? "opacity-100" : "opacity-0")} />
+                              {industry.name} ({industry.code})
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
             {/* Shop Icon Upload */}
-            <div className="space-y-2">
-              <Label htmlFor="icon">Shop Icon</Label>
-              <div className="flex items-center gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="icon" className="text-xs">Shop Icon</Label>
+              <div className="flex items-center gap-3">
                 {iconPreview ? (
                   <div className="relative">
-                    <img 
-                      src={iconPreview} 
-                      alt="Shop icon preview" 
-                      className="w-16 h-16 object-cover rounded-lg border"
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0"
-                      onClick={removeIcon}
-                    >
+                    <img src={iconPreview} alt="Shop icon preview" className="w-12 h-12 object-cover rounded-lg border" />
+                    <Button type="button" size="sm" variant="destructive" className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full p-0" onClick={removeIcon}>
                       <X className="w-3 h-3" />
                     </Button>
                   </div>
                 ) : (
-                  <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                    <Upload className="w-6 h-6 text-gray-400" />
+                  <div className="w-12 h-12 border-2 border-dashed border-muted-foreground/30 rounded-lg flex items-center justify-center">
+                    <Upload className="w-4 h-4 text-muted-foreground" />
                   </div>
                 )}
                 <div className="flex-1">
-                  <Input
-                    id="icon"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleIconChange}
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Upload a logo or icon for your shop (optional, max 5MB)
-                  </p>
+                  <Input id="icon" type="file" accept="image/*" onChange={handleIconChange} className="h-9 text-xs file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Optional, max 5MB</p>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
-                placeholder="Enter shop description"
-                rows={4}
-              />
+            <div className="space-y-1.5">
+              <Label htmlFor="description" className="text-xs">Description</Label>
+              <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange("description", e.target.value)} placeholder="Enter shop description" rows={3} className="text-sm min-h-[70px]" />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
-              <Textarea
-                id="address"
-                value={formData.address}
-                onChange={(e) => handleInputChange("address", e.target.value)}
-                placeholder="Enter shop address"
-                rows={3}
-              />
+            <div className="space-y-1.5">
+              <Label htmlFor="address" className="text-xs">Address</Label>
+              <Textarea id="address" value={formData.address} onChange={(e) => handleInputChange("address", e.target.value)} placeholder="Enter shop address" rows={2} className="text-sm min-h-[56px]" />
             </div>
 
             <LocationPicker
@@ -584,54 +399,33 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
               }}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  placeholder="Enter phone number"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="phone" className="text-xs">Phone Number</Label>
+                <Input id="phone" value={formData.phone} onChange={(e) => handleInputChange("phone", e.target.value)} placeholder="Enter phone number" className="h-9 text-sm" />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  placeholder="Enter email address"
-                />
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-xs">Email</Label>
+                <Input id="email" type="email" value={formData.email} onChange={(e) => handleInputChange("email", e.target.value)} placeholder="Enter email address" className="h-9 text-sm" />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                value={formData.website}
-                onChange={(e) => handleInputChange("website", e.target.value)}
-                placeholder="Enter website URL"
-              />
+            <div className="space-y-1.5">
+              <Label htmlFor="website" className="text-xs">Website</Label>
+              <Input id="website" value={formData.website} onChange={(e) => handleInputChange("website", e.target.value)} placeholder="Enter website URL" className="h-9 text-sm" />
             </div>
           </div>
 
           {/* Step-by-Step Document Upload */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">Required Documents Upload</h3>
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold border-b pb-1.5">Required Documents Upload</h3>
             
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-amber-800 mb-1">
-                    Zimbabwe Business Registration Requirements
-                  </p>
-                  <p className="text-xs text-amber-700">
-                    Please upload all required business documents step by step. These documents will be verified by our team to ensure your shop meets regulatory requirements.
-                  </p>
+                  <p className="text-xs font-medium text-amber-800 mb-0.5">Zimbabwe Business Registration Requirements</p>
+                  <p className="text-[10px] text-amber-700">Upload all required business documents step by step for verification.</p>
                 </div>
               </div>
             </div>
@@ -642,21 +436,15 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
             />
           </div>
 
-          <div className="flex gap-4 pt-4">
+          <div className="flex gap-3 pt-2">
             <Button 
               type="submit" 
-              className={`flex-1 ${isFormValid ? 'bg-nust-blue hover:bg-nust-blue-dark' : 'bg-gray-400'}`}
-            disabled={isSubmitting || !isFormValid}
-          >
-            {isSubmitting ? (shopId ? "Updating..." : "Registering...") : (shopId ? "Update Shop" : "Register Shop")}
-          </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="flex-1"
-              onClick={clearForm}
-              disabled={isSubmitting}
+              className="flex-1 h-9 text-sm"
+              disabled={isSubmitting || !isFormValid}
             >
+              {isSubmitting ? (shopId ? "Updating..." : "Registering...") : (shopId ? "Update Shop" : "Register Shop")}
+            </Button>
+            <Button type="button" variant="outline" className="flex-1 h-9 text-sm" onClick={clearForm} disabled={isSubmitting}>
               Clear Form
             </Button>
           </div>

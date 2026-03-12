@@ -30,23 +30,12 @@ const IndustryRegistrationForm = () => {
       return data;
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Industry registered successfully!"
-      });
-      setFormData({
-        name: "",
-        description: "",
-        code: ""
-      });
+      toast({ title: "Success", description: "Industry registered successfully!" });
+      setFormData({ name: "", description: "", code: "" });
       queryClient.invalidateQueries({ queryKey: ['industries'] });
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to register industry. Please try again.",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to register industry. Please try again.", variant: "destructive" });
       console.error("Error registering industry:", error);
     }
   });
@@ -62,64 +51,32 @@ const IndustryRegistrationForm = () => {
 
   return (
     <Card className="max-w-2xl mx-auto">
-      <CardHeader className="text-center bg-nust-blue text-white">
-        <CardTitle className="text-2xl">Register New Industry</CardTitle>
+      <CardHeader className="text-center bg-primary text-primary-foreground py-4">
+        <CardTitle className="text-lg">Register New Industry</CardTitle>
       </CardHeader>
-      <CardContent className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Industry Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                required
-                placeholder="Enter industry name"
-              />
+      <CardContent className="p-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="name" className="text-xs">Industry Name *</Label>
+              <Input id="name" value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} required placeholder="Enter industry name" className="h-9 text-sm" />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="code">Industry Code *</Label>
-              <Input
-                id="code"
-                value={formData.code}
-                onChange={(e) => handleInputChange("code", e.target.value.toUpperCase())}
-                required
-                placeholder="Enter industry code"
-              />
+            <div className="space-y-1.5">
+              <Label htmlFor="code" className="text-xs">Industry Code *</Label>
+              <Input id="code" value={formData.code} onChange={(e) => handleInputChange("code", e.target.value.toUpperCase())} required placeholder="Enter industry code" className="h-9 text-sm" />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              placeholder="Enter industry description"
-              rows={4}
-            />
+          <div className="space-y-1.5">
+            <Label htmlFor="description" className="text-xs">Description</Label>
+            <Textarea id="description" value={formData.description} onChange={(e) => handleInputChange("description", e.target.value)} placeholder="Enter industry description" rows={3} className="text-sm min-h-[70px]" />
           </div>
 
-          <div className="flex gap-4 pt-4">
-            <Button 
-              type="submit" 
-              className="flex-1 bg-nust-blue hover:bg-nust-blue-dark"
-              disabled={registerIndustryMutation.isPending}
-            >
+          <div className="flex gap-3 pt-2">
+            <Button type="submit" className="flex-1 h-9 text-sm" disabled={registerIndustryMutation.isPending}>
               {registerIndustryMutation.isPending ? "Registering..." : "Register Industry"}
             </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => setFormData({
-                name: "",
-                description: "",
-                code: ""
-              })}
-            >
+            <Button type="button" variant="outline" className="flex-1 h-9 text-sm" onClick={() => setFormData({ name: "", description: "", code: "" })}>
               Clear Form
             </Button>
           </div>
