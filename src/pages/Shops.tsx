@@ -99,7 +99,7 @@ const Shops = () => {
 
           <TabsContent value="browse">
             {/* Search & Filters */}
-            <div className="bg-card rounded-2xl p-5 mb-8 shadow-sm border border-border">
+            <div className="bg-card rounded-2xl p-4 mb-8 shadow-sm border border-border">
               <div className="flex flex-col md:flex-row gap-3">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -107,11 +107,11 @@ const Shops = () => {
                     placeholder="Search shops by name or description..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 h-11"
+                    className="pl-10 h-9 text-sm"
                   />
                 </div>
                 <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
-                  <SelectTrigger className="w-full md:w-52 h-11">
+                  <SelectTrigger className="w-full md:w-44 h-9 text-sm">
                     <SelectValue placeholder="All Industries" />
                   </SelectTrigger>
                   <SelectContent>
