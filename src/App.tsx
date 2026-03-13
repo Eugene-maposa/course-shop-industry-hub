@@ -48,6 +48,7 @@ const AppRoutes = () => {
 
 const AppContent = () => {
   useTheme();
+  useThemeMode();
   
   return (
     <>
