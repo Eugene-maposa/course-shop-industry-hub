@@ -93,9 +93,9 @@ const Industries = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-10 h-12 bg-muted/60 p-1 rounded-xl">
+          <TabsList className={`grid w-full max-w-md mx-auto mb-10 h-12 bg-muted/60 p-1 rounded-xl ${user ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <TabsTrigger value="browse" className="rounded-lg text-sm font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm">Browse Industries</TabsTrigger>
-            <TabsTrigger value="register" className="rounded-lg text-sm font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm">Register Industry</TabsTrigger>
+            {user && <TabsTrigger value="register" className="rounded-lg text-sm font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm">Register Industry</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="register">
