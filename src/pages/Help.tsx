@@ -317,7 +317,7 @@ const Help = () => {
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-nust-blue mb-4">Contact Us</h2>
             <p className="text-gray-600 text-lg">
-              Ministry of Industry and Commerce - Zimbabwe
+              National University of Science and Technology - Zimbabwe
             </p>
           </div>
 
