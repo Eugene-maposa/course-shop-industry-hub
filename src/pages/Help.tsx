@@ -345,9 +345,9 @@ const Help = () => {
                   <h3 className="text-lg font-semibold text-nust-blue">Postal Address</h3>
                 </div>
                 <div className="space-y-2 text-gray-700">
-                  <p>P.O. Box CY 708</p>
-                  <p>Causeway</p>
-                  <p>Harare, Zimbabwe</p>
+                  <p>P.O. Box AC 939</p>
+                  <p>Ascot</p>
+                  <p>Bulawayo, Zimbabwe</p>
                 </div>
               </CardContent>
             </Card>
