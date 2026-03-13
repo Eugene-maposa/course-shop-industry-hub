@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Package, Store, Building2, User, LogOut, Shield, Settings } from "lucide-react";
+import ThemeModeToggle from "./ThemeModeToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -87,6 +88,8 @@ const Navbar = () => {
             <Link to="/help" className="text-gray-200 hover:text-white hover:bg-nust-blue-light px-3 py-2 rounded-md text-sm font-medium transition-colors">
               Help ?
             </Link>
+            
+            <ThemeModeToggle />
             
             {/* User Menu */}
             {user && (

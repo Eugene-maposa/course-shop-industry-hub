@@ -242,18 +242,14 @@ const Index = () => {
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
               <div className="space-y-2 text-sm text-gray-200">
-                <p>Ministry of Industry and Commerce</p>
-                <p>Mukwati Building, Corner 4th Street/Central Avenue</p>
-                <p>P.O. Box CY 708, Causeway</p>
-                <p>Harare, Zimbabwe</p>
+                <p>National University of Science and Technology</p>
+                <p>Cnr Gwanda Road & Cecil Avenue</p>
+                <p>Bulawayo, Zimbabwe</p>
                 <p className="mt-3">
-                  <strong>Phone:</strong> +263 4 703 001-9
+                  <strong>Phone:</strong> +263 775 126 513 / +263 713 641 507
                 </p>
                 <p>
-                  <strong>Email:</strong> info@mic.gov.zw
-                </p>
-                <p>
-                  <strong>Website:</strong> www.mic.gov.zw
+                  <strong>Email:</strong> maposa.eugene16@gmail.com
                 </p>
               </div>
             </div>

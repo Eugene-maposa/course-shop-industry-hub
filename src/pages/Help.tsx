@@ -317,7 +317,7 @@ const Help = () => {
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-nust-blue mb-4">Contact Us</h2>
             <p className="text-gray-600 text-lg">
-              Ministry of Industry and Commerce - Zimbabwe
+              National University of Science and Technology - Zimbabwe
             </p>
           </div>
 
@@ -330,9 +330,9 @@ const Help = () => {
                   <h3 className="text-lg font-semibold text-nust-blue">Physical Address</h3>
                 </div>
                 <div className="space-y-2 text-gray-700">
-                  <p className="font-medium">Mukwati Building</p>
-                  <p>Corner 4th Street/Central Avenue</p>
-                  <p>Harare, Zimbabwe</p>
+                  <p className="font-medium">National University of Science and Technology</p>
+                  <p>Cnr Gwanda Road & Cecil Avenue</p>
+                  <p>Bulawayo, Zimbabwe</p>
                 </div>
               </CardContent>
             </Card>
@@ -345,9 +345,9 @@ const Help = () => {
                   <h3 className="text-lg font-semibold text-nust-blue">Postal Address</h3>
                 </div>
                 <div className="space-y-2 text-gray-700">
-                  <p>P.O. Box CY 708</p>
-                  <p>Causeway</p>
-                  <p>Harare, Zimbabwe</p>
+                  <p>P.O. Box AC 939</p>
+                  <p>Ascot</p>
+                  <p>Bulawayo, Zimbabwe</p>
                 </div>
               </CardContent>
             </Card>
@@ -360,9 +360,8 @@ const Help = () => {
                   <h3 className="text-lg font-semibold text-nust-blue">Phone & Fax</h3>
                 </div>
                 <div className="space-y-2 text-gray-700">
-                  <p><strong>Main Line:</strong> +263 4 703 001-9</p>
-                  <p><strong>Switchboard:</strong> +263 4 703 000</p>
-                  <p><strong>Fax:</strong> +263 4 728 695</p>
+                  <p><strong>Line 1:</strong> +263 775 126 513</p>
+                  <p><strong>Line 2:</strong> +263 713 641 507</p>
                 </div>
               </CardContent>
             </Card>
@@ -376,11 +375,7 @@ const Help = () => {
                 </div>
                 <div className="space-y-2 text-gray-700">
                   <p><strong>General Inquiries:</strong></p>
-                  <p className="text-blue-600">info@mic.gov.zw</p>
-                  <p><strong>Product Registration:</strong></p>
-                  <p className="text-blue-600">products@mic.gov.zw</p>
-                  <p><strong>Technical Support:</strong></p>
-                  <p className="text-blue-600">support@mic.gov.zw</p>
+                  <p className="text-blue-600">maposa.eugene16@gmail.com</p>
                 </div>
               </CardContent>
             </Card>
@@ -412,15 +407,13 @@ const Help = () => {
                 <div className="space-y-2 text-gray-700">
                   <p><strong>Official Website:</strong></p>
                   <a 
-                    href="https://www.mic.gov.zw" 
+                    href="https://www.nust.ac.zw" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline block"
                   >
-                    www.mic.gov.zw
+                    www.nust.ac.zw
                   </a>
-                  <p><strong>Online Portal:</strong></p>
-                  <p className="text-blue-600">portal.mic.gov.zw</p>
                 </div>
               </CardContent>
             </Card>
