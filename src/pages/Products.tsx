@@ -14,8 +14,10 @@ import ProductRegistrationForm from "@/components/forms/ProductRegistrationForm"
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useAuth } from "@/hooks/useAuth";
 
 const Products = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [activeTab, setActiveTab] = useState("browse");
@@ -72,9 +74,9 @@ const Products = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-10 h-12 bg-muted/60 p-1 rounded-xl">
+          <TabsList className={`grid w-full max-w-md mx-auto mb-10 h-12 bg-muted/60 p-1 rounded-xl ${user ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <TabsTrigger value="browse" className="rounded-lg text-sm font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm">Browse Products</TabsTrigger>
-            <TabsTrigger value="register" className="rounded-lg text-sm font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm">Register Product</TabsTrigger>
+            {user && <TabsTrigger value="register" className="rounded-lg text-sm font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm">Register Product</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="register">
