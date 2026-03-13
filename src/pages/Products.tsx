@@ -14,6 +14,7 @@ import ProductRegistrationForm from "@/components/forms/ProductRegistrationForm"
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useAuth } from "@/hooks/useAuth";
 
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState("");

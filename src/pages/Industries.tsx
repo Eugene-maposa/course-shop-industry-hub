@@ -12,6 +12,7 @@ import Navbar from "@/components/Navbar";
 import IndustryRegistrationForm from "@/components/forms/IndustryRegistrationForm";
 import IndustryDetailModal from "@/components/IndustryDetailModal";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const Industries = () => {
   const [searchTerm, setSearchTerm] = useState("");

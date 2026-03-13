@@ -11,6 +11,7 @@ import Navbar from "@/components/Navbar";
 import ShopRegistrationForm from "@/components/forms/ShopRegistrationForm";
 import ShopContactModal from "@/components/ShopContactModal";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const Shops = () => {
   const [searchTerm, setSearchTerm] = useState("");
