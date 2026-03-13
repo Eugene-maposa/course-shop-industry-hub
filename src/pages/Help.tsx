@@ -407,15 +407,13 @@ const Help = () => {
                 <div className="space-y-2 text-gray-700">
                   <p><strong>Official Website:</strong></p>
                   <a 
-                    href="https://www.mic.gov.zw" 
+                    href="https://www.nust.ac.zw" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline block"
                   >
-                    www.mic.gov.zw
+                    www.nust.ac.zw
                   </a>
-                  <p><strong>Online Portal:</strong></p>
-                  <p className="text-blue-600">portal.mic.gov.zw</p>
                 </div>
               </CardContent>
             </Card>

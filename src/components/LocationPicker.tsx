@@ -88,7 +88,7 @@ const LocationPicker = ({ latitude, longitude, onLocationChange }: LocationPicke
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    const center: [number, number] = hasCoords ? [parsedLat!, parsedLng!] : [-19.015, 29.155];
+    const center: [number, number] = hasCoords ? [parsedLat!, parsedLng!] : [-20.2325, 28.6929];
     const zoom = hasCoords ? 14 : 6;
 
     const map = L.map(mapRef.current).setView(center, zoom);

@@ -41,7 +41,7 @@ const HomeShopMap = () => {
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    const map = L.map(mapRef.current, { scrollWheelZoom: false }).setView([-19.015, 29.155], 6);
+    const map = L.map(mapRef.current, { scrollWheelZoom: false }).setView([-20.2325, 28.6929], 6);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
