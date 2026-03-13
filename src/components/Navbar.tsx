@@ -89,6 +89,8 @@ const Navbar = () => {
               Help ?
             </Link>
             
+            <ThemeModeToggle />
+            
             {/* User Menu */}
             {user && (
               <div className="flex items-center space-x-4">
