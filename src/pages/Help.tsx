@@ -375,11 +375,7 @@ const Help = () => {
                 </div>
                 <div className="space-y-2 text-gray-700">
                   <p><strong>General Inquiries:</strong></p>
-                  <p className="text-blue-600">info@mic.gov.zw</p>
-                  <p><strong>Product Registration:</strong></p>
-                  <p className="text-blue-600">products@mic.gov.zw</p>
-                  <p><strong>Technical Support:</strong></p>
-                  <p className="text-blue-600">support@mic.gov.zw</p>
+                  <p className="text-blue-600">maposa.eugene16@gmail.com</p>
                 </div>
               </CardContent>
             </Card>
