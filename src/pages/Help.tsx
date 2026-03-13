@@ -360,9 +360,8 @@ const Help = () => {
                   <h3 className="text-lg font-semibold text-nust-blue">Phone & Fax</h3>
                 </div>
                 <div className="space-y-2 text-gray-700">
-                  <p><strong>Main Line:</strong> +263 4 703 001-9</p>
-                  <p><strong>Switchboard:</strong> +263 4 703 000</p>
-                  <p><strong>Fax:</strong> +263 4 728 695</p>
+                  <p><strong>Line 1:</strong> +263 775 126 513</p>
+                  <p><strong>Line 2:</strong> +263 713 641 507</p>
                 </div>
               </CardContent>
             </Card>
