@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useTheme } from "@/hooks/useTheme";
+import { useThemeMode } from "@/hooks/useThemeMode";
 import { useVisitTracker } from "@/hooks/useVisitTracker";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
