@@ -330,9 +330,9 @@ const Help = () => {
                   <h3 className="text-lg font-semibold text-nust-blue">Physical Address</h3>
                 </div>
                 <div className="space-y-2 text-gray-700">
-                  <p className="font-medium">Mukwati Building</p>
-                  <p>Corner 4th Street/Central Avenue</p>
-                  <p>Harare, Zimbabwe</p>
+                  <p className="font-medium">National University of Science and Technology</p>
+                  <p>Cnr Gwanda Road & Cecil Avenue</p>
+                  <p>Bulawayo, Zimbabwe</p>
                 </div>
               </CardContent>
             </Card>
