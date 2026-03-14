@@ -29,9 +29,18 @@ const Products = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select(`*, product_types(name, code), shops(name)`);
+        .select(`*, product_types(name, code)`);
       if (error) throw error;
       return data || [];
+    }
+  });
+
+  const { data: publicShops = [] } = useQuery({
+    queryKey: ['public-shops-products'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc('get_public_shops');
+      if (error) throw error;
+      return (data || []) as any[];
     }
   });
 
