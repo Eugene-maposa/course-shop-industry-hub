@@ -319,28 +319,22 @@ const ProductDetail = () => {
             <CardContent className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Shop Name</span>
-                <span className="text-sm font-medium">{product.shops?.name || 'Unknown'}</span>
+                <span className="text-sm font-medium">{shopInfo?.name || 'Unknown'}</span>
               </div>
-              {product.shops?.email && (
+              {shopInfo?.industry_name && (
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Email</span>
-                  <span className="text-sm font-medium">{product.shops.email}</span>
+                  <span className="text-sm text-muted-foreground">Industry</span>
+                  <span className="text-sm font-medium">{shopInfo.industry_name}</span>
                 </div>
               )}
-              {product.shops?.phone && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Phone</span>
-                  <span className="text-sm font-medium">{product.shops.phone}</span>
-                </div>
-              )}
-              {product.shops?.website && (
+              {shopInfo?.website && (
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Website</span>
                   <a 
-                    href={product.shops.website.startsWith('http') ? product.shops.website : `https://${product.shops.website}`}
+                    href={shopInfo.website.startsWith('http') ? shopInfo.website : `https://${shopInfo.website}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-medium text-blue-600 hover:text-blue-800 underline"
+                    className="text-sm font-medium text-primary hover:opacity-80 underline"
                   >
                     Visit Website
                   </a>
