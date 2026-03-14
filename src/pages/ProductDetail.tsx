@@ -186,11 +186,13 @@ const ProductDetail = () => {
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
-              <ProductImageEditor
-                productId={product.id}
-                mainImage={mainImageUrl}
-                galleryImages={galleryImages}
-              />
+              {canEditProduct && (
+                <ProductImageEditor
+                  productId={product.id}
+                  mainImage={persistedMainImage}
+                  galleryImages={persistedGalleryImages}
+                />
+              )}
             </div>
             <div className="grid grid-cols-3 gap-4">
               {productImages.slice(1).map((image, index) => (
@@ -228,7 +230,7 @@ const ProductDetail = () => {
                   <span className="text-sm font-medium">4.5</span>
                   <span className="text-sm text-muted-foreground">(12 reviews)</span>
                 </div>
-                <span className="text-sm text-muted-foreground">by {product.shops?.name || 'Unknown Shop'}</span>
+                <span className="text-sm text-muted-foreground">by {shopInfo?.name || 'Unknown Shop'}</span>
               </div>
             </div>
 
