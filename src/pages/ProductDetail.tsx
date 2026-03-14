@@ -21,6 +21,8 @@ const ProductDetail = () => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { shareProduct } = useShare();
   
+  const { user } = useAuth();
+
   // Fetch real product data from database
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
@@ -30,12 +32,11 @@ const ProductDetail = () => {
         .from('products')
         .select(`
           *,
-          product_types(name, code),
-          shops(name, website, email, phone)
+          product_types(name, code)
         `)
         .eq('id', id)
         .single();
-      
+
       if (error) {
         console.error("Error fetching product:", error);
         throw error;
@@ -44,6 +45,20 @@ const ProductDetail = () => {
       return data;
     },
     enabled: !!id
+  });
+
+  const { data: shopInfo } = useQuery({
+    queryKey: ['public-shop', product?.shop_id],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc('get_public_shop_by_id', {
+        p_shop_id: product.shop_id,
+      });
+
+      if (error) throw error;
+      if (!Array.isArray(data) || data.length === 0) return null;
+      return data[0] as { id: string; name: string; website: string | null; industry_name: string | null; industry_code: string | null };
+    },
+    enabled: !!product?.shop_id,
   });
 
   // Mock reviews data - in a real app, this would also come from API
