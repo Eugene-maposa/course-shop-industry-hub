@@ -38,18 +38,40 @@ const ProductImageEditor = ({
 
   const updateProductMutation = useMutation({
     mutationFn: async (data: { mainImage: string; galleryImages: string[] }) => {
-      const { error } = await supabase
+      const { data: updatedProduct, error } = await supabase
         .from('products')
         .update({
           main_image_url: data.mainImage,
-          gallery_images: data.galleryImages
+          gallery_images: data.galleryImages,
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', productId);
+        .eq('id', productId)
+        .select('id, main_image_url, gallery_images, updated_at')
+        .maybeSingle();
 
       if (error) throw error;
+      if (!updatedProduct) {
+        throw new Error("Product not found or you don't have permission to update it.");
+      }
+
+      return updatedProduct;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['product', productId] });
+    onSuccess: (updatedProduct) => {
+      queryClient.setQueryData(['product', productId], (previous: any) =>
+        previous
+          ? {
+              ...previous,
+              main_image_url: updatedProduct.main_image_url,
+              gallery_images: updatedProduct.gallery_images ?? [],
+              updated_at: updatedProduct.updated_at,
+            }
+          : previous
+      );
+
+      queryClient.invalidateQueries({ queryKey: ['product', productId], exact: true });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['user-products'] });
+
       toast({
         title: "Success",
         description: "Product images updated successfully!"
@@ -57,11 +79,11 @@ const ProductImageEditor = ({
       setIsEditing(false);
       onEditComplete?.();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error updating product images:', error);
       toast({
         title: "Error",
-        description: "Failed to update product images. Please try again.",
+        description: error?.message || "Failed to update product images. Please try again.",
         variant: "destructive"
       });
     }
