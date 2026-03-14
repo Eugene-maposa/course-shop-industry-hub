@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Edit3, X, Upload, Save, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";

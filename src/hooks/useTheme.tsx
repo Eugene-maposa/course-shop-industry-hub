@@ -32,7 +32,7 @@ export const useTheme = () => {
     },
   });
 
-  // Apply theme to document
+  // Apply theme to document (only fonts - colors are handled via CSS classes for dark mode support)
   useEffect(() => {
     if (themeSettings.length === 0 || isApplying) return;
 
@@ -50,10 +50,9 @@ export const useTheme = () => {
           const varName = setting.setting_key.replace('font-', '--');
           root.style.setProperty(varName, setting.setting_value);
         }
-      } else if (setting.category === 'color') {
-        const varName = setting.setting_key.replace('color-', '--');
-        root.style.setProperty(varName, setting.setting_value);
       }
+      // NOTE: Color settings are NOT applied as inline styles because they would
+      // override the .dark class CSS variables and break dark mode toggling.
     });
 
     setIsApplying(false);
