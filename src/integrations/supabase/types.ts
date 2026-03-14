@@ -603,6 +603,40 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["admin_role"]
       }
+      get_public_industry_stats: {
+        Args: never
+        Returns: {
+          active_shops_count: number
+          industry_id: string
+        }[]
+      }
+      get_public_shop_by_id: {
+        Args: { p_shop_id: string }
+        Returns: {
+          id: string
+          industry_code: string
+          industry_name: string
+          name: string
+          website: string
+        }[]
+      }
+      get_public_shops: {
+        Args: never
+        Returns: {
+          created_at: string
+          description: string
+          icon_url: string
+          id: string
+          industry_code: string
+          industry_id: string
+          industry_name: string
+          latitude: number
+          longitude: number
+          name: string
+          status: Database["public"]["Enums"]["shop_status"]
+          website: string
+        }[]
+      }
       get_user_count: { Args: never; Returns: number }
       get_visit_stats: {
         Args: { period?: string }
