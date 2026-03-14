@@ -290,7 +290,7 @@ const ProductDetail = () => {
           </Card>
 
           {/* Shop Information */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
               <CardTitle>Shop Information</CardTitle>
             </CardHeader>
