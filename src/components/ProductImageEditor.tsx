@@ -167,11 +167,11 @@ const ProductImageEditor = ({
     setUploading(true);
     const uploadPromises = validFiles.map(file => uploadImage(file));
     const uploadedUrls = await Promise.all(uploadPromises);
-    
+
     const successfulUrls = uploadedUrls.filter(url => url !== null) as string[];
-    
+
     if (successfulUrls.length > 0) {
-      setEditedGalleryImages([...editedGalleryImages, ...successfulUrls]);
+      setEditedGalleryImages((current) => [...current, ...successfulUrls]);
       toast({
         title: "Success",
         description: `${successfulUrls.length} gallery image(s) uploaded successfully!`
@@ -183,6 +183,8 @@ const ProductImageEditor = ({
         variant: "destructive"
       });
     }
+
+    event.target.value = "";
     setUploading(false);
   };
 
