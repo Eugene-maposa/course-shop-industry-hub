@@ -31,16 +31,24 @@ const Industries = () => {
       
       if (industriesError) throw industriesError;
 
+      const { data: industryStats, error: statsError } = await (supabase as any).rpc('get_public_industry_stats');
+      if (statsError) throw statsError;
+
+      const shopsCountByIndustry = new Map(
+        ((industryStats || []) as any[]).map((entry) => [entry.industry_id, Number(entry.active_shops_count || 0)])
+      );
+
       const industriesWithCounts = await Promise.all(
         industriesData.map(async (industry) => {
-          const [shopsResult, productTypesResult] = await Promise.all([
-            supabase.from('shops').select('id', { count: 'exact' }).eq('industry_id', industry.id),
-            supabase.from('product_types').select('id', { count: 'exact' }).eq('industry_id', industry.id)
-          ]);
+          const { count: productTypeCount } = await supabase
+            .from('product_types')
+            .select('id', { count: 'exact' })
+            .eq('industry_id', industry.id);
+
           return {
             ...industry,
-            shopsCount: shopsResult.count || 0,
-            productTypesCount: productTypesResult.count || 0
+            shopsCount: shopsCountByIndustry.get(industry.id) || 0,
+            productTypesCount: productTypeCount || 0
           };
         })
       );
