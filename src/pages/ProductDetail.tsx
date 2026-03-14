@@ -50,6 +50,8 @@ const ProductDetail = () => {
   const { data: shopInfo } = useQuery({
     queryKey: ['public-shop', product?.shop_id],
     queryFn: async () => {
+      if (!product?.shop_id) return null;
+
       const { data, error } = await (supabase as any).rpc('get_public_shop_by_id', {
         p_shop_id: product.shop_id,
       });
