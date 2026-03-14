@@ -263,7 +263,7 @@ const ProductDetail = () => {
         {/* Product Details Tabs */}
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Product Info */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
               <CardTitle>Product Information</CardTitle>
             </CardHeader>
