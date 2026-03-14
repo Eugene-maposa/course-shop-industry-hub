@@ -75,7 +75,7 @@ const ProductDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="min-h-screen bg-background">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
@@ -88,7 +88,7 @@ const ProductDetail = () => {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
@@ -145,7 +145,7 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -160,7 +160,7 @@ const ProductDetail = () => {
         <div className="grid lg:grid-cols-2 gap-12 mb-12">
           {/* Product Images */}
           <div className="space-y-4 relative">
-            <div className="aspect-square bg-white rounded-2xl overflow-hidden shadow-lg relative">
+            <div className="aspect-square bg-card rounded-2xl overflow-hidden shadow-lg relative">
               <img 
                 src={productImages[0]} 
                 alt={product.name}
@@ -263,7 +263,7 @@ const ProductDetail = () => {
         {/* Product Details Tabs */}
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Product Info */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
               <CardTitle>Product Information</CardTitle>
             </CardHeader>
@@ -290,7 +290,7 @@ const ProductDetail = () => {
           </Card>
 
           {/* Shop Information */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
               <CardTitle>Shop Information</CardTitle>
             </CardHeader>
@@ -328,7 +328,7 @@ const ProductDetail = () => {
           </Card>
 
           {/* Reviews */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
               <CardTitle>Customer Reviews</CardTitle>
             </CardHeader>

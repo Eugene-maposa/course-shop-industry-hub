@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Edit3, X, Upload, Save, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,15 @@ const ProductImageEditor = ({
   const [editedGalleryImages, setEditedGalleryImages] = useState<string[]>(galleryImages);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Sync state when props change (e.g., after query refetch)
+  useEffect(() => {
+    setEditedMainImage(mainImage);
+  }, [mainImage]);
+
+  useEffect(() => {
+    setEditedGalleryImages(galleryImages);
+  }, [galleryImages]);
 
   const updateProductMutation = useMutation({
     mutationFn: async (data: { mainImage: string; galleryImages: string[] }) => {
