@@ -53,9 +53,13 @@ const Products = () => {
     }
   });
 
+  const shopsById = new Map(publicShops.map((shop: any) => [shop.id, shop.name as string]));
+  const getShopName = (shopId: string | null) => (shopId ? shopsById.get(shopId) || 'Unknown Shop' : 'Unknown Shop');
+
   const filteredProducts = products.filter(product => {
+    const shopName = getShopName(product.shop_id || null);
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.shops?.name.toLowerCase().includes(searchTerm.toLowerCase());
+                         shopName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "all" || product.product_types?.name === selectedCategory;
     return matchesSearch && matchesCategory;
   });
