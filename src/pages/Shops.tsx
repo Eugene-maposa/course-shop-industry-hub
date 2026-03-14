@@ -24,13 +24,15 @@ const Shops = () => {
   const { data: shops = [], isLoading } = useQuery({
     queryKey: ['shops'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('shops')
-        .select(`*, industries(name, code)`)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
+      const { data, error } = await (supabase as any).rpc('get_public_shops');
       if (error) throw error;
-      return data || [];
+      return ((data || []) as any[]).map((shop) => ({
+        ...shop,
+        industries: {
+          name: shop.industry_name,
+          code: shop.industry_code,
+        },
+      }));
     }
   });
 

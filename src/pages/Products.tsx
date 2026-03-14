@@ -29,9 +29,18 @@ const Products = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select(`*, product_types(name, code), shops(name)`);
+        .select(`*, product_types(name, code)`);
       if (error) throw error;
       return data || [];
+    }
+  });
+
+  const { data: publicShops = [] } = useQuery({
+    queryKey: ['public-shops-products'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc('get_public_shops');
+      if (error) throw error;
+      return (data || []) as any[];
     }
   });
 
@@ -44,9 +53,13 @@ const Products = () => {
     }
   });
 
+  const shopsById = new Map(publicShops.map((shop: any) => [shop.id, shop.name as string]));
+  const getShopName = (shopId: string | null) => (shopId ? shopsById.get(shopId) || 'Unknown Shop' : 'Unknown Shop');
+
   const filteredProducts = products.filter(product => {
+    const shopName = getShopName(product.shop_id || null);
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.shops?.name.toLowerCase().includes(searchTerm.toLowerCase());
+                         shopName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "all" || product.product_types?.name === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -184,7 +197,7 @@ const Products = () => {
                         {product.name}
                       </CardTitle>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>by {product.shops?.name || 'Unknown Shop'}</span>
+                        <span>by {getShopName(product.shop_id || null)}</span>
                         <span>{product.sku ? `P#: ${product.sku}` : ''}</span>
                       </div>
                     </CardHeader>

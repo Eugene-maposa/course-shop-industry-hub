@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useShare } from "@/hooks/useShare";
+import { useAuth } from "@/hooks/useAuth";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -20,6 +21,8 @@ const ProductDetail = () => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { shareProduct } = useShare();
   
+  const { user } = useAuth();
+
   // Fetch real product data from database
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
@@ -29,12 +32,11 @@ const ProductDetail = () => {
         .from('products')
         .select(`
           *,
-          product_types(name, code),
-          shops(name, website, email, phone)
+          product_types(name, code)
         `)
         .eq('id', id)
         .single();
-      
+
       if (error) {
         console.error("Error fetching product:", error);
         throw error;
@@ -43,6 +45,22 @@ const ProductDetail = () => {
       return data;
     },
     enabled: !!id
+  });
+
+  const { data: shopInfo } = useQuery({
+    queryKey: ['public-shop', product?.shop_id],
+    queryFn: async () => {
+      if (!product?.shop_id) return null;
+
+      const { data, error } = await (supabase as any).rpc('get_public_shop_by_id', {
+        p_shop_id: product.shop_id,
+      });
+
+      if (error) throw error;
+      if (!Array.isArray(data) || data.length === 0) return null;
+      return data[0] as { id: string; name: string; website: string | null; industry_name: string | null; industry_code: string | null };
+    },
+    enabled: !!product?.shop_id,
   });
 
   // Mock reviews data - in a real app, this would also come from API
@@ -102,13 +120,17 @@ const ProductDetail = () => {
     );
   }
 
-  // Get product images from the database or use defaults
-  const mainImageUrl = (product.main_image_url as string) || "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop";
-  const galleryImages: string[] = Array.isArray(product.gallery_images) && product.gallery_images.length > 0 
+  // Keep persisted images separate from UI placeholders so edits save real values only
+  const fallbackImage = "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop";
+  const persistedMainImage = (product.main_image_url as string) || "";
+  const persistedGalleryImages: string[] = Array.isArray(product.gallery_images)
     ? (product.gallery_images as string[])
-    : ["https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop", "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop"];
-  
-  const productImages = [mainImageUrl, ...galleryImages];
+    : [];
+
+  const mainImageUrl = persistedMainImage || fallbackImage;
+  const displayGalleryImages = persistedGalleryImages.length > 0 ? persistedGalleryImages : [fallbackImage, fallbackImage];
+  const productImages = [mainImageUrl, ...displayGalleryImages];
+  const canEditProduct = Boolean(user);
 
   const handleAddToCart = () => {
     if (product.price) {
@@ -166,11 +188,13 @@ const ProductDetail = () => {
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
-              <ProductImageEditor
-                productId={product.id}
-                mainImage={mainImageUrl}
-                galleryImages={galleryImages}
-              />
+              {canEditProduct && (
+                <ProductImageEditor
+                  productId={product.id}
+                  mainImage={persistedMainImage}
+                  galleryImages={persistedGalleryImages}
+                />
+              )}
             </div>
             <div className="grid grid-cols-3 gap-4">
               {productImages.slice(1).map((image, index) => (
@@ -208,7 +232,7 @@ const ProductDetail = () => {
                   <span className="text-sm font-medium">4.5</span>
                   <span className="text-sm text-muted-foreground">(12 reviews)</span>
                 </div>
-                <span className="text-sm text-muted-foreground">by {product.shops?.name || 'Unknown Shop'}</span>
+                <span className="text-sm text-muted-foreground">by {shopInfo?.name || 'Unknown Shop'}</span>
               </div>
             </div>
 
@@ -297,28 +321,22 @@ const ProductDetail = () => {
             <CardContent className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Shop Name</span>
-                <span className="text-sm font-medium">{product.shops?.name || 'Unknown'}</span>
+                <span className="text-sm font-medium">{shopInfo?.name || 'Unknown'}</span>
               </div>
-              {product.shops?.email && (
+              {shopInfo?.industry_name && (
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Email</span>
-                  <span className="text-sm font-medium">{product.shops.email}</span>
+                  <span className="text-sm text-muted-foreground">Industry</span>
+                  <span className="text-sm font-medium">{shopInfo.industry_name}</span>
                 </div>
               )}
-              {product.shops?.phone && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Phone</span>
-                  <span className="text-sm font-medium">{product.shops.phone}</span>
-                </div>
-              )}
-              {product.shops?.website && (
+              {shopInfo?.website && (
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Website</span>
                   <a 
-                    href={product.shops.website.startsWith('http') ? product.shops.website : `https://${product.shops.website}`}
+                    href={shopInfo.website.startsWith('http') ? shopInfo.website : `https://${shopInfo.website}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-medium text-blue-600 hover:text-blue-800 underline"
+                    className="text-sm font-medium text-primary hover:opacity-80 underline"
                   >
                     Visit Website
                   </a>

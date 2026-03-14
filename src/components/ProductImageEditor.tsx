@@ -38,18 +38,40 @@ const ProductImageEditor = ({
 
   const updateProductMutation = useMutation({
     mutationFn: async (data: { mainImage: string; galleryImages: string[] }) => {
-      const { error } = await supabase
+      const { data: updatedProduct, error } = await supabase
         .from('products')
         .update({
           main_image_url: data.mainImage,
-          gallery_images: data.galleryImages
+          gallery_images: data.galleryImages,
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', productId);
+        .eq('id', productId)
+        .select('id, main_image_url, gallery_images, updated_at')
+        .maybeSingle();
 
       if (error) throw error;
+      if (!updatedProduct) {
+        throw new Error("Product not found or you don't have permission to update it.");
+      }
+
+      return updatedProduct;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['product', productId] });
+    onSuccess: (updatedProduct) => {
+      queryClient.setQueryData(['product', productId], (previous: any) =>
+        previous
+          ? {
+              ...previous,
+              main_image_url: updatedProduct.main_image_url,
+              gallery_images: updatedProduct.gallery_images ?? [],
+              updated_at: updatedProduct.updated_at,
+            }
+          : previous
+      );
+
+      queryClient.invalidateQueries({ queryKey: ['product', productId], exact: true });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['user-products'] });
+
       toast({
         title: "Success",
         description: "Product images updated successfully!"
@@ -57,11 +79,11 @@ const ProductImageEditor = ({
       setIsEditing(false);
       onEditComplete?.();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error updating product images:', error);
       toast({
         title: "Error",
-        description: "Failed to update product images. Please try again.",
+        description: error?.message || "Failed to update product images. Please try again.",
         variant: "destructive"
       });
     }
@@ -70,12 +92,12 @@ const ProductImageEditor = ({
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = fileName;
 
       const { error: uploadError } = await supabase.storage
         .from('product-images')
-        .upload(filePath, file);
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
 
       if (uploadError) {
         throw uploadError;
@@ -107,7 +129,7 @@ const ProductImageEditor = ({
 
     setUploading(true);
     const url = await uploadImage(file);
-    
+
     if (url) {
       setEditedMainImage(url);
       toast({
@@ -121,6 +143,8 @@ const ProductImageEditor = ({
         variant: "destructive"
       });
     }
+
+    event.target.value = "";
     setUploading(false);
   };
 
@@ -143,11 +167,11 @@ const ProductImageEditor = ({
     setUploading(true);
     const uploadPromises = validFiles.map(file => uploadImage(file));
     const uploadedUrls = await Promise.all(uploadPromises);
-    
+
     const successfulUrls = uploadedUrls.filter(url => url !== null) as string[];
-    
+
     if (successfulUrls.length > 0) {
-      setEditedGalleryImages([...editedGalleryImages, ...successfulUrls]);
+      setEditedGalleryImages((current) => [...current, ...successfulUrls]);
       toast({
         title: "Success",
         description: `${successfulUrls.length} gallery image(s) uploaded successfully!`
@@ -159,6 +183,8 @@ const ProductImageEditor = ({
         variant: "destructive"
       });
     }
+
+    event.target.value = "";
     setUploading(false);
   };
 
