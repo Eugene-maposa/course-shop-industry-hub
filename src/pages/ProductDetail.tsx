@@ -118,13 +118,17 @@ const ProductDetail = () => {
     );
   }
 
-  // Get product images from the database or use defaults
-  const mainImageUrl = (product.main_image_url as string) || "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop";
-  const galleryImages: string[] = Array.isArray(product.gallery_images) && product.gallery_images.length > 0 
+  // Keep persisted images separate from UI placeholders so edits save real values only
+  const fallbackImage = "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop";
+  const persistedMainImage = (product.main_image_url as string) || "";
+  const persistedGalleryImages: string[] = Array.isArray(product.gallery_images)
     ? (product.gallery_images as string[])
-    : ["https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop", "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=600&fit=crop"];
-  
-  const productImages = [mainImageUrl, ...galleryImages];
+    : [];
+
+  const mainImageUrl = persistedMainImage || fallbackImage;
+  const displayGalleryImages = persistedGalleryImages.length > 0 ? persistedGalleryImages : [fallbackImage, fallbackImage];
+  const productImages = [mainImageUrl, ...displayGalleryImages];
+  const canEditProduct = Boolean(user);
 
   const handleAddToCart = () => {
     if (product.price) {
