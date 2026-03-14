@@ -328,7 +328,7 @@ const ProductDetail = () => {
           </Card>
 
           {/* Reviews */}
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader>
               <CardTitle>Customer Reviews</CardTitle>
             </CardHeader>
