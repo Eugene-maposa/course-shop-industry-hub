@@ -160,7 +160,7 @@ const ProductDetail = () => {
         <div className="grid lg:grid-cols-2 gap-12 mb-12">
           {/* Product Images */}
           <div className="space-y-4 relative">
-            <div className="aspect-square bg-white rounded-2xl overflow-hidden shadow-lg relative">
+            <div className="aspect-square bg-card rounded-2xl overflow-hidden shadow-lg relative">
               <img 
                 src={productImages[0]} 
                 alt={product.name}
