@@ -197,7 +197,7 @@ const Products = () => {
                         {product.name}
                       </CardTitle>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>by {product.shops?.name || 'Unknown Shop'}</span>
+                        <span>by {getShopName(product.shop_id || null)}</span>
                         <span>{product.sku ? `P#: ${product.sku}` : ''}</span>
                       </div>
                     </CardHeader>
