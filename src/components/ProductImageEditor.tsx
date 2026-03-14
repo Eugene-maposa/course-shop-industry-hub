@@ -92,12 +92,12 @@ const ProductImageEditor = ({
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = fileName;
 
       const { error: uploadError } = await supabase.storage
         .from('product-images')
-        .upload(filePath, file);
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
 
       if (uploadError) {
         throw uploadError;
