@@ -27,6 +27,15 @@ const ProductImageEditor = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Sync state when props change (e.g., after query refetch)
+  useEffect(() => {
+    setEditedMainImage(mainImage);
+  }, [mainImage]);
+
+  useEffect(() => {
+    setEditedGalleryImages(galleryImages);
+  }, [galleryImages]);
+
   const updateProductMutation = useMutation({
     mutationFn: async (data: { mainImage: string; galleryImages: string[] }) => {
       const { error } = await supabase
