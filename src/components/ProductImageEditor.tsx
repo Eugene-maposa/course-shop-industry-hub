@@ -129,7 +129,7 @@ const ProductImageEditor = ({
 
     setUploading(true);
     const url = await uploadImage(file);
-    
+
     if (url) {
       setEditedMainImage(url);
       toast({
@@ -143,6 +143,8 @@ const ProductImageEditor = ({
         variant: "destructive"
       });
     }
+
+    event.target.value = "";
     setUploading(false);
   };
 
