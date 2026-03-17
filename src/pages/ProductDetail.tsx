@@ -64,33 +64,22 @@ const ProductDetail = () => {
     enabled: !!product?.shop_id,
   });
 
-  // Mock reviews data - in a real app, this would also come from API
-  const reviews = [
-    {
-      id: 1,
-      user: "Sarah M.",
-      avatar: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=40&h=40&fit=crop&crop=face",
-      rating: 5,
-      comment: "Great product! Exactly as described.",
-      date: "2 days ago"
+  // Fetch review stats for header display
+  const { data: reviewStats } = useQuery({
+    queryKey: ['product-review-stats', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_reviews' as any)
+        .select('rating')
+        .eq('product_id', id);
+      if (error) throw error;
+      const ratings = (data as any[]) || [];
+      const total = ratings.length;
+      const avg = total > 0 ? ratings.reduce((s: number, r: any) => s + r.rating, 0) / total : 0;
+      return { avg, total };
     },
-    {
-      id: 2,
-      user: "Mike R.",
-      avatar: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=40&h=40&fit=crop&crop=face",
-      rating: 4,
-      comment: "Good quality and fast delivery.",
-      date: "1 week ago"
-    },
-    {
-      id: 3,
-      user: "Emma L.",
-      avatar: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=40&h=40&fit=crop&crop=face",
-      rating: 5,
-      comment: "Highly recommend this product!",
-      date: "2 weeks ago"
-    }
-  ];
+    enabled: !!id,
+  });
 
   if (isLoading) {
     return (
