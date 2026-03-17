@@ -335,40 +335,11 @@ const ProductDetail = () => {
             </CardContent>
           </Card>
 
-          {/* Reviews */}
-          <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle>Customer Reviews</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {reviews.slice(0, 3).map((review) => (
-                <div key={review.id} className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={review.avatar} alt={review.user} />
-                      <AvatarFallback>{review.user.slice(0, 2)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="text-sm font-medium">{review.user}</div>
-                      <div className="flex items-center space-x-1">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              className={`w-3 h-3 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs text-muted-foreground">{review.date}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{review.comment}</p>
-                  {review.id < reviews.length && <Separator />}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+        </div>
+
+        {/* Full Reviews Section */}
+        <div className="mt-8">
+          <ProductReviews productId={product.id} />
         </div>
       </div>
     </div>
