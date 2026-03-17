@@ -1,14 +1,14 @@
 
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Star, Heart, ShoppingCart, Share2, Shield, Truck, RotateCcw } from "lucide-react";
+import { ArrowLeft, Star, Heart, ShoppingCart, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import ProductImageEditor from "@/components/ProductImageEditor";
+import ProductReviews from "@/components/ProductReviews";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -63,33 +63,22 @@ const ProductDetail = () => {
     enabled: !!product?.shop_id,
   });
 
-  // Mock reviews data - in a real app, this would also come from API
-  const reviews = [
-    {
-      id: 1,
-      user: "Sarah M.",
-      avatar: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=40&h=40&fit=crop&crop=face",
-      rating: 5,
-      comment: "Great product! Exactly as described.",
-      date: "2 days ago"
+  // Fetch review stats for header display
+  const { data: reviewStats } = useQuery({
+    queryKey: ['product-review-stats', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_reviews' as any)
+        .select('rating')
+        .eq('product_id', id);
+      if (error) throw error;
+      const ratings = (data as any[]) || [];
+      const total = ratings.length;
+      const avg = total > 0 ? ratings.reduce((s: number, r: any) => s + r.rating, 0) / total : 0;
+      return { avg, total };
     },
-    {
-      id: 2,
-      user: "Mike R.",
-      avatar: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=40&h=40&fit=crop&crop=face",
-      rating: 4,
-      comment: "Good quality and fast delivery.",
-      date: "1 week ago"
-    },
-    {
-      id: 3,
-      user: "Emma L.",
-      avatar: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=40&h=40&fit=crop&crop=face",
-      rating: 5,
-      comment: "Highly recommend this product!",
-      date: "2 weeks ago"
-    }
-  ];
+    enabled: !!id,
+  });
 
   if (isLoading) {
     return (
@@ -225,12 +214,12 @@ const ProductDetail = () => {
                     {[...Array(5)].map((_, i) => (
                       <Star 
                         key={i} 
-                        className={`w-5 h-5 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                        className={`w-5 h-5 ${i < Math.round(reviewStats?.avg || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} 
                       />
                     ))}
                   </div>
-                  <span className="text-sm font-medium">4.5</span>
-                  <span className="text-sm text-muted-foreground">(12 reviews)</span>
+                  <span className="text-sm font-medium">{reviewStats?.avg ? reviewStats.avg.toFixed(1) : '—'}</span>
+                  <span className="text-sm text-muted-foreground">({reviewStats?.total || 0} reviews)</span>
                 </div>
                 <span className="text-sm text-muted-foreground">by {shopInfo?.name || 'Unknown Shop'}</span>
               </div>
@@ -345,40 +334,11 @@ const ProductDetail = () => {
             </CardContent>
           </Card>
 
-          {/* Reviews */}
-          <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle>Customer Reviews</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {reviews.slice(0, 3).map((review) => (
-                <div key={review.id} className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={review.avatar} alt={review.user} />
-                      <AvatarFallback>{review.user.slice(0, 2)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="text-sm font-medium">{review.user}</div>
-                      <div className="flex items-center space-x-1">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              className={`w-3 h-3 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs text-muted-foreground">{review.date}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{review.comment}</p>
-                  {review.id < reviews.length && <Separator />}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+        </div>
+
+        {/* Full Reviews Section */}
+        <div className="mt-8">
+          <ProductReviews productId={product.id} />
         </div>
       </div>
     </div>
