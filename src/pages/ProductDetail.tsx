@@ -215,12 +215,12 @@ const ProductDetail = () => {
                     {[...Array(5)].map((_, i) => (
                       <Star 
                         key={i} 
-                        className={`w-5 h-5 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                        className={`w-5 h-5 ${i < Math.round(reviewStats?.avg || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} 
                       />
                     ))}
                   </div>
-                  <span className="text-sm font-medium">4.5</span>
-                  <span className="text-sm text-muted-foreground">(12 reviews)</span>
+                  <span className="text-sm font-medium">{reviewStats?.avg ? reviewStats.avg.toFixed(1) : '—'}</span>
+                  <span className="text-sm text-muted-foreground">({reviewStats?.total || 0} reviews)</span>
                 </div>
                 <span className="text-sm text-muted-foreground">by {shopInfo?.name || 'Unknown Shop'}</span>
               </div>
