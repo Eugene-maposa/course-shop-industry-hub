@@ -80,6 +80,56 @@ export type Database = {
         }
         Relationships: []
       }
+      document_verifications: {
+        Row: {
+          ai_analysis: string | null
+          ai_confidence_score: number | null
+          created_at: string
+          document_type: string
+          document_url: string
+          id: string
+          shop_id: string | null
+          updated_at: string
+          user_id: string
+          verification_status: string
+          verified_at: string | null
+        }
+        Insert: {
+          ai_analysis?: string | null
+          ai_confidence_score?: number | null
+          created_at?: string
+          document_type: string
+          document_url: string
+          id?: string
+          shop_id?: string | null
+          updated_at?: string
+          user_id: string
+          verification_status?: string
+          verified_at?: string | null
+        }
+        Update: {
+          ai_analysis?: string | null
+          ai_confidence_score?: number | null
+          created_at?: string
+          document_type?: string
+          document_url?: string
+          id?: string
+          shop_id?: string | null
+          updated_at?: string
+          user_id?: string
+          verification_status?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_verifications_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       industries: {
         Row: {
           code: string
@@ -513,7 +563,10 @@ export type Database = {
           date_of_birth: string | null
           first_name: string | null
           id: string
+          id_verification_status: string | null
           last_name: string | null
+          national_id_back_url: string | null
+          national_id_front_url: string | null
           phone: string | null
           updated_at: string
           user_id: string
@@ -528,7 +581,10 @@ export type Database = {
           date_of_birth?: string | null
           first_name?: string | null
           id?: string
+          id_verification_status?: string | null
           last_name?: string | null
+          national_id_back_url?: string | null
+          national_id_front_url?: string | null
           phone?: string | null
           updated_at?: string
           user_id: string
@@ -543,7 +599,10 @@ export type Database = {
           date_of_birth?: string | null
           first_name?: string | null
           id?: string
+          id_verification_status?: string | null
           last_name?: string | null
+          national_id_back_url?: string | null
+          national_id_front_url?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string

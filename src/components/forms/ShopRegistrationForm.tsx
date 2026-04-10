@@ -165,6 +165,22 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
       const { data: { publicUrl } } = supabase.storage.from('shop-documents').getPublicUrl(`temp/${fileName}`);
       documentUrls[docType] = publicUrl;
     }
+
+    // Save national ID URLs to user profile
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && (documentUrls.national_id_front || documentUrls.national_id_back)) {
+      const profileUpdate: Record<string, string> = {};
+      if (documentUrls.national_id_front) profileUpdate.national_id_front_url = documentUrls.national_id_front;
+      if (documentUrls.national_id_back) profileUpdate.national_id_back_url = documentUrls.national_id_back;
+
+      const { data: existing } = await supabase.from('user_profiles').select('id').eq('user_id', user.id).maybeSingle();
+      if (existing) {
+        await supabase.from('user_profiles').update(profileUpdate).eq('user_id', user.id);
+      } else {
+        await supabase.from('user_profiles').insert({ user_id: user.id, ...profileUpdate });
+      }
+    }
+
     return documentUrls;
   };
 
