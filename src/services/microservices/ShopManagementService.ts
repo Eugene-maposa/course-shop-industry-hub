@@ -376,34 +376,21 @@ class ShopManagementService {
         throw new Error('Invalid document file type or size');
       }
 
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) throw new Error("Not authenticated");
+
       const fileExt = file.name.split('.').pop();
-      // Organize documents by shop ID in folders
-      const fileName = `${shopId}/${documentType}_${Date.now()}.${fileExt}`;
+      // Storage RLS requires first folder segment to be the user's auth id
+      const fileName = `${authUser.id}/${shopId}_${documentType}_${Date.now()}.${fileExt}`;
 
-      // Create shop-documents bucket if it doesn't exist
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const bucketExists = buckets?.some(bucket => bucket.name === 'shop-documents');
-      
-      if (!bucketExists) {
-        await supabase.storage.createBucket('shop-documents', {
-          public: true,
-          fileSizeLimit: 10485760, // 10MB
-          allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png', 'image/gif']
-        });
-      }
-
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('shop-documents')
         .upload(fileName, file);
 
       if (error) throw error;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('shop-documents')
-        .getPublicUrl(fileName);
-
-      return urlData.publicUrl;
+      // Return the storage path; signed URLs are generated on demand
+      return fileName;
     } catch (error) {
       console.error('Error uploading shop document:', error);
       return null;
