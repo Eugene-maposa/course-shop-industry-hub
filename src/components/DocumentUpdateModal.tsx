@@ -74,35 +74,35 @@ const DocumentUpdateModal: React.FC<DocumentUpdateModalProps> = ({
 
   const uploadDocumentsToStorage = async (documents: Record<string, File>) => {
     const documentUrls: Record<string, string> = {};
-    
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) throw new Error("Not authenticated");
+
     for (const [docType, file] of Object.entries(documents)) {
       try {
         const fileExt = file.name.split('.').pop();
         const fileName = `${docType}_${shop?.id}_${Date.now()}.${fileExt}`;
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const path = `${authUser.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
           .from('shop-documents')
-          .upload(`shops/${shop?.id}/${fileName}`, file, {
+          .upload(path, file, {
             cacheControl: '3600',
             upsert: true
           });
-          
+
         if (uploadError) {
           console.error(`Document upload error for ${docType}:`, uploadError);
           throw new Error(`Failed to upload ${docType}`);
         }
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('shop-documents')
-          .getPublicUrl(`shops/${shop?.id}/${fileName}`);
-          
-        documentUrls[docType] = publicUrl;
+
+        // Store storage path; signed URLs are generated on demand
+        documentUrls[docType] = path;
       } catch (error) {
         console.error(`Error uploading document ${docType}:`, error);
         throw error;
       }
     }
-    
+
     return documentUrls;
   };
 

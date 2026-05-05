@@ -245,15 +245,19 @@ export const ShopDocumentManagement = () => {
     }
   };
 
-  const viewDocument = (url: string, type: string) => {
-    setCurrentDocumentUrl(url);
+  const viewDocument = async (url: string, type: string) => {
+    const { getSignedUrl } = await import("@/lib/storage");
+    const signed = await getSignedUrl("shop-documents", url, 120);
+    setCurrentDocumentUrl(signed || url);
     setCurrentDocumentType(type);
     setIsDocumentViewerOpen(true);
   };
 
-  const downloadDocument = (url: string, filename: string) => {
+  const downloadDocument = async (url: string, filename: string) => {
+    const { getSignedUrl } = await import("@/lib/storage");
+    const signed = (await getSignedUrl("shop-documents", url, 120)) || url;
     const link = document.createElement('a');
-    link.href = url;
+    link.href = signed;
     link.download = filename;
     link.target = '_blank';
     document.body.appendChild(link);

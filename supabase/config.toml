@@ -21,4 +21,4 @@ port = 54323
 image_transformation = { enabled = true }
 
 [functions.send-notification-email]
-verify_jwt = false
+verify_jwt = true

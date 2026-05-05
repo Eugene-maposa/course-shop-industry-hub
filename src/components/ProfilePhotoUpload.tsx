@@ -54,8 +54,9 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
     try {
       // Generate unique filename
       const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}_${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${Date.now()}.${fileExt}`;
+      // Avatars storage RLS requires the first folder segment to equal the user id
+      const filePath = `${userId}/${fileName}`;
 
       // Upload to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
