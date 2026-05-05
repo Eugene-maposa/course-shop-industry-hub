@@ -99,10 +99,13 @@ const handler = async (req: Request): Promise<Response> => {
       `;
     };
 
+    // Strip control chars / newlines from subject to prevent header injection
+    const safeSubject = String(title ?? "").replace(/[\r\n\t]+/g, " ").slice(0, 200);
+
     const emailResponse = await resend.emails.send({
       from: "Marketplace <onboarding@resend.dev>",
       to: [recipientEmail],
-      subject: escapeSubject(title),
+      subject: safeSubject,
       html: getEmailContent(type, title, message),
     });
 
