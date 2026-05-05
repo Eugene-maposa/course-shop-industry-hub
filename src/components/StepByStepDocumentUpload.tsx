@@ -110,11 +110,18 @@ const StepByStepDocumentUpload = ({ onDocumentsChange, onProgressChange }: StepB
     setVerifyingDoc(docType);
     try {
       // Upload to storage first for AI to access
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        toast({ title: "Not authenticated", description: "Please sign in to verify documents.", variant: "destructive" });
+        setVerifyingDoc(null);
+        return;
+      }
       const fileExt = file.name.split('.').pop();
       const fileName = `verify_${docType}_${Date.now()}.${fileExt}`;
+      const path = `${authUser.id}/${fileName}`;
       const { error: uploadError } = await supabase.storage
         .from('shop-documents')
-        .upload(`verification/${fileName}`, file, { cacheControl: '3600', upsert: true });
+        .upload(path, file, { cacheControl: '3600', upsert: true });
 
       if (uploadError) {
         console.error("Upload for verification failed:", uploadError);
@@ -123,9 +130,16 @@ const StepByStepDocumentUpload = ({ onDocumentsChange, onProgressChange }: StepB
         return;
       }
 
-      const { data: { publicUrl } } = supabase.storage
+      // Create a short-lived signed URL so the AI verifier can fetch the file
+      const { data: signed, error: signErr } = await supabase.storage
         .from('shop-documents')
-        .getPublicUrl(`verification/${fileName}`);
+        .createSignedUrl(path, 300);
+      if (signErr || !signed?.signedUrl) {
+        toast({ title: "Verification failed", description: "Could not prepare document for verification.", variant: "destructive" });
+        setVerifyingDoc(null);
+        return;
+      }
+      const publicUrl = signed.signedUrl;
 
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {

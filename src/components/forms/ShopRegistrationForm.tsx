@@ -155,15 +155,18 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
 
   const uploadDocumentsToStorage = async (documents: Record<string, File>) => {
     const documentUrls: Record<string, string> = {};
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) throw new Error("Not authenticated");
     for (const [docType, file] of Object.entries(documents)) {
       const fileExt = file.name.split('.').pop();
       const fileName = `${docType}_${Date.now()}.${fileExt}`;
+      const path = `${authUser.id}/${fileName}`;
       const { error: uploadError } = await supabase.storage
         .from('shop-documents')
-        .upload(`temp/${fileName}`, file, { cacheControl: '3600', upsert: false });
+        .upload(path, file, { cacheControl: '3600', upsert: false });
       if (uploadError) throw new Error(`Failed to upload ${docType}`);
-      const { data: { publicUrl } } = supabase.storage.from('shop-documents').getPublicUrl(`temp/${fileName}`);
-      documentUrls[docType] = publicUrl;
+      // Store the storage path; viewers will create signed URLs on demand
+      documentUrls[docType] = path;
     }
 
     // Save national ID URLs to user profile
