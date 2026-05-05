@@ -67,6 +67,13 @@ const handler = async (req: Request): Promise<Response> => {
       `;
 
       const actionUrl = `${Deno.env.get("SUPABASE_URL")?.replace('/rest/v1', '')}/`;
+      const escape = (s: string) =>
+        String(s ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
 
       return `
         <!DOCTYPE html>
@@ -77,10 +84,10 @@ const handler = async (req: Request): Promise<Response> => {
         <body>
           <div class="container">
             <div class="header">
-              <h1 style="margin: 0; font-size: 24px;">${title}</h1>
+              <h1 style="margin: 0; font-size: 24px;">${escape(title)}</h1>
             </div>
             <div class="content">
-              <p style="font-size: 16px; line-height: 1.5; color: #374151;">${message}</p>
+              <p style="font-size: 16px; line-height: 1.5; color: #374151;">${escape(message)}</p>
               <a href="${actionUrl}" class="button">View Dashboard</a>
               <div class="footer">
                 <p>This is an automated notification from your marketplace system.</p>
@@ -95,7 +102,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "Marketplace <onboarding@resend.dev>",
       to: [recipientEmail],
-      subject: title,
+      subject: escapeSubject(title),
       html: getEmailContent(type, title, message),
     });
 
