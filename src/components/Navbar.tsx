@@ -106,6 +106,19 @@ const Navbar = () => {
                   <Settings className="w-4 h-4" />
                   <span>Dashboard</span>
                 </Link>
+                {isAdmin && (
+                  <Link
+                    to="/site-ops"
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      location.pathname.startsWith('/site-ops')
+                        ? "bg-nust-blue-light text-white"
+                        : "text-gray-200 hover:text-white hover:bg-nust-blue-light"
+                    }`}
+                  >
+                    <Shield className="w-4 h-4" />
+                    <span>Site Ops</span>
+                  </Link>
+                )}
                 <div className="flex items-center space-x-2 text-gray-200">
                   <User className="w-4 h-4" />
                   <span className="text-sm">{user.email}</span>
@@ -197,6 +210,20 @@ const Navbar = () => {
                     <Settings className="w-5 h-5" />
                     <span>Dashboard</span>
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      to="/site-ops"
+                      onClick={() => setIsOpen(false)}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                        location.pathname.startsWith('/site-ops')
+                          ? "bg-nust-blue-light text-white"
+                          : "text-gray-200 hover:text-white hover:bg-nust-blue-light"
+                      }`}
+                    >
+                      <Shield className="w-5 h-5" />
+                      <span>Site Ops</span>
+                    </Link>
+                  )}
                   <button
                     onClick={() => {
                       handleSignOut();
