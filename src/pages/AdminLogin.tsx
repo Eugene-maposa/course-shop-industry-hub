@@ -15,24 +15,17 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [awaitingDoubleClick, setAwaitingDoubleClick] = useState(false);
   const { user, signIn } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Set awaiting double-click state when admin is verified
+  // Auto-redirect admin to dashboard once verified
   useEffect(() => {
-    if (user && !adminLoading && isAdmin && !awaitingDoubleClick) {
-      setAwaitingDoubleClick(true);
+    if (user && !adminLoading && isAdmin) {
+      navigate('/site-ops', { replace: true });
     }
-  }, [user, isAdmin, adminLoading, awaitingDoubleClick]);
-
-  const handleDoubleClick = () => {
-    if (awaitingDoubleClick) {
-      navigate('/site-ops');
-    }
-  };
+  }, [user, isAdmin, adminLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
