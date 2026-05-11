@@ -71,17 +71,14 @@ const AdminLogin = () => {
     );
   }
 
-  if (user && !adminLoading && isAdmin && awaitingDoubleClick) {
+  if (user && !adminLoading && isAdmin) {
     return (
-      <div 
-        className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4"
-        onDoubleClick={handleDoubleClick}
-      >
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-slate-800 border-slate-700">
           <CardContent className="p-8 text-center">
             <Shield className="w-16 h-16 text-green-400 mx-auto mb-4 animate-pulse" />
             <h2 className="text-2xl font-bold text-white mb-2">Authentication Successful</h2>
-            <p className="text-slate-400 text-sm">Verifying security clearance...</p>
+            <p className="text-slate-400 text-sm">Redirecting to dashboard...</p>
           </CardContent>
         </Card>
       </div>
