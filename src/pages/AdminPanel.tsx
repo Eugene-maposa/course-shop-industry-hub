@@ -244,25 +244,9 @@ const AdminPanel = () => {
     return <Navigate to="/site-ops/login" replace />;
   }
 
-  // Show access denied if not admin
+  // Silently redirect non-admins back to the login gate
   if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <Card className="w-full max-w-md bg-slate-800 border-slate-700">
-          <CardContent className="p-6 text-center">
-            <Shield className="w-12 h-12 text-red-400 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
-            <p className="text-slate-400 mb-4">You don't have admin privileges.</p>
-            <Button 
-              onClick={() => window.location.href = '/'}
-              className="bg-slate-700 hover:bg-slate-600 text-white"
-            >
-              Back to Home
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <Navigate to="/site-ops/login" replace />;
   }
 
   return (
