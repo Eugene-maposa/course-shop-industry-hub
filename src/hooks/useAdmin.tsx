@@ -10,12 +10,18 @@ export const useAdmin = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user, session } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
 
   useEffect(() => {
     const checkAdminStatus = async () => {
+      // Wait for auth to finish loading before deciding admin status
+      if (authLoading) {
+        setLoading(true);
+        return;
+      }
+
       console.log('Checking admin status for user:', user?.email);
-      
+
       if (!user || !session) {
         console.log('No user or session found');
         setIsAdmin(false);
