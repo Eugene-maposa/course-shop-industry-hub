@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Shield, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,12 +20,10 @@ const AdminLogin = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Auto-redirect admin to dashboard once verified
-  useEffect(() => {
-    if (user && !adminLoading && isAdmin) {
-      navigate('/site-ops', { replace: true });
-    }
-  }, [user, isAdmin, adminLoading, navigate]);
+  // Redirect verified admins straight to the dashboard
+  if (user && !adminLoading && isAdmin) {
+    return <Navigate to="/site-ops" replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
