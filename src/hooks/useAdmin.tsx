@@ -72,7 +72,7 @@ export const useAdmin = () => {
     };
 
     checkAdminStatus();
-  }, [user, session]);
+  }, [user, session, authLoading]);
 
   const promoteToAdmin = async (userId: string, role: AdminRole = 'admin') => {
     if (!user) throw new Error('No authenticated user');
