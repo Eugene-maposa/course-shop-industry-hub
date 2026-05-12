@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -24,6 +26,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, resetPassword } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +43,18 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             description: "Welcome back!",
           });
           onClose();
+          // Auto-redirect admins to the admin panel
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { data: isAdminData } = await supabase.rpc('check_admin_status', { user_id: user.id });
+              if (isAdminData) {
+                navigate('/site-ops', { replace: true });
+              }
+            }
+          } catch (err) {
+            console.error('Admin redirect check failed:', err);
+          }
         }
       } else if (mode === 'signup') {
         if (password !== confirmPassword) {
