@@ -195,7 +195,89 @@ export const ContentManagement = () => {
     }
   });
 
-  const getStatusBadge = (status: string) => {
+  // Admin edit product (name, description, price, sku, image)
+  const editProductMutation = useMutation({
+    mutationFn: async (p: any) => {
+      const { data, error } = await supabase
+        .from('products')
+        .update({
+          name: p.name,
+          description: p.description,
+          price: p.price ? Number(p.price) : null,
+          sku: p.sku,
+          main_image_url: p.main_image_url,
+        })
+        .eq('id', p.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Product updated" });
+      queryClient.invalidateQueries({ queryKey: ['content-products'] });
+      setEditingProduct(null);
+      logAdminAction("Product edited", "products");
+    },
+    onError: (e: any) => toast({ title: "Update failed", description: e.message, variant: "destructive" }),
+  });
+
+  // Admin delete product
+  const deleteProductMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Product deleted" });
+      queryClient.invalidateQueries({ queryKey: ['content-products'] });
+      logAdminAction("Product deleted", "products");
+    },
+    onError: (e: any) => toast({ title: "Delete failed", description: e.message, variant: "destructive" }),
+  });
+
+  // Admin edit shop (name, description, website, phone, email, address)
+  const editShopMutation = useMutation({
+    mutationFn: async (s: any) => {
+      const { data, error } = await supabase
+        .from('shops')
+        .update({
+          name: s.name,
+          description: s.description,
+          website: s.website,
+          phone: s.phone,
+          email: s.email,
+          address: s.address,
+          icon_url: s.icon_url,
+        })
+        .eq('id', s.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Shop updated" });
+      queryClient.invalidateQueries({ queryKey: ['content-shops'] });
+      setEditingShop(null);
+      logAdminAction("Shop edited", "shops");
+    },
+    onError: (e: any) => toast({ title: "Update failed", description: e.message, variant: "destructive" }),
+  });
+
+  // Admin delete shop
+  const deleteShopMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('shops').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Shop deleted" });
+      queryClient.invalidateQueries({ queryKey: ['content-shops'] });
+      logAdminAction("Shop deleted", "shops");
+    },
+    onError: (e: any) => toast({ title: "Delete failed", description: e.message, variant: "destructive" }),
+  });
     switch (status) {
       case 'active':
         return <Badge className="bg-green-500 text-white">Active</Badge>;
