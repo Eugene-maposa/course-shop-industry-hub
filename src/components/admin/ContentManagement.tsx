@@ -21,6 +21,10 @@ export const ContentManagement = () => {
   const { logAdminAction } = useAdmin();
   const queryClient = useQueryClient();
   
+  // Edit state for shops & products
+  const [editingShop, setEditingShop] = useState<any>(null);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+
   // Industry management state
   const [newIndustryName, setNewIndustryName] = useState("");
   const [newIndustryCode, setNewIndustryCode] = useState("");
