@@ -278,6 +278,8 @@ export const ContentManagement = () => {
     },
     onError: (e: any) => toast({ title: "Delete failed", description: e.message, variant: "destructive" }),
   });
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
         return <Badge className="bg-green-500 text-white">Active</Badge>;
