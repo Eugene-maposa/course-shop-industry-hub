@@ -631,23 +631,45 @@ export const ContentManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {shops.slice(0, 10).map((shop) => (
+                    {shops.map((shop) => (
                       <TableRow key={shop.id}>
                         <TableCell className="text-white font-medium">{shop.name}</TableCell>
                         <TableCell className="text-slate-300">{shop.industries?.name || 'N/A'}</TableCell>
                         <TableCell>{getStatusBadge(shop.status)}</TableCell>
                         <TableCell>{getStatusBadge(shop.document_verification_status)}</TableCell>
                         <TableCell>
-                          <Select onValueChange={(value) => updateShopStatusMutation.mutate({ shopId: shop.id, status: value as "active" | "inactive" | "pending" })}>
-                            <SelectTrigger className="w-32 bg-slate-700 border-slate-600 text-white">
-                              <SelectValue placeholder="Update" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-700 border-slate-600">
-                              <SelectItem value="active">Approve</SelectItem>
-                              <SelectItem value="inactive">Reject</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-600" onClick={() => setEditingShop({ ...shop })}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Select onValueChange={(value) => updateShopStatusMutation.mutate({ shopId: shop.id, status: value as "active" | "inactive" | "pending" })}>
+                              <SelectTrigger className="w-28 bg-slate-700 border-slate-600 text-white">
+                                <SelectValue placeholder="Status" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-700 border-slate-600">
+                                <SelectItem value="active">Approve</SelectItem>
+                                <SelectItem value="inactive">Reject</SelectItem>
+                                <SelectItem value="pending">Pending</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="outline" className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-slate-800 border-slate-700">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="text-white">Delete shop?</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-slate-300">Permanently delete "{shop.name}". This cannot be undone.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="bg-slate-700 text-white hover:bg-slate-600">Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteShopMutation.mutate(shop.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
