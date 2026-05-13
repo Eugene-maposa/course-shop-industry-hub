@@ -547,16 +547,12 @@ export const ContentManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {products.slice(0, 10).map((product) => (
+                    {products.map((product) => (
                       <TableRow key={product.id}>
                         <TableCell>
                           <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-700">
                             {product.main_image_url ? (
-                              <img 
-                                src={product.main_image_url} 
-                                alt={product.name}
-                                className="w-full h-full object-cover"
-                              />
+                              <img src={product.main_image_url} alt={product.name} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full bg-slate-600 flex items-center justify-center">
                                 <Package className="w-6 h-6 text-slate-400" />
@@ -569,16 +565,38 @@ export const ContentManagement = () => {
                         <TableCell className="text-slate-300">${product.price || 0}</TableCell>
                         <TableCell>{getStatusBadge(product.status)}</TableCell>
                         <TableCell>
-                          <Select onValueChange={(value) => updateProductStatusMutation.mutate({ productId: product.id, status: value as "active" | "inactive" | "pending" })}>
-                            <SelectTrigger className="w-32 bg-slate-700 border-slate-600 text-white">
-                              <SelectValue placeholder="Update" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-700 border-slate-600">
-                              <SelectItem value="active">Approve</SelectItem>
-                              <SelectItem value="inactive">Reject</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-600" onClick={() => setEditingProduct({ ...product })}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Select onValueChange={(value) => updateProductStatusMutation.mutate({ productId: product.id, status: value as "active" | "inactive" | "pending" })}>
+                              <SelectTrigger className="w-28 bg-slate-700 border-slate-600 text-white">
+                                <SelectValue placeholder="Status" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-700 border-slate-600">
+                                <SelectItem value="active">Approve</SelectItem>
+                                <SelectItem value="inactive">Reject</SelectItem>
+                                <SelectItem value="pending">Pending</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="outline" className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-slate-800 border-slate-700">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="text-white">Delete product?</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-slate-300">Permanently delete "{product.name}". This cannot be undone.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="bg-slate-700 text-white hover:bg-slate-600">Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteProductMutation.mutate(product.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
