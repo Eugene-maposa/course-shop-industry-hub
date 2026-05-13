@@ -21,6 +21,10 @@ export const ContentManagement = () => {
   const { logAdminAction } = useAdmin();
   const queryClient = useQueryClient();
   
+  // Edit state for shops & products
+  const [editingShop, setEditingShop] = useState<any>(null);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+
   // Industry management state
   const [newIndustryName, setNewIndustryName] = useState("");
   const [newIndustryCode, setNewIndustryCode] = useState("");
@@ -189,6 +193,90 @@ export const ContentManagement = () => {
       queryClient.invalidateQueries({ queryKey: ['content-shops'] });
       logAdminAction("Shop status updated", "shops");
     }
+  });
+
+  // Admin edit product (name, description, price, sku, image)
+  const editProductMutation = useMutation({
+    mutationFn: async (p: any) => {
+      const { data, error } = await supabase
+        .from('products')
+        .update({
+          name: p.name,
+          description: p.description,
+          price: p.price ? Number(p.price) : null,
+          sku: p.sku,
+          main_image_url: p.main_image_url,
+        })
+        .eq('id', p.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Product updated" });
+      queryClient.invalidateQueries({ queryKey: ['content-products'] });
+      setEditingProduct(null);
+      logAdminAction("Product edited", "products");
+    },
+    onError: (e: any) => toast({ title: "Update failed", description: e.message, variant: "destructive" }),
+  });
+
+  // Admin delete product
+  const deleteProductMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Product deleted" });
+      queryClient.invalidateQueries({ queryKey: ['content-products'] });
+      logAdminAction("Product deleted", "products");
+    },
+    onError: (e: any) => toast({ title: "Delete failed", description: e.message, variant: "destructive" }),
+  });
+
+  // Admin edit shop (name, description, website, phone, email, address)
+  const editShopMutation = useMutation({
+    mutationFn: async (s: any) => {
+      const { data, error } = await supabase
+        .from('shops')
+        .update({
+          name: s.name,
+          description: s.description,
+          website: s.website,
+          phone: s.phone,
+          email: s.email,
+          address: s.address,
+          icon_url: s.icon_url,
+        })
+        .eq('id', s.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Shop updated" });
+      queryClient.invalidateQueries({ queryKey: ['content-shops'] });
+      setEditingShop(null);
+      logAdminAction("Shop edited", "shops");
+    },
+    onError: (e: any) => toast({ title: "Update failed", description: e.message, variant: "destructive" }),
+  });
+
+  // Admin delete shop
+  const deleteShopMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('shops').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Shop deleted" });
+      queryClient.invalidateQueries({ queryKey: ['content-shops'] });
+      logAdminAction("Shop deleted", "shops");
+    },
+    onError: (e: any) => toast({ title: "Delete failed", description: e.message, variant: "destructive" }),
   });
 
   const getStatusBadge = (status: string) => {
@@ -459,16 +547,12 @@ export const ContentManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {products.slice(0, 10).map((product) => (
+                    {products.map((product) => (
                       <TableRow key={product.id}>
                         <TableCell>
                           <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-700">
                             {product.main_image_url ? (
-                              <img 
-                                src={product.main_image_url} 
-                                alt={product.name}
-                                className="w-full h-full object-cover"
-                              />
+                              <img src={product.main_image_url} alt={product.name} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full bg-slate-600 flex items-center justify-center">
                                 <Package className="w-6 h-6 text-slate-400" />
@@ -481,16 +565,38 @@ export const ContentManagement = () => {
                         <TableCell className="text-slate-300">${product.price || 0}</TableCell>
                         <TableCell>{getStatusBadge(product.status)}</TableCell>
                         <TableCell>
-                          <Select onValueChange={(value) => updateProductStatusMutation.mutate({ productId: product.id, status: value as "active" | "inactive" | "pending" })}>
-                            <SelectTrigger className="w-32 bg-slate-700 border-slate-600 text-white">
-                              <SelectValue placeholder="Update" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-700 border-slate-600">
-                              <SelectItem value="active">Approve</SelectItem>
-                              <SelectItem value="inactive">Reject</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-600" onClick={() => setEditingProduct({ ...product })}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Select onValueChange={(value) => updateProductStatusMutation.mutate({ productId: product.id, status: value as "active" | "inactive" | "pending" })}>
+                              <SelectTrigger className="w-28 bg-slate-700 border-slate-600 text-white">
+                                <SelectValue placeholder="Status" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-700 border-slate-600">
+                                <SelectItem value="active">Approve</SelectItem>
+                                <SelectItem value="inactive">Reject</SelectItem>
+                                <SelectItem value="pending">Pending</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="outline" className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-slate-800 border-slate-700">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="text-white">Delete product?</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-slate-300">Permanently delete "{product.name}". This cannot be undone.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="bg-slate-700 text-white hover:bg-slate-600">Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteProductMutation.mutate(product.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -525,23 +631,45 @@ export const ContentManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {shops.slice(0, 10).map((shop) => (
+                    {shops.map((shop) => (
                       <TableRow key={shop.id}>
                         <TableCell className="text-white font-medium">{shop.name}</TableCell>
                         <TableCell className="text-slate-300">{shop.industries?.name || 'N/A'}</TableCell>
                         <TableCell>{getStatusBadge(shop.status)}</TableCell>
                         <TableCell>{getStatusBadge(shop.document_verification_status)}</TableCell>
                         <TableCell>
-                          <Select onValueChange={(value) => updateShopStatusMutation.mutate({ shopId: shop.id, status: value as "active" | "inactive" | "pending" })}>
-                            <SelectTrigger className="w-32 bg-slate-700 border-slate-600 text-white">
-                              <SelectValue placeholder="Update" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-700 border-slate-600">
-                              <SelectItem value="active">Approve</SelectItem>
-                              <SelectItem value="inactive">Reject</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-600" onClick={() => setEditingShop({ ...shop })}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Select onValueChange={(value) => updateShopStatusMutation.mutate({ shopId: shop.id, status: value as "active" | "inactive" | "pending" })}>
+                              <SelectTrigger className="w-28 bg-slate-700 border-slate-600 text-white">
+                                <SelectValue placeholder="Status" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-700 border-slate-600">
+                                <SelectItem value="active">Approve</SelectItem>
+                                <SelectItem value="inactive">Reject</SelectItem>
+                                <SelectItem value="pending">Pending</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="outline" className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-slate-800 border-slate-700">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="text-white">Delete shop?</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-slate-300">Permanently delete "{shop.name}". This cannot be undone.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="bg-slate-700 text-white hover:bg-slate-600">Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteShopMutation.mutate(shop.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -552,6 +680,96 @@ export const ContentManagement = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Product Dialog */}
+      <Dialog open={!!editingProduct} onOpenChange={(o) => !o && setEditingProduct(null)}>
+        <DialogContent className="bg-slate-800 border-slate-700 max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-white">Edit Product</DialogTitle>
+          </DialogHeader>
+          {editingProduct && (
+            <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+              <div>
+                <Label className="text-white">Name</Label>
+                <Input value={editingProduct.name || ''} onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })} className="bg-slate-700 border-slate-600 text-white" />
+              </div>
+              <div>
+                <Label className="text-white">Description</Label>
+                <Textarea value={editingProduct.description || ''} onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} className="bg-slate-700 border-slate-600 text-white" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-white">Price</Label>
+                  <Input type="number" step="0.01" value={editingProduct.price ?? ''} onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value })} className="bg-slate-700 border-slate-600 text-white" />
+                </div>
+                <div>
+                  <Label className="text-white">P Number</Label>
+                  <Input value={editingProduct.sku || ''} onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value })} className="bg-slate-700 border-slate-600 text-white" />
+                </div>
+              </div>
+              <div>
+                <Label className="text-white">Main Image URL</Label>
+                <Input value={editingProduct.main_image_url || ''} onChange={(e) => setEditingProduct({ ...editingProduct, main_image_url: e.target.value })} className="bg-slate-700 border-slate-600 text-white" />
+                {editingProduct.main_image_url && (
+                  <img src={editingProduct.main_image_url} alt="preview" className="mt-2 w-32 h-32 object-cover rounded" />
+                )}
+              </div>
+              <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => editProductMutation.mutate(editingProduct)} disabled={editProductMutation.isPending}>
+                {editProductMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Shop Dialog */}
+      <Dialog open={!!editingShop} onOpenChange={(o) => !o && setEditingShop(null)}>
+        <DialogContent className="bg-slate-800 border-slate-700 max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-white">Edit Shop</DialogTitle>
+          </DialogHeader>
+          {editingShop && (
+            <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+              <div>
+                <Label className="text-white">Shop Name</Label>
+                <Input value={editingShop.name || ''} onChange={(e) => setEditingShop({ ...editingShop, name: e.target.value })} className="bg-slate-700 border-slate-600 text-white" />
+              </div>
+              <div>
+                <Label className="text-white">Description</Label>
+                <Textarea value={editingShop.description || ''} onChange={(e) => setEditingShop({ ...editingShop, description: e.target.value })} className="bg-slate-700 border-slate-600 text-white" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-white">Email</Label>
+                  <Input value={editingShop.email || ''} onChange={(e) => setEditingShop({ ...editingShop, email: e.target.value })} className="bg-slate-700 border-slate-600 text-white" />
+                </div>
+                <div>
+                  <Label className="text-white">Phone</Label>
+                  <Input value={editingShop.phone || ''} onChange={(e) => setEditingShop({ ...editingShop, phone: e.target.value })} className="bg-slate-700 border-slate-600 text-white" />
+                </div>
+              </div>
+              <div>
+                <Label className="text-white">Website</Label>
+                <Input value={editingShop.website || ''} onChange={(e) => setEditingShop({ ...editingShop, website: e.target.value })} className="bg-slate-700 border-slate-600 text-white" />
+              </div>
+              <div>
+                <Label className="text-white">Address</Label>
+                <Input value={editingShop.address || ''} onChange={(e) => setEditingShop({ ...editingShop, address: e.target.value })} className="bg-slate-700 border-slate-600 text-white" />
+              </div>
+              <div>
+                <Label className="text-white">Icon URL</Label>
+                <Input value={editingShop.icon_url || ''} onChange={(e) => setEditingShop({ ...editingShop, icon_url: e.target.value })} className="bg-slate-700 border-slate-600 text-white" />
+                {editingShop.icon_url && (
+                  <img src={editingShop.icon_url} alt="preview" className="mt-2 w-20 h-20 object-cover rounded" />
+                )}
+              </div>
+              <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => editShopMutation.mutate(editingShop)} disabled={editShopMutation.isPending}>
+                {editShopMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
