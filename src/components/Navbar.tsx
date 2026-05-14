@@ -50,7 +50,7 @@ const Navbar = () => {
                 <Package className="w-6 h-6 text-nust-blue" />
               </div>
               <span className="text-xl font-bold text-white">
-                ProductHub
+                IndustryHub
               </span>
             </Link>
           </div>
