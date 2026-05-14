@@ -1,11 +1,16 @@
 
 import { useParams, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Star, Heart, ShoppingCart, Share2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Star, Heart, ShoppingCart, Share2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import Navbar from "@/components/Navbar";
 import ProductImageEditor from "@/components/ProductImageEditor";
 import ProductReviews from "@/components/ProductReviews";
@@ -14,6 +19,8 @@ import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useShare } from "@/hooks/useShare";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/hooks/use-toast";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -22,6 +29,11 @@ const ProductDetail = () => {
   const { shareProduct } = useShare();
   
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editOpen, setEditOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", description: "", price: "", sku: "" });
 
   // Fetch real product data from database
   const { data: product, isLoading, error } = useQuery({
@@ -80,6 +92,34 @@ const ProductDetail = () => {
     enabled: !!id,
   });
 
+  const updateProductMutation = useMutation({
+    mutationFn: async (values: { name: string; description: string; price: string; sku: string }) => {
+      const { data, error } = await supabase
+        .from('products')
+        .update({
+          name: values.name,
+          description: values.description,
+          price: values.price === "" ? null : Number(values.price),
+          sku: values.sku || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id as string)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product', id] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast({ title: "Product updated", description: "Changes saved successfully." });
+      setEditOpen(false);
+    },
+    onError: (err: any) => {
+      toast({ title: "Update failed", description: err?.message || "Could not update product.", variant: "destructive" });
+    },
+  });
+
   if (isLoading) {
     return (
         <div className="min-h-screen bg-background">
@@ -120,6 +160,16 @@ const ProductDetail = () => {
   const displayGalleryImages = persistedGalleryImages.length > 0 ? persistedGalleryImages : [fallbackImage, fallbackImage];
   const productImages = [mainImageUrl, ...displayGalleryImages];
   const canEditProduct = Boolean(user);
+  // Admins always can edit; owners (matched via shops) too. Keep permissive: any logged-in user sees the editor; RLS enforces.
+  const openEdit = () => {
+    setForm({
+      name: product.name || "",
+      description: product.description || "",
+      price: product.price != null ? String(product.price) : "",
+      sku: product.sku || "",
+    });
+    setEditOpen(true);
+  };
 
   const handleAddToCart = () => {
     if (product.price) {
@@ -229,6 +279,11 @@ const ProductDetail = () => {
               <div className="text-3xl font-bold text-foreground">
                 {product.price ? `$${product.price}` : 'Price not set'}
               </div>
+              {isAdmin && (
+                <Button variant="outline" size="sm" onClick={openEdit}>
+                  <Pencil className="w-4 h-4 mr-2" /> Edit Details
+                </Button>
+              )}
             </div>
 
             <p className="text-muted-foreground leading-relaxed">
@@ -341,6 +396,40 @@ const ProductDetail = () => {
           <ProductReviews productId={product.id} />
         </div>
       </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Product Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Name</Label>
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Price (USD)</Label>
+                <Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+              </div>
+              <div>
+                <Label>P Number</Label>
+                <Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button onClick={() => updateProductMutation.mutate(form)} disabled={updateProductMutation.isPending}>
+              {updateProductMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
