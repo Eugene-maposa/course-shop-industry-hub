@@ -159,7 +159,18 @@ const ProductDetail = () => {
   const mainImageUrl = persistedMainImage || fallbackImage;
   const displayGalleryImages = persistedGalleryImages.length > 0 ? persistedGalleryImages : [fallbackImage, fallbackImage];
   const productImages = [mainImageUrl, ...displayGalleryImages];
-  const canEditProduct = Boolean(user);
+  const isOwner = Boolean(user && (product as any).shop_id && shopInfo && (product as any).user_id === user.id);
+  const canEditProduct = Boolean(user) && (isAdmin || isOwner !== false);
+  // Admins always can edit; owners (matched via shops) too. Keep permissive: any logged-in user sees the editor; RLS enforces.
+  const openEdit = () => {
+    setForm({
+      name: product.name || "",
+      description: product.description || "",
+      price: product.price != null ? String(product.price) : "",
+      sku: product.sku || "",
+    });
+    setEditOpen(true);
+  };
 
   const handleAddToCart = () => {
     if (product.price) {
