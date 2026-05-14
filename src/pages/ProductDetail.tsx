@@ -29,6 +29,11 @@ const ProductDetail = () => {
   const { shareProduct } = useShare();
   
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editOpen, setEditOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", description: "", price: "", sku: "" });
 
   // Fetch real product data from database
   const { data: product, isLoading, error } = useQuery({
