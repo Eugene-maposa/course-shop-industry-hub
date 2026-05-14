@@ -92,6 +92,34 @@ const ProductDetail = () => {
     enabled: !!id,
   });
 
+  const updateProductMutation = useMutation({
+    mutationFn: async (values: { name: string; description: string; price: string; sku: string }) => {
+      const { data, error } = await supabase
+        .from('products')
+        .update({
+          name: values.name,
+          description: values.description,
+          price: values.price === "" ? null : Number(values.price),
+          sku: values.sku || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id as string)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product', id] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast({ title: "Product updated", description: "Changes saved successfully." });
+      setEditOpen(false);
+    },
+    onError: (err: any) => {
+      toast({ title: "Update failed", description: err?.message || "Could not update product.", variant: "destructive" });
+    },
+  });
+
   if (isLoading) {
     return (
         <div className="min-h-screen bg-background">
