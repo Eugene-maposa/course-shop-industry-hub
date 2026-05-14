@@ -159,8 +159,7 @@ const ProductDetail = () => {
   const mainImageUrl = persistedMainImage || fallbackImage;
   const displayGalleryImages = persistedGalleryImages.length > 0 ? persistedGalleryImages : [fallbackImage, fallbackImage];
   const productImages = [mainImageUrl, ...displayGalleryImages];
-  const isOwner = Boolean(user && (product as any).shop_id && shopInfo && (product as any).user_id === user.id);
-  const canEditProduct = Boolean(user) && (isAdmin || isOwner !== false);
+  const canEditProduct = Boolean(user);
   // Admins always can edit; owners (matched via shops) too. Keep permissive: any logged-in user sees the editor; RLS enforces.
   const openEdit = () => {
     setForm({
