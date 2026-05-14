@@ -280,6 +280,11 @@ const ProductDetail = () => {
               <div className="text-3xl font-bold text-foreground">
                 {product.price ? `$${product.price}` : 'Price not set'}
               </div>
+              {isAdmin && (
+                <Button variant="outline" size="sm" onClick={openEdit}>
+                  <Pencil className="w-4 h-4 mr-2" /> Edit Details
+                </Button>
+              )}
             </div>
 
             <p className="text-muted-foreground leading-relaxed">
