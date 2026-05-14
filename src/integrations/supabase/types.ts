@@ -666,6 +666,14 @@ export type Database = {
         }
         Returns: Json
       }
+      create_admin_user_with_auth: {
+        Args: {
+          admin_role?: Database["public"]["Enums"]["admin_role"]
+          user_email: string
+          user_password: string
+        }
+        Returns: Json
+      }
       create_notification: {
         Args: {
           p_message: string
@@ -734,6 +742,7 @@ export type Database = {
           website: string
         }[]
       }
+      get_user_by_email: { Args: { user_email: string }; Returns: Json }
       get_user_count: { Args: never; Returns: number }
       get_visit_stats: {
         Args: { period?: string }
