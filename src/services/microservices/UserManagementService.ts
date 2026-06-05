@@ -313,7 +313,7 @@ class UserManagementService {
         id: userId,
         email: user.email || '',
         created_at: user.created_at || '',
-        role: data.role,
+        role: data.role as 'user' | 'admin' | 'super_admin',
         is_active: true,
         profile_data: user.user_metadata
       };
