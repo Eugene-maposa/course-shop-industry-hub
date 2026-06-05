@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/Navbar";
+import BackHomeNav from "@/components/BackHomeNav";
 import ShopRegistrationForm from "@/components/forms/ShopRegistrationForm";
 import ShopContactModal from "@/components/ShopContactModal";
 import { supabase } from "@/integrations/supabase/client";
