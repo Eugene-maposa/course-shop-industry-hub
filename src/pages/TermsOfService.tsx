@@ -2,6 +2,7 @@
 import { FileText, AlertTriangle, Scale, Users, Shield } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
+import BackHomeNav from "@/components/BackHomeNav";
 
 const TermsOfService = () => {
   return (
@@ -9,6 +10,8 @@ const TermsOfService = () => {
       <Navbar />
       
       <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <BackHomeNav className="mb-6" />
+
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-4">

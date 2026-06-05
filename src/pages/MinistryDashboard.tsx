@@ -19,6 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend, Tooltip } from "recharts";
 import ShopMap from "@/components/ShopMap";
+import BackHomeNav from "@/components/BackHomeNav";
 
 const MinistryDashboard = () => {
   const { toast } = useToast();
@@ -607,6 +608,7 @@ const MinistryDashboard = () => {
       {/* Header */}
       <div className="bg-card border-b px-6 py-6">
         <div className="max-w-7xl mx-auto">
+          <BackHomeNav className="mb-4" />
           <div className="flex items-center space-x-3 mb-2">
             <Building className="w-10 h-10 text-primary" />
             <div>
@@ -616,6 +618,7 @@ const MinistryDashboard = () => {
           </div>
         </div>
       </div>
+
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Statistics Overview */}

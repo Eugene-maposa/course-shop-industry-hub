@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/Navbar";
+import BackHomeNav from "@/components/BackHomeNav";
 import IndustryRegistrationForm from "@/components/forms/IndustryRegistrationForm";
 import IndustryDetailModal from "@/components/IndustryDetailModal";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,6 +82,8 @@ const Industries = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4"><BackHomeNav /></div>
+
       
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10">
