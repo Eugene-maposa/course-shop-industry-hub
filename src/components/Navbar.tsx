@@ -21,6 +21,7 @@ const Navbar = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdmin();
+  const { isMinistry } = useMinistry();
   const { toast } = useToast();
 
   const navigation = [
