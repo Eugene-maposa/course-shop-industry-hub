@@ -11,7 +11,18 @@ import {
 import ThemeModeToggle from "./ThemeModeToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { Menu, X, Package, Store, Building2, User, LogOut, Shield, Settings, ChevronDown, Building } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import ThemeModeToggle from "./ThemeModeToggle";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useMinistry } from "@/hooks/useMinistry";
 import { useToast } from "@/hooks/use-toast";
 import NotificationCenter from "./NotificationCenter";
 
