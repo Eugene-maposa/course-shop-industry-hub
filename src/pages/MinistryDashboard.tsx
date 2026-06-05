@@ -26,6 +26,7 @@ const MinistryDashboard = () => {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
+  const { isMinistry, loading: ministryLoading } = useMinistry();
   const queryClient = useQueryClient();
   const [shopSearch, setShopSearch] = useState("");
   const [productSearch, setProductSearch] = useState("");
