@@ -562,7 +562,7 @@ const MinistryDashboard = () => {
   };
 
   // Show loading state while checking authentication
-  if (authLoading || adminLoading) {
+  if (authLoading || adminLoading || ministryLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -578,8 +578,8 @@ const MinistryDashboard = () => {
     return <Navigate to="/site-ops/login" replace />;
   }
 
-  // Show access denied if not admin
-  if (!isAdmin) {
+  // Show access denied if not admin or ministry user
+  if (!isAdmin && !isMinistry) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="max-w-md w-full">
