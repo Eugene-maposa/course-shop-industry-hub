@@ -781,7 +781,7 @@ export type Database = {
     }
     Enums: {
       admin_role: "super_admin" | "admin" | "moderator"
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "ministry"
       industry_status: "active" | "inactive" | "pending"
       product_status: "active" | "inactive" | "pending"
       shop_status: "active" | "inactive" | "pending"
@@ -913,7 +913,7 @@ export const Constants = {
   public: {
     Enums: {
       admin_role: ["super_admin", "admin", "moderator"],
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "ministry"],
       industry_status: ["active", "inactive", "pending"],
       product_status: ["active", "inactive", "pending"],
       shop_status: ["active", "inactive", "pending"],

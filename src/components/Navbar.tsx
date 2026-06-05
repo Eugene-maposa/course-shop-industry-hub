@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Package, Store, Building2, User, LogOut, Shield, Settings, ChevronDown } from "lucide-react";
+import { Menu, X, Package, Store, Building2, User, LogOut, Shield, Settings, ChevronDown, Building } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,7 @@ import ThemeModeToggle from "./ThemeModeToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useMinistry } from "@/hooks/useMinistry";
 import { useToast } from "@/hooks/use-toast";
 import NotificationCenter from "./NotificationCenter";
 
@@ -20,6 +21,7 @@ const Navbar = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdmin();
+  const { isMinistry } = useMinistry();
   const { toast } = useToast();
 
   const navigation = [
@@ -132,6 +134,14 @@ const Navbar = () => {
                         </Link>
                       </DropdownMenuItem>
                     )}
+                    {(isMinistry || isAdmin) && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/site-ops/ministry" className="flex items-center gap-2 cursor-pointer">
+                          <Building className="w-4 h-4" />
+                          <span>Ministry</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <div className="flex items-center space-x-2 text-gray-200">
@@ -237,6 +247,20 @@ const Navbar = () => {
                     >
                       <Shield className="w-5 h-5" />
                       <span>Site Ops</span>
+                    </Link>
+                  )}
+                  {(isMinistry || isAdmin) && (
+                    <Link
+                      to="/site-ops/ministry"
+                      onClick={() => setIsOpen(false)}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                        location.pathname === '/site-ops/ministry'
+                          ? "bg-nust-blue-light text-white"
+                          : "text-gray-200 hover:text-white hover:bg-nust-blue-light"
+                      }`}
+                    >
+                      <Building className="w-5 h-5" />
+                      <span>Ministry</span>
                     </Link>
                   )}
                   <button
