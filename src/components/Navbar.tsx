@@ -249,6 +249,20 @@ const Navbar = () => {
                       <span>Site Ops</span>
                     </Link>
                   )}
+                  {(isMinistry || isAdmin) && (
+                    <Link
+                      to="/site-ops/ministry"
+                      onClick={() => setIsOpen(false)}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                        location.pathname === '/site-ops/ministry'
+                          ? "bg-nust-blue-light text-white"
+                          : "text-gray-200 hover:text-white hover:bg-nust-blue-light"
+                      }`}
+                    >
+                      <Building className="w-5 h-5" />
+                      <span>Ministry</span>
+                    </Link>
+                  )}
                   <button
                     onClick={() => {
                       handleSignOut();
