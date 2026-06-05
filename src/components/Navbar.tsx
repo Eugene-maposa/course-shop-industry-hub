@@ -134,6 +134,14 @@ const Navbar = () => {
                         </Link>
                       </DropdownMenuItem>
                     )}
+                    {(isMinistry || isAdmin) && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/site-ops/ministry" className="flex items-center gap-2 cursor-pointer">
+                          <Building className="w-4 h-4" />
+                          <span>Ministry</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <div className="flex items-center space-x-2 text-gray-200">
