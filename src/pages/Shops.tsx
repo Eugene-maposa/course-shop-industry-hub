@@ -67,6 +67,8 @@ const Shops = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4"><BackHomeNav /></div>
+
 
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10">

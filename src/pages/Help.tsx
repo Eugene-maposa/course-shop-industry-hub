@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
+import BackHomeNav from "@/components/BackHomeNav";
 
 const Help = () => {
   const [openFaqSections, setOpenFaqSections] = useState<Record<string, boolean>>({});
@@ -163,6 +164,8 @@ const Help = () => {
       <Navbar />
       
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <BackHomeNav className="mb-6" />
+
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-4">
