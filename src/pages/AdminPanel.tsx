@@ -263,15 +263,6 @@ const AdminPanel = () => {
               </div>
             </div>
             <div className="flex items-center space-x-2 flex-wrap gap-2">
-              <Button 
-                variant="outline"
-                onClick={() => window.location.href = '/site-ops/ministry'}
-                className="bg-slate-700 hover:bg-slate-600 text-white border-slate-600 text-sm"
-                size="sm"
-              >
-                <Building className="w-4 h-4 mr-1" />
-                Ministry
-              </Button>
               <Badge className="bg-blue-500 text-white text-xs">{adminRole}</Badge>
               <span className="text-slate-300 text-sm hidden md:inline">{user?.email}</span>
             </div>
