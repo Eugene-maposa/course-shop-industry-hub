@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import ProductImageUpload from "@/components/ProductImageUpload";
 
 interface ProductRegistrationFormProps {
@@ -49,6 +50,7 @@ const ProductRegistrationForm = ({ productId, initialData, onSuccess }: ProductR
   }>({ isChecked: false, isLegal: true, violations: [] });
 
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: productTypes = [], isLoading: isLoadingTypes } = useQuery({
@@ -61,9 +63,14 @@ const ProductRegistrationForm = ({ productId, initialData, onSuccess }: ProductR
   });
 
   const { data: shops = [], isLoading: isLoadingShops } = useQuery({
-    queryKey: ['shops'],
+    queryKey: ['my-shops', user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
-      const { data, error } = await supabase.from('shops').select('*').eq('status', 'active');
+      const { data, error } = await supabase
+        .from('shops')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('name');
       if (error) throw error;
       return data || [];
     }
@@ -220,9 +227,9 @@ const ProductRegistrationForm = ({ productId, initialData, onSuccess }: ProductR
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="shop" className="text-xs">Shop *</Label>
-              <Select value={formData.shop_id} onValueChange={handleSelectChange("shop_id")}>
+              <Select value={formData.shop_id} onValueChange={handleSelectChange("shop_id")} disabled={shops.length === 0}>
                 <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder={isLoadingShops ? "Loading..." : "Select shop"} />
+                  <SelectValue placeholder={isLoadingShops ? "Loading..." : (shops.length === 0 ? "No shops — create one first" : "Select your shop")} />
                 </SelectTrigger>
                 <SelectContent>
                   {shops.map((shop) => (
@@ -230,6 +237,9 @@ const ProductRegistrationForm = ({ productId, initialData, onSuccess }: ProductR
                   ))}
                 </SelectContent>
               </Select>
+              {!isLoadingShops && shops.length === 0 && (
+                <p className="text-[11px] text-muted-foreground">You can only add products under shops you own. Create a shop first from your dashboard.</p>
+              )}
             </div>
           </div>
 
