@@ -50,7 +50,7 @@ const Index = () => {
             <Card className="bg-white/95 backdrop-blur-sm shadow-xl border-0">
               <CardHeader className="text-center pb-4">
                 <CardTitle className="text-2xl font-bold text-nust-blue mb-4">
-                  PRODUCT REGISTRATION
+                  SHOP REGISTRATION
                 </CardTitle>
                 <CardDescription className="text-gray-600 text-base leading-relaxed">
                   Through the easy to use product registration forms below you can register your products with ProductHub.
