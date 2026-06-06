@@ -227,9 +227,9 @@ const ProductRegistrationForm = ({ productId, initialData, onSuccess }: ProductR
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="shop" className="text-xs">Shop *</Label>
-              <Select value={formData.shop_id} onValueChange={handleSelectChange("shop_id")}>
+              <Select value={formData.shop_id} onValueChange={handleSelectChange("shop_id")} disabled={shops.length === 0}>
                 <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder={isLoadingShops ? "Loading..." : "Select shop"} />
+                  <SelectValue placeholder={isLoadingShops ? "Loading..." : (shops.length === 0 ? "No shops — create one first" : "Select your shop")} />
                 </SelectTrigger>
                 <SelectContent>
                   {shops.map((shop) => (
@@ -237,6 +237,9 @@ const ProductRegistrationForm = ({ productId, initialData, onSuccess }: ProductR
                   ))}
                 </SelectContent>
               </Select>
+              {!isLoadingShops && shops.length === 0 && (
+                <p className="text-[11px] text-muted-foreground">You can only add products under shops you own. Create a shop first from your dashboard.</p>
+              )}
             </div>
           </div>
 
