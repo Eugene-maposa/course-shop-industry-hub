@@ -50,6 +50,7 @@ const ProductRegistrationForm = ({ productId, initialData, onSuccess }: ProductR
   }>({ isChecked: false, isLegal: true, violations: [] });
 
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: productTypes = [], isLoading: isLoadingTypes } = useQuery({
@@ -62,9 +63,14 @@ const ProductRegistrationForm = ({ productId, initialData, onSuccess }: ProductR
   });
 
   const { data: shops = [], isLoading: isLoadingShops } = useQuery({
-    queryKey: ['shops'],
+    queryKey: ['my-shops', user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
-      const { data, error } = await supabase.from('shops').select('*').eq('status', 'active');
+      const { data, error } = await supabase
+        .from('shops')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('name');
       if (error) throw error;
       return data || [];
     }
