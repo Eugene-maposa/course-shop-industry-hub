@@ -50,7 +50,7 @@ const Shops = () => {
     const matchesSearch = shop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          shop.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesIndustry = selectedIndustry === "all" || shop.industries?.name === selectedIndustry;
-    return matchesSearch && matchesIndustry;
+    return shop.status === 'active' && matchesSearch && matchesIndustry;
   });
 
   const handleContact = (shop: any) => {
