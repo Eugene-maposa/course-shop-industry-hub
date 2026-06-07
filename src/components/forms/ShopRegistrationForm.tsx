@@ -443,7 +443,7 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="phone" className="text-xs">Phone Number</Label>
-                <Input id="phone" value={formData.phone} onChange={(e) => handleInputChange("phone", e.target.value)} placeholder="Enter phone number" className="h-9 text-sm" />
+                <Input id="phone" inputMode="tel" value={formData.phone} onChange={(e) => handleInputChange("phone", filterPhone(e.target.value))} placeholder="e.g. +263 77 123 4567" className="h-9 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs">Email</Label>
