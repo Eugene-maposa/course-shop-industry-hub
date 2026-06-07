@@ -9,6 +9,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { emailSchema, passwordSchema, firstZodError } from "@/lib/validators";
+import { z } from "zod";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -30,6 +32,22 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Validate inputs
+    const emailCheck = emailSchema.safeParse(email);
+    if (!emailCheck.success) {
+      toast({ title: "Invalid Email", description: firstZodError(emailCheck.error), variant: "destructive" });
+      return;
+    }
+    if (mode !== 'reset') {
+      // For login we don't enforce complexity rules (legacy passwords), only non-empty
+      const pwSchema = mode === 'signup' ? passwordSchema : z.string().min(1, "Password is required");
+      const pwCheck = pwSchema.safeParse(password);
+      if (!pwCheck.success) {
+        toast({ title: "Invalid Password", description: firstZodError(pwCheck.error), variant: "destructive" });
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
