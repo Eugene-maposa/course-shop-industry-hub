@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import ProductImageUpload from "@/components/ProductImageUpload";
+import { productNameSchema, priceSchema, descriptionSchema, filterSku, SKU_REGEX, firstZodError } from "@/lib/validators";
 
 interface ProductRegistrationFormProps {
   productId?: string;
@@ -136,7 +137,15 @@ const ProductRegistrationForm = ({ productId, initialData, onSuccess }: ProductR
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim()) { toast({ title: "Validation Error", description: "Product name is required.", variant: "destructive" }); return; }
+    const nameRes = productNameSchema.safeParse(formData.name);
+    if (!nameRes.success) { toast({ title: "Invalid Product Name", description: firstZodError(nameRes.error), variant: "destructive" }); return; }
+    const descRes = descriptionSchema.safeParse(formData.description);
+    if (!descRes.success) { toast({ title: "Invalid Description", description: firstZodError(descRes.error), variant: "destructive" }); return; }
+    const priceRes = priceSchema.safeParse(formData.price);
+    if (!priceRes.success) { toast({ title: "Invalid Price", description: firstZodError(priceRes.error), variant: "destructive" }); return; }
+    if (formData.sku && !SKU_REGEX.test(formData.sku)) {
+      toast({ title: "Invalid P Number", description: "P Number can only contain letters, digits, '-' or '_' (max 32).", variant: "destructive" }); return;
+    }
     if (!formData.product_type_id) { toast({ title: "Validation Error", description: "Product type is required.", variant: "destructive" }); return; }
     if (!formData.shop_id) { toast({ title: "Validation Error", description: "Shop is required.", variant: "destructive" }); return; }
     const legalityCheck = await checkProductLegality(formData.name, formData.description);
@@ -172,7 +181,7 @@ const ProductRegistrationForm = ({ productId, initialData, onSuccess }: ProductR
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="sku" className="text-xs">P Number</Label>
-              <Input id="sku" value={formData.sku} onChange={(e) => handleInputChange("sku", e.target.value)} placeholder="Enter product number" className="h-9 text-sm" />
+              <Input id="sku" value={formData.sku} onChange={(e) => handleInputChange("sku", filterSku(e.target.value))} placeholder="Enter product number" className="h-9 text-sm" />
             </div>
           </div>
 
@@ -245,7 +254,7 @@ const ProductRegistrationForm = ({ productId, initialData, onSuccess }: ProductR
 
           <div className="space-y-1.5">
             <Label htmlFor="price" className="text-xs">Price</Label>
-            <Input id="price" type="number" step="0.01" value={formData.price} onChange={(e) => handleInputChange("price", e.target.value)} placeholder="Enter price" className="h-9 text-sm" />
+            <Input id="price" type="number" step="0.01" min="0" value={formData.price} onChange={(e) => handleInputChange("price", e.target.value)} placeholder="Enter price" className="h-9 text-sm" />
           </div>
 
           <div className="col-span-full">
