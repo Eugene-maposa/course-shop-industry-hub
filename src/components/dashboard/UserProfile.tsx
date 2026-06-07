@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ProfilePhotoUpload from '@/components/ProfilePhotoUpload';
+import { filterName, filterPhone, optionalPersonNameSchema, optionalPhoneSchema, optionalUrlSchema, firstZodError } from '@/lib/validators';
 
 interface UserProfileData {
   id?: string;
@@ -61,6 +62,21 @@ const UserProfile = () => {
 
   const handleSave = async () => {
     if (!user) return;
+
+    // Validate fields before saving
+    const checks: Array<[string, ReturnType<typeof optionalPersonNameSchema.safeParse>]> = [
+      ['First name', optionalPersonNameSchema.safeParse(profileData.first_name || '')],
+      ['Last name', optionalPersonNameSchema.safeParse(profileData.last_name || '')],
+      ['Phone', optionalPhoneSchema.safeParse(profileData.phone || '')],
+      ['Website', optionalUrlSchema.safeParse(profileData.website || '')],
+    ];
+    for (const [label, res] of checks) {
+      if (!res.success) {
+        toast({ title: `Invalid ${label}`, description: firstZodError(res.error), variant: 'destructive' });
+        return;
+      }
+    }
+
 
     setLoading(true);
     try {
@@ -133,7 +149,7 @@ const UserProfile = () => {
               <Input
                 id="firstName"
                 value={profileData.first_name || ''}
-                onChange={(e) => handleInputChange('first_name', e.target.value)}
+                onChange={(e) => handleInputChange('first_name', filterName(e.target.value))}
                 placeholder="Enter your first name"
                 className="h-8 text-sm"
               />
@@ -143,7 +159,7 @@ const UserProfile = () => {
               <Input
                 id="lastName"
                 value={profileData.last_name || ''}
-                onChange={(e) => handleInputChange('last_name', e.target.value)}
+                onChange={(e) => handleInputChange('last_name', filterName(e.target.value))}
                 placeholder="Enter your last name"
                 className="h-8 text-sm"
               />
@@ -175,7 +191,7 @@ const UserProfile = () => {
               <Input
                 id="phone"
                 value={profileData.phone || ''}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
+                onChange={(e) => handleInputChange('phone', filterPhone(e.target.value))}
                 placeholder="Enter your phone number"
                 className="h-8 text-sm"
               />
