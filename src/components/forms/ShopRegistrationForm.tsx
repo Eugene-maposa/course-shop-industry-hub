@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import StepByStepDocumentUpload from "@/components/StepByStepDocumentUpload";
 import LocationPicker from "@/components/LocationPicker";
+import { shopNameSchema, emailSchema, optionalPhoneSchema, optionalUrlSchema, addressSchema, descriptionSchema, filterPhone, firstZodError } from "@/lib/validators";
+import { z } from "zod";
 
 interface ShopRegistrationFormProps {
   shopId?: string;
@@ -224,13 +226,33 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
-    if (!formData.name.trim()) {
-      toast({ title: "Missing Information", description: "Please enter a shop name.", variant: "destructive" });
-      return;
+    // Run validation
+    const validations: Array<[string, ReturnType<typeof shopNameSchema.safeParse>]> = [
+      ["Shop Name", shopNameSchema.safeParse(formData.name)],
+      ["Description", descriptionSchema.safeParse(formData.description) as any],
+      ["Address", addressSchema.safeParse(formData.address) as any],
+      ["Phone", optionalPhoneSchema.safeParse(formData.phone) as any],
+      ["Email", formData.email ? emailSchema.safeParse(formData.email) : { success: true } as any],
+      ["Website", optionalUrlSchema.safeParse(formData.website) as any],
+    ];
+    for (const [label, res] of validations) {
+      if (!(res as any).success) {
+        toast({ title: `Invalid ${label}`, description: firstZodError((res as any).error), variant: "destructive" });
+        return;
+      }
     }
     if (!formData.industry_id) {
       toast({ title: "Missing Information", description: "Please select an industry.", variant: "destructive" });
       return;
+    }
+    // Latitude/longitude sanity check if provided
+    if (formData.latitude || formData.longitude) {
+      const lat = parseFloat(formData.latitude);
+      const lng = parseFloat(formData.longitude);
+      if (isNaN(lat) || lat < -90 || lat > 90 || isNaN(lng) || lng < -180 || lng > 180) {
+        toast({ title: "Invalid Location", description: "Latitude must be -90..90 and longitude -180..180.", variant: "destructive" });
+        return;
+      }
     }
     if (!shopId) {
       const requiredDocs = documentRequirements.filter(req => req.is_required);
