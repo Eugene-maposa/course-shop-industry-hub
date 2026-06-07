@@ -190,6 +190,50 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
     return documentUrls;
   };
 
+  const buildVerificationSummary = () => {
+    const labelFor = (type: string) => {
+      const map: Record<string, string> = {
+        national_id_front: 'National ID (Front)',
+        national_id_back: 'National ID (Back)',
+        tax_clearance: 'Tax Clearance Certificate',
+        business_license: 'Business License',
+        trading_license: 'Trading License',
+        vat_certificate: 'VAT Registration Certificate',
+        fire_certificate: 'Fire Safety Certificate',
+        company_registration: 'Company Registration Certificate',
+      };
+      return map[type] || type;
+    };
+    const entries = Object.entries(verificationResults);
+    if (entries.length === 0) return { text: '', html: '' };
+
+    const lines: string[] = [];
+    const htmlBlocks: string[] = [];
+    for (const [type, r] of entries) {
+      const label = labelFor(type);
+      const statusUpper = (r.status || 'pending').toUpperCase();
+      lines.push(`• ${label} — ${statusUpper} (${r.confidence_score ?? 0}% confidence)`);
+      if (r.analysis) lines.push(`  Analysis: ${r.analysis}`);
+      if (r.issues && r.issues.length > 0) {
+        lines.push(`  Issues:`);
+        for (const i of r.issues) lines.push(`   - ${i}`);
+      }
+
+      const issuesHtml = r.issues && r.issues.length > 0
+        ? `<ul>${r.issues.map(i => `<li>${i}</li>`).join('')}</ul>`
+        : '<em>No issues flagged.</em>';
+      const color = r.status === 'verified' ? '#059669' : r.status === 'rejected' ? '#dc2626' : '#d97706';
+      htmlBlocks.push(`
+        <div style="border-left:4px solid ${color};padding:8px 12px;margin:8px 0;background:#f9fafb;">
+          <div style="font-weight:600;">${label} — <span style="color:${color}">${statusUpper}</span> (${r.confidence_score ?? 0}%)</div>
+          ${r.analysis ? `<div style="font-size:13px;color:#374151;margin-top:4px;">${r.analysis}</div>` : ''}
+          <div style="font-size:13px;color:#7f1d1d;margin-top:4px;"><strong>Issues:</strong>${issuesHtml}</div>
+        </div>
+      `);
+    }
+    return { text: lines.join('\n'), html: htmlBlocks.join('') };
+  };
+
   const handleDocumentUploadComplete = async (shopId: string) => {
     try {
       const { data: notifications } = await supabase
@@ -201,14 +245,27 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
       if (notifications && notifications.length > 0) {
         await supabase.from('notifications').update({ read: true }).in('id', notifications.map(n => n.id));
       }
+
+      const summary = buildVerificationSummary();
+      const flagged = Object.values(verificationResults).filter(r => r.status !== 'verified').length;
+      const hasIssues = flagged > 0;
+      const shopName = formData.name || 'New shop';
+
+      const notifTitle = hasIssues
+        ? `Shop Registration Needs Review — ${flagged} document(s) flagged`
+        : 'New Shop Registration Pending Approval';
+      const notifMessage = hasIssues
+        ? `Shop "${shopName}" registered and is pending approval. ${flagged} document(s) flagged by AI verification.\n\n${summary.text}`
+        : `Shop "${shopName}" is pending approval. All documents passed AI verification.\n\n${summary.text}`;
+
       const { data: adminUsers } = await supabase.from('admin_users').select('user_id').eq('is_active', true);
       if (adminUsers && adminUsers.length > 0) {
         await supabase.from('notifications').insert(
           adminUsers.map(admin => ({
             user_id: admin.user_id,
-            title: 'Shop Documents Updated',
-            message: 'New shop registration documents have been uploaded and are ready for review.',
-            type: 'document_update',
+            title: notifTitle,
+            message: notifMessage,
+            type: hasIssues ? 'shop_verification_issues' : 'document_update',
             related_entity_type: 'shop',
             related_entity_id: shopId
           }))
@@ -216,7 +273,12 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
         for (const admin of adminUsers) {
           try {
             await supabase.functions.invoke('send-notification-email', {
-              body: { user_id: admin.user_id, title: 'Shop Documents Updated', message: 'A shop owner has uploaded new registration documents that require your review and approval.', type: 'document_update' }
+              body: {
+                userId: admin.user_id,
+                title: notifTitle,
+                message: notifMessage,
+                type: hasIssues ? 'shop_verification_issues' : 'document_update'
+              }
             });
           } catch (e) { console.warn('Failed to send email to admin:', e); }
         }
