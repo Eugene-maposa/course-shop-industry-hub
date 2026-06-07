@@ -90,7 +90,7 @@ interface VerificationResult {
   analysis: string;
 }
 
-const StepByStepDocumentUpload = ({ onDocumentsChange, onProgressChange }: StepByStepDocumentUploadProps) => {
+const StepByStepDocumentUpload = ({ onDocumentsChange, onProgressChange, onVerificationResultsChange }: StepByStepDocumentUploadProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, File>>({});
   const [docPreviews, setDocPreviews] = useState<Record<string, string>>({});
@@ -106,6 +106,10 @@ const StepByStepDocumentUpload = ({ onDocumentsChange, onProgressChange }: StepB
   React.useEffect(() => {
     onProgressChange(progress);
   }, [progress, onProgressChange]);
+
+  React.useEffect(() => {
+    onVerificationResultsChange?.(verificationResults);
+  }, [verificationResults, onVerificationResultsChange]);
 
   const verifyDocument = async (file: File, docType: string) => {
     setVerifyingDoc(docType);
