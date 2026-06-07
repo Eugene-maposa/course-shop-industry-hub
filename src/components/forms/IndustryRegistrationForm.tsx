@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { industryNameSchema, industryCodeSchema, descriptionSchema, filterIndustryCode, firstZodError } from "@/lib/validators";
 
 const IndustryRegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -42,6 +43,12 @@ const IndustryRegistrationForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const nameRes = industryNameSchema.safeParse(formData.name);
+    if (!nameRes.success) { toast({ title: "Invalid Industry Name", description: firstZodError(nameRes.error), variant: "destructive" }); return; }
+    const codeRes = industryCodeSchema.safeParse(formData.code);
+    if (!codeRes.success) { toast({ title: "Invalid Code", description: firstZodError(codeRes.error), variant: "destructive" }); return; }
+    const descRes = descriptionSchema.safeParse(formData.description);
+    if (!descRes.success) { toast({ title: "Invalid Description", description: firstZodError(descRes.error), variant: "destructive" }); return; }
     registerIndustryMutation.mutate(formData);
   };
 
@@ -63,7 +70,7 @@ const IndustryRegistrationForm = () => {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="code" className="text-xs">Industry Code *</Label>
-              <Input id="code" value={formData.code} onChange={(e) => handleInputChange("code", e.target.value.toUpperCase())} required placeholder="Enter industry code" className="h-9 text-sm" />
+              <Input id="code" value={formData.code} onChange={(e) => handleInputChange("code", filterIndustryCode(e.target.value))} required placeholder="e.g. MFG01" className="h-9 text-sm" />
             </div>
           </div>
 
