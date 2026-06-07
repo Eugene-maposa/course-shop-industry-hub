@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface StepByStepDocumentUploadProps {
   onDocumentsChange: (documents: Record<string, File>) => void;
   onProgressChange: (progress: number) => void;
+  onVerificationResultsChange?: (results: Record<string, VerificationResult>) => void;
 }
 
 const documentSteps = [
