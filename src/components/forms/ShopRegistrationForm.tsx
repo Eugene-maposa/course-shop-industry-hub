@@ -537,6 +537,7 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
             <StepByStepDocumentUpload 
               onDocumentsChange={handleDocumentsChange}
               onProgressChange={handleProgressChange}
+              onVerificationResultsChange={setVerificationResults}
             />
           </div>
 
