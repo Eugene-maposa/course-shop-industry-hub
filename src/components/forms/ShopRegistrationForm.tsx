@@ -50,6 +50,7 @@ const ShopRegistrationForm = ({ shopId, initialData, onSuccess }: ShopRegistrati
   const [iconFile, setIconFile] = useState<File | null>(null);
   const [iconPreview, setIconPreview] = useState<string | null>(initialData?.icon_url || null);
   const [documents, setDocuments] = useState<Record<string, File>>({});
+  const [verificationResults, setVerificationResults] = useState<Record<string, { status: string; confidence_score: number; is_authentic: boolean; issues: string[]; analysis: string }>>({});
   const [documentProgress, setDocumentProgress] = useState(shopId ? 100 : 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [industryOpen, setIndustryOpen] = useState(false);
